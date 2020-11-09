@@ -361,10 +361,6 @@ function redraw(){
 		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover);
 	}
 
-	// Draw the toolbox icons 
-	drawIcon("open", 20, (gateOptions+1)*gridY-gateSize/2);
-	drawIcon("save", 20, (gateOptions+2)*gridY-gateSize/2);
-
 }
 
 /**
@@ -425,6 +421,16 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 function fromID(id){
 	for (k=0; k<gates.length; k++){
 		if (gates[k]["id"] == id){
+			return k;
+		}
+	}
+	return -1;
+}
+
+// Find a gate index from its ID (from custom array)
+function fromIDArray(id, arr){
+	for (k=0; k<arr.length; k++){
+		if (arr[k]["id"] == id){
 			return k;
 		}
 	}
@@ -606,11 +612,11 @@ function mouseDown(e){
 			// If it's the save icon 
 			} else if (gates[hover]["letter"] == "save"){
 
-				// Convert circuit to qasm TODO
-				asQasm = "test";
+				// Convert circuit to qasm 
+				asQASM = toQASM();
 
 				// Download the qasm
-				download("circuit.qasm", asQasm);
+				download("circuit.qasm", asQASM);
 
 			// If it's the open icon 
 			} else if (gates[hover]["letter"] == "open"){
@@ -646,6 +652,87 @@ function mouseDown(e){
 
 	// Update the canvas
 	redraw();
+
+}
+
+// Convert the circuit and all info into a qasm string TODO
+function toQASM(){
+
+	// Required at the start of the QASM file
+	qasmString = "OPENQASM 3.0;\n";
+
+	// Determine how many qubits are needed for the main circuit
+	minQubit = 9999;
+	maxQubit = -9999;
+	for (var i=gateOptions; i<gates.length; i++){
+
+		if (gates[i]["y"] < minQubit){
+			minQubit = gates[i]["y"];
+		}
+		if (gates[i]["y"] > minQubit){
+			maxQubit = gates[i]["y"];
+		}
+
+	}
+
+	// Add a register
+	qasmString += "qubit q[" + (1+maxQubit-minQubit) + "];\n";
+
+	// Create a copy of the array
+	copy = gates.slice(gateOptions);
+
+	// Sort the list, leftmost gates first
+	copy.sort(function(a, b){return a["y"] - b["y"];});
+
+	// Loop over this sorted list
+	for (var i=0; i<copy.length; i++){
+
+		// Get info about this gate
+		qubit = copy[i]["y"]-minQubit;
+		letter = copy[i]["letter"].toLowerCase();
+		controls = copy[i]["attached"];
+		numControls = controls.length;
+
+		// Don't add controls directly
+		if (letter != "controlfilled" && letter != "controlunfilled"){
+
+			// Without controls
+			if (numControls == 0){
+				qasmString += letter + " q[" + qubit + "];\n";
+
+			// With controls
+			} else {
+
+				// Add the ccc...ch
+				for (var j=0; j<numControls; j++){
+					qasmString += "c";
+				}
+				qasmString += letter + " ";
+
+				// Add the controls q[1], q[2] etc.
+				for (var j=0; j<numControls; j++){
+					controlIndex = fromIDArray(controls[j], copy);
+					controlQubit = copy[controlIndex]["y"]-minQubit;
+					qasmString += "q[" + controlQubit + "], ";
+				}
+
+				// Add the target
+				qasmString += "q[" + qubit + "];\n";
+
+			}
+
+		}
+
+	}
+
+	// Return to be turned into a file
+	return qasmString;
+
+}
+
+function fromQASM(qasmString){
+
+
 
 }
 
