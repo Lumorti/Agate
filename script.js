@@ -14,7 +14,7 @@ var nextID = 0;
 
 // General settings
 var gateSize = 50;
-var gridY = 80;
+var gridY = 60;
 var gridX = 60;
 var spacing = 0.8;
 var toolboxWidth = -1;
@@ -27,6 +27,9 @@ var lastClickTime = -1;
 // For dragging the canvas around
 var offsetX = 0;
 var offsetY = 0;
+
+// User-modifiable settings
+var drawGrid = true;
 
 // Called on body ready
 function init(){
@@ -41,15 +44,19 @@ function init(){
 	canvas.addEventListener('mouseup', mouseUp);
 
 	// Add the gate summoning buttons
-	gates.push({"letter": "H", "x": 0.5, "y": 0.5+spacing*0, "draggable": false})
-	gates.push({"letter": "X", "x": 0.5, "y": 0.5+spacing*1, "draggable": false})
-	gates.push({"letter": "Y", "x": 0.5, "y": 0.5+spacing*2, "draggable": false})
-	gates.push({"letter": "Z", "x": 0.5, "y": 0.5+spacing*3, "draggable": false})
-	gates.push({"letter": "T", "x": 0.5, "y": 0.5+spacing*4, "draggable": false})
-	gates.push({"letter": "S", "x": 0.5, "y": 0.5+spacing*5, "draggable": false})
+	gates.push({"letter": "H", "x": 0.33, "y": 0.5+0, "draggable": false})
+	gates.push({"letter": "X", "x": 0.33, "y": 0.5+1, "draggable": false})
+	gates.push({"letter": "Y", "x": 0.33, "y": 0.5+2, "draggable": false})
+	gates.push({"letter": "Z", "x": 0.33, "y": 0.5+3, "draggable": false})
+	gates.push({"letter": "T", "x": 0.33, "y": 0.5+4, "draggable": false})
+	gates.push({"letter": "S", "x": 0.33, "y": 0.5+5, "draggable": false})
+	gates.push({"letter": "sub", "x": 0.33, "y": 0.5+6, "draggable": false})
+	gates.push({"letter": "io", "x": 0.33, "y": 0.5+7, "draggable": false})
+	gates.push({"letter": "open", "x": 0.38, "y": 0.5+8, "draggable": false})
+	gates.push({"letter": "save", "x": 0.38, "y": 0.5+9.1, "draggable": false})
 	gateOptions = gates.length;
-	toolboxWidth = gateSize+gridX;
-	toolboxHeight = gridY*(1.0+spacing*(gateOptions-1)) + gateSize;
+	toolboxWidth = gateSize+20;
+	toolboxHeight = gridY*(gates[gates.length-1]["y"]+1);
 
 	// First drawing
 	redraw();
@@ -90,6 +97,149 @@ function drawGate(letter, x, y, isSelected){
 		ctx.fill();
 		ctx.stroke();
 
+	// If it's an i/o control 
+	} else if (letter == "io"){
+
+		// Draw the box
+		if (!isSelected){
+			ctx.fillStyle = "#e89b00";
+		} else {
+			ctx.fillStyle = "#b87c04";
+		}
+		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize);
+
+		// Draw the letter
+		ctx.font = "30px Arial";
+		ctx.fillStyle = "#ffffff";
+		ctx.fillText("io", 15+x-gateSize/2, 35+y-gateSize/2);
+
+	// If it's an subroutine
+	} else if (letter == "sub"){
+
+		// Draw the box
+		if (!isSelected){
+			ctx.fillStyle = "#16a300";
+		} else {
+			ctx.fillStyle = "#107800";
+		}
+		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize);
+		
+		// Draw the letter
+		ctx.font = "30px Arial";
+		ctx.fillStyle = "#ffffff";
+		ctx.fillText("?", 15+x-gateSize/2, 35+y-gateSize/2);
+
+	} else if (letter == "open"){
+
+		// Colours
+		backCol = "#fcb603";
+		paperCol = "#ffffff";
+		frontCol = "#d49f00";
+
+		// To save adding this everywhere
+		x = x-gateSize/2;
+		y = y-gateSize/2+10;
+
+		// Draw the back bit of the folder
+		ctx.fillStyle = backCol;
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.lineTo(x, y+40);
+		ctx.lineTo(x+40, y+40);
+		ctx.lineTo(x+40, y);
+		ctx.fill();
+
+		// Draw the paper inside the folder
+		if (!isSelected){
+			ctx.fillStyle = paperCol;
+			ctx.beginPath();
+			ctx.moveTo(x+10, y+2);
+			ctx.lineTo(x+10, y+40);
+			ctx.lineTo(x+35, y+40);
+			ctx.lineTo(x+35, y+2);
+			ctx.fill();
+		} else {
+			ctx.fillStyle = paperCol;
+			ctx.beginPath();
+			ctx.moveTo(x+10, y-5);
+			ctx.lineTo(x+10, y+40);
+			ctx.lineTo(x+35, y+40);
+			ctx.lineTo(x+35, y-5);
+			ctx.fill();
+		}
+
+		// Draw the front bit of the folder
+		if (!isSelected){
+			ctx.fillStyle = frontCol;
+			ctx.beginPath();
+			ctx.moveTo(x+05, y+15);
+			ctx.lineTo(x, y+40);
+			ctx.lineTo(x+40, y+40);
+			ctx.lineTo(x+50, y+15);
+			ctx.fill();
+		} else {
+			ctx.fillStyle = frontCol;
+			ctx.beginPath();
+			ctx.moveTo(x+05, y+15);
+			ctx.lineTo(x, y+40);
+			ctx.lineTo(x+40, y+40);
+			ctx.lineTo(x+50, y+15);
+			ctx.fill();
+		}
+
+	} else if (letter == "save"){
+
+		// To save adding this everywhere
+		x = x-gateSize/2;
+		y = y-gateSize/2;
+
+		// Main plastic bit
+		ctx.fillStyle = "#00bbd4";
+		ctx.beginPath();
+		ctx.moveTo(x+5, y);
+		ctx.lineTo(x+5, y+40);
+		ctx.lineTo(x+40, y+40);
+		ctx.lineTo(x+40, y+5);
+		ctx.lineTo(x+35, y);
+		ctx.fill();
+
+		// Top white bit
+		ctx.fillStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.moveTo(x+10, y);
+		ctx.lineTo(x+10, y+10);
+		ctx.lineTo(x+30, y+10);
+		ctx.lineTo(x+30, y);
+		ctx.fill();
+
+		// Black bit inside top white bit
+		if (!isSelected){
+			ctx.fillStyle = "#000000";
+			ctx.beginPath();
+			ctx.moveTo(x+22, y);
+			ctx.lineTo(x+22, y+10);
+			ctx.lineTo(x+30, y+10);
+			ctx.lineTo(x+30, y);
+			ctx.fill();
+		} else {
+			ctx.fillStyle = "#000000";
+			ctx.beginPath();
+			ctx.moveTo(x+10, y);
+			ctx.lineTo(x+10, y+10);
+			ctx.lineTo(x+18, y+10);
+			ctx.lineTo(x+18, y);
+			ctx.fill();
+		}
+		
+		// Bottom white bit
+		ctx.fillStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.moveTo(x+10, y+20);
+		ctx.lineTo(x+10, y+40);
+		ctx.lineTo(x+35, y+40);
+		ctx.lineTo(x+35, y+20);
+		ctx.fill();
+
 	// If it's a standard gate
 	} else {
 
@@ -117,21 +267,54 @@ function redraw(){
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 
+	// Draw gridlines
+	if (drawGrid){
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = "#aaaaaa";
+		for (var x=offsetX%gridX; x<ctx.canvas.width; x+=gridX){
+			ctx.beginPath();
+			ctx.moveTo(x-(gridX/2)+(gateSize/2), 0);
+			ctx.lineTo(x-(gridX/2)+(gateSize/2), ctx.canvas.height);
+			ctx.stroke();
+		}
+		for (var y=offsetY%gridY; y<ctx.canvas.width; y+=gridY){
+			ctx.beginPath();
+			ctx.moveTo(0, y-(gridY/2)+(gateSize/2));
+			ctx.lineTo(ctx.canvas.width, y-(gridY/2)+(gateSize/2));
+			ctx.stroke();
+		}
+	}
+
 	// Find qubit line rectangles needed ([minX,maxX,minY,maxY])
 	var lineStartEnds = [];
 	lineStartEnds.push([999999,-9999999, 9999999, -999999])
 	for (var i=gateOptions; i<gates.length; i++){
-		if (gates[i]["x"] < lineStartEnds[0][0]){
-			lineStartEnds[0][0] = gates[i]["x"];
-		} 
-		if (gates[i]["x"] > lineStartEnds[0][1]){
-			lineStartEnds[0][1] = gates[i]["x"];
-		}
-		if (gates[i]["y"] < lineStartEnds[0][2]){
-			lineStartEnds[0][2] = gates[i]["y"];
-		}
-		if (gates[i]["y"] > lineStartEnds[0][3]){
-			lineStartEnds[0][3] = gates[i]["y"];
+		if (gates[i]["letter"] != "io"){
+			if (gates[i]["x"]-1 < lineStartEnds[0][0]){
+				lineStartEnds[0][0] = gates[i]["x"]-1;
+			} 
+			if (gates[i]["x"]+1 > lineStartEnds[0][1]){
+				lineStartEnds[0][1] = gates[i]["x"]+1;
+			}
+			if (gates[i]["y"] < lineStartEnds[0][2]){
+				lineStartEnds[0][2] = gates[i]["y"];
+			}
+			if (gates[i]["y"] > lineStartEnds[0][3]){
+				lineStartEnds[0][3] = gates[i]["y"];
+			}
+		} else {
+			if (gates[i]["x"] < lineStartEnds[0][0]){
+				lineStartEnds[0][0] = gates[i]["x"];
+			} 
+			if (gates[i]["x"] > lineStartEnds[0][1]){
+				lineStartEnds[0][1] = gates[i]["x"];
+			}
+			if (gates[i]["y"] < lineStartEnds[0][2]){
+				lineStartEnds[0][2] = gates[i]["y"];
+			}
+			if (gates[i]["y"] > lineStartEnds[0][3]){
+				lineStartEnds[0][3] = gates[i]["y"];
+			}
 		}
 	}
 
@@ -141,8 +324,8 @@ function redraw(){
 			ctx.lineWidth = 5;
 			ctx.strokeStyle = "#aaaaaa";
 			ctx.beginPath();
-			ctx.moveTo((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-			ctx.lineTo((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+			ctx.moveTo((lineStartEnds[i][0])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+			ctx.lineTo((lineStartEnds[i][1])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
 			ctx.stroke();
 		}
 	}
@@ -169,17 +352,72 @@ function redraw(){
 		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true);
 	}
 
-	// Toolbox outline
-	ctx.fillStyle = "#555555";
-	ctx.fillRect(0, 0, toolboxWidth+5, toolboxHeight+5);
-	ctx.fillStyle = "#eeeeee";
-	ctx.fillRect(0, 0, toolboxWidth, toolboxHeight);
+	// Toolbox outline 
+	ctx.fillStyle = "#dddddd";
+	roundRect(ctx, 10, 10, toolboxWidth, toolboxHeight, 20, true, false);
 	
 	// Draw the toolbox gates
 	for (var i=0; i<gateOptions; i++){
 		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover);
 	}
 
+	// Draw the toolbox icons 
+	drawIcon("open", 20, (gateOptions+1)*gridY-gateSize/2);
+	drawIcon("save", 20, (gateOptions+2)*gridY-gateSize/2);
+
+}
+
+/**
+ * FROM: https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} [radius = 5] The corner radius; It can also be an object
+ *                 to specify different radii for corners
+ * @param {Number} [radius.tl = 0] Top left
+ * @param {Number} [radius.tr = 0] Top right
+ * @param {Number} [radius.br = 0] Bottom right
+ * @param {Number} [radius.bl = 0] Bottom left
+ * @param {Boolean} [fill = false] Whether to fill the rectangle.
+ * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+ */
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof stroke === 'undefined') {
+    stroke = true;
+  }
+  if (typeof radius === 'undefined') {
+    radius = 5;
+  }
+  if (typeof radius === 'number') {
+    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+  } else {
+    var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+    for (var side in defaultRadius) {
+      radius[side] = radius[side] || defaultRadius[side];
+    }
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius.tl, y);
+  ctx.lineTo(x + width - radius.tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+  ctx.lineTo(x + width, y + height - radius.br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+  ctx.lineTo(x + radius.bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+  ctx.lineTo(x, y + radius.tl);
+  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.stroke();
+  }
 
 }
 
@@ -319,7 +557,7 @@ function mouseDown(e){
 		// Get the current time in milliseconds
 		var currentTime = new Date().getTime();
 
-		// Double click TODO
+		// Double click 
 		if ((currentTime - lastClickTime) < doubleClickMilli){
 
 			// If it can be dragged (i.e. not in the toolbox)
@@ -337,6 +575,10 @@ function mouseDown(e){
 					// Change it to be unfilled
 					gates[hover]["letter"] = "controlFilled";
 
+				// If it's an io element TODO
+				} else if (gates[hover]["letter"] == "io"){
+
+				// If it's a normal gate
 				} else {
 
 					// Create a control at the cursor
@@ -360,6 +602,25 @@ function mouseDown(e){
 			// If it can be dragged, select it
 			if (gates[hover]["draggable"]){
 				selected = hover;
+
+			// If it's the save icon 
+			} else if (gates[hover]["letter"] == "save"){
+
+				// Convert circuit to qasm TODO
+				asQasm = "test";
+
+				// Download the qasm
+				download("circuit.qasm", asQasm);
+
+			// If it's the open icon 
+			} else if (gates[hover]["letter"] == "open"){
+				
+				// Open the file input box
+				document.getElementById("fileIn").click(); 
+
+				// Get file data TODO
+				
+				// Convert qasm to circuit TODO
 
 			// If it can't, create a new gate and select that
 			} else {
@@ -387,3 +648,15 @@ function mouseDown(e){
 	redraw();
 
 }
+
+// Download text to a filename, from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server 
+function download(filename, text) {
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	element.setAttribute('download', filename);
+	element.style.display = 'none';
+	document.body.appendChild(element);
+	element.click();
+	document.body.removeChild(element);
+}
+
