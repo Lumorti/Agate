@@ -624,10 +624,6 @@ function mouseDown(e){
 				// Open the file input box
 				document.getElementById("fileIn").click(); 
 
-				// Get file data TODO
-				
-				// Convert qasm to circuit TODO
-
 			// If it can't, create a new gate and select that
 			} else {
 				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "draggable": true, "attached":[]})
@@ -655,7 +651,7 @@ function mouseDown(e){
 
 }
 
-// Convert the circuit and all info into a qasm string TODO
+// Convert the circuit and all info into a qasm string 
 function toQASM(){
 
 	// Required at the start of the QASM file
@@ -730,9 +726,54 @@ function toQASM(){
 
 }
 
+function onFileChange(e){
+
+	// Create a file reader
+	var input = event.target;
+	var reader = new FileReader();
+
+	// Setup the onload function
+	reader.onload = function(){
+
+		// Get the text
+		var text = reader.result;
+
+		// Load the QASM 
+		fromQASM(text);
+
+	};
+
+	// Trigger this event
+	reader.readAsText(input.files[0]);
+
+}
+
 function fromQASM(qasmString){
 
+	// Split into the different lines
+	lines = qasmString.split("\n");
 
+	// Things to figure out
+	numQubitsRequired = 0
+
+	// Iterate over the lines
+	for (var i=1; i<lines.length; i++){
+
+		// Ignore any blank lines or commends
+		if (lines[i].length > 0){
+
+			// Ignore comments
+			if (lines[i][0] != "/"){
+
+				// If it's specifying qubit registers TODO
+				alert(lines[i]);
+
+				// If specifying a gate operation TODO
+				
+			}
+		}
+
+	}
 
 }
 
