@@ -5,12 +5,14 @@ var ctx = null;
 
 // The list of gates
 var gates = [];
+var gatesInit = [];
 var gateOptions = -1;
 
 // Which gate is current selected
 var selected = -1;
 var hover = -1;
 var nextID = 0;
+var showDelete = false;
 
 // General settings
 var gateSize = 50;
@@ -43,20 +45,23 @@ function init(){
 	canvas.addEventListener('mousedown', mouseDown);
 	canvas.addEventListener('mouseup', mouseUp);
 
-	// Add the gate summoning buttons
-	gates.push({"letter": "H", "x": 0.33, "y": 0.5+0, "draggable": false})
-	gates.push({"letter": "X", "x": 0.33, "y": 0.5+1, "draggable": false})
-	gates.push({"letter": "Y", "x": 0.33, "y": 0.5+2, "draggable": false})
-	gates.push({"letter": "Z", "x": 0.33, "y": 0.5+3, "draggable": false})
-	gates.push({"letter": "T", "x": 0.33, "y": 0.5+4, "draggable": false})
-	gates.push({"letter": "S", "x": 0.33, "y": 0.5+5, "draggable": false})
-	gates.push({"letter": "sub", "x": 0.33, "y": 0.5+6, "draggable": false})
-	gates.push({"letter": "io", "x": 0.33, "y": 0.5+7, "draggable": false})
-	gates.push({"letter": "open", "x": 0.38, "y": 0.5+8, "draggable": false})
-	gates.push({"letter": "save", "x": 0.38, "y": 0.5+9.1, "draggable": false})
-	gateOptions = gates.length;
-	toolboxWidth = gateSize+20;
-	toolboxHeight = gridY*(gates[gates.length-1]["y"]+1);
+	// Add the gate summoning buttons 
+	gateOptions = 10;
+	toolboxHeight = gateSize+20;
+	toolboxWidth = gridX*(gateOptions+1);
+	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
+	toolboxRel = (toolboxOffsetX / gateSize) - 0.33;
+	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+0+toolboxRel, "draggable": false})
+	gates.push({"letter": "X",    "y": 0.33, "x": 0.5+1+toolboxRel, "draggable": false})
+	gates.push({"letter": "Y",    "y": 0.33, "x": 0.5+2+toolboxRel, "draggable": false})
+	gates.push({"letter": "Z",    "y": 0.33, "x": 0.5+3+toolboxRel, "draggable": false})
+	gates.push({"letter": "T",    "y": 0.33, "x": 0.5+4+toolboxRel, "draggable": false})
+	gates.push({"letter": "S",    "y": 0.33, "x": 0.5+5+toolboxRel, "draggable": false})
+	gates.push({"letter": "sub",  "y": 0.33, "x": 0.5+6+toolboxRel, "draggable": false})
+	gates.push({"letter": "io",   "y": 0.33, "x": 0.5+7+toolboxRel, "draggable": false})
+	gates.push({"letter": "open", "y": 0.27, "x": 0.5+8.1+toolboxRel, "draggable": false})
+	gates.push({"letter": "save", "y": 0.43, "x": 0.5+9.1+toolboxRel, "draggable": false})
+	gatesInit = gates.slice();
 
 	// First drawing
 	redraw();
@@ -240,6 +245,58 @@ function drawGate(letter, x, y, isSelected){
 		ctx.lineTo(x+35, y+20);
 		ctx.fill();
 
+	// If drawing the delete icon 
+	} else if (letter == "delete"){
+
+		// To save adding this everywhere
+		x = x-gateSize/2;
+
+		// Colours
+		ctx.fillStyle = "#55555588";
+		ctx.strokeStyle = "#55555588";
+
+		// Bottom
+		ctx.beginPath();
+		ctx.moveTo(x, y+10);
+		ctx.lineTo(x+5, y+40);
+		ctx.lineTo(x+25, y+40);
+		ctx.lineTo(x+30, y+10);
+		ctx.fill();
+
+		// Lid
+		ctx.beginPath();
+		ctx.moveTo(x, y+7);
+		ctx.lineTo(x+5, y);
+		ctx.lineTo(x+25, y);
+		ctx.lineTo(x+30, y+7);
+		ctx.fill();
+
+		// Lid handle 
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.arc(x+15, y, 5, Math.PI, 0, false);
+		ctx.stroke();
+
+		// Stripes
+		//ctx.beginPath();
+		//ctx.moveTo(x+10, y+15);
+		//ctx.lineTo(x+10, y+35);
+		//ctx.lineTo(x+7, y+35);
+		//ctx.lineTo(x+7, y+15);
+		//ctx.fill();
+		//ctx.beginPath();
+		//ctx.moveTo(x+13, y+15);
+		//ctx.lineTo(x+16, y+15);
+		//ctx.lineTo(x+16, y+35);
+		//ctx.lineTo(x+13, y+35);
+		//ctx.fill();
+		//ctx.beginPath();
+		//ctx.moveTo(x+19, y+15);
+		//ctx.lineTo(x+22, y+15);
+		//ctx.lineTo(x+22, y+35);
+		//ctx.lineTo(x+19, y+35);
+		//ctx.fill();
+
 	// If it's a standard gate
 	} else {
 
@@ -267,7 +324,7 @@ function redraw(){
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 
-	// Draw gridlines
+	// Draw grid lines
 	if (drawGrid){
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = "#aaaaaa";
@@ -347,18 +404,30 @@ function redraw(){
 		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover);
 	}
 
-	// Draw the selected gate on top
-	if (selected >= 0){
-		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true);
-	}
-
 	// Toolbox outline 
 	ctx.fillStyle = "#dddddd";
-	roundRect(ctx, 10, 10, toolboxWidth, toolboxHeight, 20, true, false);
+	roundRect(ctx, toolboxOffsetX, 10, toolboxWidth, toolboxHeight, 20, true, false);
 	
 	// Draw the toolbox gates
 	for (var i=0; i<gateOptions; i++){
 		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover);
+	}
+
+	// If dragging a gate, change the toolbar
+	if (showDelete){
+
+		// Fade everything
+		ctx.fillStyle = "#aaaaaa55";
+		roundRect(ctx, toolboxOffsetX, 10, toolboxWidth, toolboxHeight, 20, true, false);
+
+		// Draw a delete icon 
+		drawGate("delete", toolboxOffsetX+toolboxWidth/2, 30);
+
+	}
+	
+	// Draw the selected gate on top
+	if (selected >= 0){
+		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true);
 	}
 
 }
@@ -440,6 +509,9 @@ function fromIDArray(id, arr){
 // When mouse is moved above the canvas
 function mouseMove(e){
 
+	// By default, hide the delete bar
+	showDelete = false;
+
 	// Move whatever is selected to the mouse
 	if (selected >= 0){
 
@@ -450,6 +522,9 @@ function mouseMove(e){
 		// If it's a normal gate
 		} else {
 			
+			// Show the delete bar
+			showDelete = true;
+
 			// Move this gate to the mouse, x and y
 			gates[selected]["x"] = Math.round((e.clientX - offsetX - gateSize / 2) / gridX);
 			newY = Math.round((e.clientY - offsetY - gateSize / 2) / gridY);
@@ -508,6 +583,9 @@ function mouseMove(e){
 // When mouse button lifted up
 function mouseUp(e){
 
+	// Hide the delete bar
+	showDelete = false;
+
 	// If something is selected 
 	if (selected >= 0){
 
@@ -530,7 +608,7 @@ function mouseUp(e){
 		} else {
 
 			// If dropped into the toolbox 
-			if (e.clientX > 0 && e.clientX < toolboxWidth && e.clientY > 0 && e.clientY < toolboxHeight){
+			if (e.clientX > toolboxOffsetX && e.clientX < toolboxOffsetX+toolboxWidth && e.clientY > 0 && e.clientY < toolboxHeight){
 
 				// Remove all its controls
 				for (var i=0; i<gates[selected]["attached"].length; i++){
@@ -660,13 +738,21 @@ function toQASM(){
 	// Determine how many qubits are needed for the main circuit
 	minQubit = 9999;
 	maxQubit = -9999;
+	minPos = 9999;
+	maxPos = -9999;
 	for (var i=gateOptions; i<gates.length; i++){
 
 		if (gates[i]["y"] < minQubit){
 			minQubit = gates[i]["y"];
 		}
-		if (gates[i]["y"] > minQubit){
+		if (gates[i]["y"] > maxQubit){
 			maxQubit = gates[i]["y"];
+		}
+		if (gates[i]["x"] > maxPos){
+			maxPos = gates[i]["x"];
+		}
+		if (gates[i]["x"] < minPos){
+			minPos = gates[i]["x"];
 		}
 
 	}
@@ -674,16 +760,23 @@ function toQASM(){
 	// Add a register
 	qasmString += "qubit q[" + (1+maxQubit-minQubit) + "];\n";
 
+	// Keep track of what the latest position for each qubit is
+	latestX = [];
+	for (var i=0; i<1+maxQubit-minQubit; i++){
+		latestX.push(0);
+	}
+
 	// Create a copy of the array
 	copy = gates.slice(gateOptions);
 
 	// Sort the list, leftmost gates first
-	copy.sort(function(a, b){return a["y"] - b["y"];});
+	copy.sort(function(a, b){return a["x"] - b["x"];});
 
 	// Loop over this sorted list
 	for (var i=0; i<copy.length; i++){
 
 		// Get info about this gate
+		xPos = copy[i]["x"]-minPos+1;
 		qubit = copy[i]["y"]-minQubit;
 		letter = copy[i]["letter"].toLowerCase();
 		controls = copy[i]["attached"];
@@ -694,26 +787,83 @@ function toQASM(){
 
 			// Without controls
 			if (numControls == 0){
+
+				// Determine whether there's any free space behind it
+				numIdenNeeded = xPos-latestX[qubit]-1;
+
+				// Add identities if there's free space 
+				for (var j=0; j<numIdenNeeded; j++){
+					qasmString += "i q[" + qubit + "];\n";
+				}
+
+				// Add the gate
 				qasmString += letter + " q[" + qubit + "];\n";
+
+				// Update offsets
+				latestX[qubit] = xPos;
 
 			// With controls
 			} else {
 
-				// Add the ccc...ch
-				for (var j=0; j<numControls; j++){
-					qasmString += "c";
-				}
-				qasmString += letter + " ";
-
-				// Add the controls q[1], q[2] etc.
+				// Pre-calculate control indices (since this could get costly for bigger circuits)
+				controlIndices = [];
 				for (var j=0; j<numControls; j++){
 					controlIndex = fromIDArray(controls[j], copy);
+					controlIndices.push(controlIndex);
+				}
+
+				// Get the min/max qubit for this gate
+				minGateQubit = qubit;
+				maxGateQubit = qubit;
+				for (var j=0; j<numControls; j++){
+					controlIndex = controlIndices[j];
+					controlQubit = copy[controlIndex]["y"]-minQubit;
+					if (controlQubit > maxGateQubit){
+						maxGateQubit = controlQubit;
+					}
+					if (controlQubit < minGateQubit){
+						minGateQubit = controlQubit;
+					}
+				}
+
+				// Determine whether there's any free space behind it
+				numIdenNeeded = xPos-latestX[qubit]-1;
+				closestIndex = qubit;
+				for (var j=minGateQubit; j<maxGateQubit+1; j++){
+					if (xPos-latestX[j]-1 < numIdenNeeded){
+						numIdenNeeded = xPos-latestX[j]-1;
+						closestIndex = qubit+j;
+					}
+				}
+
+				// Add identities if there's free space 
+				for (var j=0; j<numIdenNeeded; j++){
+					qasmString += "i q[" + closestIndex + "];\n";
+				}
+
+				// Add the ccc...ch
+				for (var j=0; j<numControls; j++){
+					controlIndex = controlIndices[j];
+					type = copy[controlIndex]["letter"];
+					if (type == "controlFilled"){
+						qasmString += "c";
+					} else {
+						qasmString += "o";
+					}
+				}
+
+				// Add the controls q[1], q[2] etc.
+				qasmString += letter + " ";
+				for (var j=0; j<numControls; j++){
+					controlIndex = controlIndices[j];
 					controlQubit = copy[controlIndex]["y"]-minQubit;
 					qasmString += "q[" + controlQubit + "], ";
+					latestX[controlIndex] = xPos;
 				}
 
 				// Add the target
 				qasmString += "q[" + qubit + "];\n";
+				latestX[qubit] = xPos;
 
 			}
 
@@ -748,32 +898,115 @@ function onFileChange(e){
 
 }
 
+// Load the gates from a QASM string
 function fromQASM(qasmString){
 
 	// Split into the different lines
 	lines = qasmString.split("\n");
 
 	// Things to figure out
-	numQubitsRequired = 0
+	numQubitsRequired = 0;
+	regToQubit = {};
+	latestX = [];
+
+	// Reset gates
+	gates = gatesInit.slice();
+	nextID = 0;
 
 	// Iterate over the lines
 	for (var i=1; i<lines.length; i++){
 
-		// Ignore any blank lines or commends
+		// Ignore any blank lines
 		if (lines[i].length > 0){
 
 			// Ignore comments
 			if (lines[i][0] != "/"){
 
-				// If it's specifying qubit registers TODO
-				alert(lines[i]);
+				// Split into components
+				words = lines[i].replace(/;/g,"").replace(/,/g," ").replace(/\s+/g," ").split(" ");
 
-				// If specifying a gate operation TODO
+				// If it's specifying qubit registers 
+				if (words[0] == "qubit"){
+
+					// Determine how many qubits are in this register
+					startInd = words[1].indexOf("[");
+					endInd = words[1].indexOf("]");
+					num = parseInt(words[1].substring(startInd+1, endInd));
+					name = words[1].substring(0, startInd);
+
+					// Add to mapping
+					for (var k=0; k<num; k++){
+						regToQubit[name+"["+k+"]"] = numQubitsRequired + k;
+						latestX.push(0);
+					}
+					numQubitsRequired += num;
+
+				// If defining a new gate (function) TODO
+				} else if (words[0] == "gate"){
+
+				// If an identity
+				} else if (words[0] == "i"){
+
+					// Just increase the spacing there
+					target = regToQubit[words[words.length-1]];
+					latestX[target] += 1;
+
+				// If specifying a standard gate operation 
+				} else {
+
+					// Determine gate info
+					numControls = words[0].split("o").length + words[0].split("c").length - 2;
+					target = regToQubit[words[words.length-1]];
+					letter = words[0].substring(numControls, words[0].length);
+
+					// Standard gate names should be uppercase for display
+					if (["x", "y", "z", "s", "t", "h"].indexOf(letter) >= 0){
+						letter = letter.toUpperCase();
+					}
+
+					// Determine control info
+					controls = []
+					controlTypes = [];
+					controlIDs = [];
+					latestPos = latestX[target];
+					for (var j=1; j<1+numControls; j++){
+						con = regToQubit[words[j]];
+						controls.push(con);
+						controlIDs.push(nextID);
+						nextID += 1;
+						if (latestX[con] > latestPos){
+							latestPos = latestX[con];
+						}
+						if (words[0][j-1] == "c"){
+							controlTypes.push("controlFilled");
+						} else {
+							controlTypes.push("controlUnfilled");
+						}
+					}
+
+					// Add the gate 
+					targetID = nextID;
+					gates.push({"id": targetID, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": 0, "attached": controlIDs})
+					nextID += 1
+					latestX[target] = latestPos+1;
+					
+					// Add the controls 
+					for (var j=0; j<numControls; j++){
+						con = controls[j];
+						gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": con, "draggable": true, "og": targetID, "attached": []})
+						latestX[con] = latestPos+1;
+					}
+
+				}
 				
 			}
 		}
 
 	}
+
+	// Recenter the camera 
+	offsetX = gateSize*5;
+	offsetY = gateSize*5;
 
 }
 
