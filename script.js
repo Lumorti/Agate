@@ -12,6 +12,7 @@ var gateOptions = -1;
 var selected = -1;
 var hover = -1;
 var nextID = 0;
+var ioDragging = -1;
 var showDelete = false;
 
 // General settings
@@ -51,16 +52,16 @@ function init(){
 	toolboxWidth = gridX*(gateOptions+1);
 	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
 	toolboxRel = (toolboxOffsetX / gateSize) - 0.33;
-	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+0+toolboxRel, "draggable": false})
-	gates.push({"letter": "X",    "y": 0.33, "x": 0.5+1+toolboxRel, "draggable": false})
-	gates.push({"letter": "Y",    "y": 0.33, "x": 0.5+2+toolboxRel, "draggable": false})
-	gates.push({"letter": "Z",    "y": 0.33, "x": 0.5+3+toolboxRel, "draggable": false})
-	gates.push({"letter": "T",    "y": 0.33, "x": 0.5+4+toolboxRel, "draggable": false})
-	gates.push({"letter": "S",    "y": 0.33, "x": 0.5+5+toolboxRel, "draggable": false})
-	gates.push({"letter": "sub",  "y": 0.33, "x": 0.5+6+toolboxRel, "draggable": false})
-	gates.push({"letter": "io",   "y": 0.33, "x": 0.5+7+toolboxRel, "draggable": false})
-	gates.push({"letter": "open", "y": 0.27, "x": 0.5+8.1+toolboxRel, "draggable": false})
-	gates.push({"letter": "save", "y": 0.43, "x": 0.5+9.1+toolboxRel, "draggable": false})
+	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+0+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "X",    "y": 0.33, "x": 0.5+1+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Y",    "y": 0.33, "x": 0.5+2+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Z",    "y": 0.33, "x": 0.5+3+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "T",    "y": 0.33, "x": 0.5+4+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "S",    "y": 0.33, "x": 0.5+5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "sub",  "y": 0.33, "x": 0.5+6+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "io",   "y": 0.33, "x": 0.5+7+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "open", "y": 0.27, "x": 0.5+8.1+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "save", "y": 0.43, "x": 0.5+9.1+toolboxRel, "size": 1, "draggable": false})
 	gatesInit = gates.slice();
 
 	// First drawing
@@ -69,7 +70,7 @@ function init(){
 }
 
 // Given a letter and a position, draw a gate
-function drawGate(letter, x, y, isSelected){
+function drawGate(letter, x, y, isSelected, size){
 
 	// If it's a filled control
 	if (letter == "controlFilled"){
@@ -111,7 +112,7 @@ function drawGate(letter, x, y, isSelected){
 		} else {
 			ctx.fillStyle = "#b87c04";
 		}
-		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize);
+		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize*size);
 
 		// Draw the letter
 		ctx.font = "30px Arial";
@@ -401,7 +402,13 @@ function redraw(){
 	
 	// Draw the gates
 	for (var i=gateOptions; i<gates.length; i++){
-		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover);
+		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
+
+		// If it's an io, add a corresponding io at the end
+		if (gates[i]["letter"] == "io"){
+			drawGate(gates[i]["letter"], (lineStartEnds[0][1])*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
+		}
+
 	}
 
 	// Toolbox outline 
@@ -410,7 +417,7 @@ function redraw(){
 	
 	// Draw the toolbox gates
 	for (var i=0; i<gateOptions; i++){
-		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover);
+		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
 	}
 
 	// If dragging a gate, change the toolbar
@@ -421,13 +428,13 @@ function redraw(){
 		roundRect(ctx, toolboxOffsetX, 10, toolboxWidth, toolboxHeight, 20, true, false);
 
 		// Draw a delete icon 
-		drawGate("delete", toolboxOffsetX+toolboxWidth/2, 30);
+		drawGate("delete", toolboxOffsetX+toolboxWidth/2, 30, false, 1);
 
 	}
 	
 	// Draw the selected gate on top
 	if (selected >= 0){
-		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true);
+		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true, gates[i]["size"]);
 	}
 
 }
@@ -512,8 +519,18 @@ function mouseMove(e){
 	// By default, hide the delete bar
 	showDelete = false;
 
+	// If dragging an io element TODO
+	if (ioDragging >= 0 && selected >= 0){
+
+		// Get the new size
+		newSize = Math.max(1, Math.abs(Math.round((e.clientY - offsetY + gateSize/2) / gridY) - gates[selected]["y"]));
+		newSize += (newSize-1)*0.2;
+
+		// Set the size
+		gates[selected]["size"] = newSize;
+
 	// Move whatever is selected to the mouse
-	if (selected >= 0){
+	} else if (selected >= 0){
 
 		// If it's a control, lock it to the x
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled"){
@@ -626,6 +643,7 @@ function mouseUp(e){
 	
 	// Deselect current gate
 	selected = -1;
+	ioDragging = -1;
 
 	// Update the canvas
 	redraw();
@@ -659,14 +677,16 @@ function mouseDown(e){
 					// Change it to be unfilled
 					gates[hover]["letter"] = "controlFilled";
 
-				// If it's an io element TODO
+				// If it's an io element 
 				} else if (gates[hover]["letter"] == "io"){
+					ioDragging = hover;
+					selected = hover;
 
 				// If it's a normal gate
 				} else {
 
 					// Create a control at the cursor
-					gates.push({"id": nextID, "letter": "controlFilled", "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "draggable": true, "og": gates[hover]["id"], "attached":[]})
+					gates.push({"id": nextID, "letter": "controlFilled", "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "og": gates[hover]["id"], "attached":[]})
 					nextID += 1
 
 					// Add this control to the attached list of the og gate
@@ -704,7 +724,7 @@ function mouseDown(e){
 
 			// If it can't, create a new gate and select that
 			} else {
-				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "draggable": true, "attached":[]})
+				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "attached":[]})
 				nextID += 1
 				selected = gates.length-1;
 				hover = gates.length-1;
@@ -832,7 +852,7 @@ function toQASM(){
 				for (var j=minGateQubit; j<maxGateQubit+1; j++){
 					if (xPos-latestX[j]-1 < numIdenNeeded){
 						numIdenNeeded = xPos-latestX[j]-1;
-						closestIndex = qubit+j;
+						closestIndex = j;
 					}
 				}
 
@@ -986,14 +1006,14 @@ function fromQASM(qasmString){
 
 					// Add the gate 
 					targetID = nextID;
-					gates.push({"id": targetID, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": 0, "attached": controlIDs})
+					gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": 0, "attached": controlIDs})
 					nextID += 1
 					latestX[target] = latestPos+1;
 					
 					// Add the controls 
 					for (var j=0; j<numControls; j++){
 						con = controls[j];
-						gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": con, "draggable": true, "og": targetID, "attached": []})
+						gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": con, "size": 1, "draggable": true, "og": targetID, "attached": []})
 						latestX[con] = latestPos+1;
 					}
 
