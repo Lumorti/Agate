@@ -12,8 +12,12 @@ var gateOptions = -1;
 var selected = -1;
 var hover = -1;
 var nextID = 0;
-var ioDragging = -1;
 var showDelete = false;
+var selectStartX = 0;
+var selectEndX = 0;
+var selectStartY = 0;
+var selectEndY = 0;
+var selectionArray = [];
 
 // General settings
 var gateSize = 50;
@@ -47,7 +51,7 @@ function init(){
 	canvas.addEventListener('mouseup', mouseUp);
 
 	// Add the gate summoning buttons 
-	gateOptions = 10;
+	gateOptions = 9;
 	toolboxHeight = gateSize+20;
 	toolboxWidth = gridX*(gateOptions+1);
 	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
@@ -59,9 +63,8 @@ function init(){
 	gates.push({"letter": "T",    "y": 0.33, "x": 0.5+4+toolboxRel, "size": 1, "draggable": false})
 	gates.push({"letter": "S",    "y": 0.33, "x": 0.5+5+toolboxRel, "size": 1, "draggable": false})
 	gates.push({"letter": "sub",  "y": 0.33, "x": 0.5+6+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "io",   "y": 0.33, "x": 0.5+7+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "open", "y": 0.27, "x": 0.5+8.1+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "save", "y": 0.43, "x": 0.5+9.1+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "open", "y": 0.27, "x": 0.5+7.1+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "save", "y": 0.43, "x": 0.5+8.1+toolboxRel, "size": 1, "draggable": false})
 	gatesInit = gates.slice();
 
 	// First drawing
@@ -102,22 +105,6 @@ function drawGate(letter, x, y, isSelected, size){
 		ctx.arc(x, y, gateSize/4, 0, 2 * Math.PI, false);
 		ctx.fill();
 		ctx.stroke();
-
-	// If it's an i/o control 
-	} else if (letter == "io"){
-
-		// Draw the box
-		if (!isSelected){
-			ctx.fillStyle = "#e89b00";
-		} else {
-			ctx.fillStyle = "#b87c04";
-		}
-		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize*size);
-
-		// Draw the letter
-		ctx.font = "30px Arial";
-		ctx.fillStyle = "#ffffff";
-		ctx.fillText("io", 15+x-gateSize/2, 35+y-gateSize/2);
 
 	// If it's an subroutine
 	} else if (letter == "sub"){
@@ -345,46 +332,84 @@ function redraw(){
 
 	// Find qubit line rectangles needed ([minX,maxX,minY,maxY])
 	var lineStartEnds = [];
-	lineStartEnds.push([999999,-9999999, 9999999, -999999])
+	var qubitsWithGates = [];
 	for (var i=gateOptions; i<gates.length; i++){
-		if (gates[i]["letter"] != "io"){
-			if (gates[i]["x"]-1 < lineStartEnds[0][0]){
-				lineStartEnds[0][0] = gates[i]["x"]-1;
-			} 
-			if (gates[i]["x"]+1 > lineStartEnds[0][1]){
-				lineStartEnds[0][1] = gates[i]["x"]+1;
+
+		// Gate info caches
+		gateX = gates[i]["x"];
+		gateY = gates[i]["y"];
+
+		// Keep track of number of gates on each qubit
+		if (qubitsWithGates.indexOf(gateY) < 0){
+			qubitsWithGates.push(gateY);
+		}
+
+		// Check if this gate is in an existing rectangle
+		inRect = [];
+		for (var j=0; j<lineStartEnds.length; j++){
+
+			// If the gate itself is in the rect
+			if (gateY <= lineStartEnds[j][3]+1 && gateY >= lineStartEnds[j][2]-1){
+				inRect.push(j);
 			}
-			if (gates[i]["y"] < lineStartEnds[0][2]){
-				lineStartEnds[0][2] = gates[i]["y"];
+			
+			// If it's a control, check its main gate
+			if (gates[i]["letter"] == "controlFilled" || gates[i]["letter"] == "controlUnfilled"){
+				ogInd = fromID(gates[i]["og"]);
+				if (gates[ogInd]["y"] <= lineStartEnds[j][3]+1 && gates[ogInd]["y"] >= lineStartEnds[j][2]-1){
+					inRect.push(j);
+				}
 			}
-			if (gates[i]["y"] > lineStartEnds[0][3]){
-				lineStartEnds[0][3] = gates[i]["y"];
+
+			// If any of its controls are 
+			for (var k=0; k<gates[i]["attached"].length; k++){
+				controlInd = fromID(gates[i]["attached"][k]);
+				if (gates[controlInd]["y"] <= lineStartEnds[j][3]+1 && gates[controlInd]["y"] >= lineStartEnds[j][2]-1){
+					inRect.push(j);
+				}
 			}
+
+		}
+
+		// If connecting multiple rectangles 
+		if (inRect.length >= 1){
+
+			// For each rect
+			for (var k=0; k<inRect.length; k++){
+
+				// Update the mins/maxs
+				if (gateX-1 < lineStartEnds[inRect[k]][0]){
+					lineStartEnds[inRect[k]][0] = gateX-1;
+				} 
+				if (gateX+1 > lineStartEnds[inRect[k]][1]){
+					lineStartEnds[inRect[k]][1] = gateX+1;
+				}
+				if (gateY < lineStartEnds[inRect[k]][2]){
+					lineStartEnds[inRect[k]][2] = gateY;
+				}
+				if (gateY > lineStartEnds[inRect[k]][3]){
+					lineStartEnds[inRect[k]][3] = gateY;
+				}
+
+			}
+
+		// Otherwise add a new rectangle
 		} else {
-			if (gates[i]["x"] < lineStartEnds[0][0]){
-				lineStartEnds[0][0] = gates[i]["x"];
-			} 
-			if (gates[i]["x"] > lineStartEnds[0][1]){
-				lineStartEnds[0][1] = gates[i]["x"];
-			}
-			if (gates[i]["y"] < lineStartEnds[0][2]){
-				lineStartEnds[0][2] = gates[i]["y"];
-			}
-			if (gates[i]["y"] > lineStartEnds[0][3]){
-				lineStartEnds[0][3] = gates[i]["y"];
-			}
+			lineStartEnds.push([gateX-1, gateX+1, gateY, gateY]);
 		}
 	}
 
 	// Draw each qubit grid
 	for (var i=0; i<lineStartEnds.length; i++){
 		for (var y=lineStartEnds[i][2]; y<=lineStartEnds[i][3]; y++){
-			ctx.lineWidth = 5;
-			ctx.strokeStyle = "#aaaaaa";
-			ctx.beginPath();
-			ctx.moveTo((lineStartEnds[i][0])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-			ctx.lineTo((lineStartEnds[i][1])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-			ctx.stroke();
+			if (qubitsWithGates.indexOf(y) >= 0){
+				ctx.lineWidth = 5;
+				ctx.strokeStyle = "#aaaaaa";
+				ctx.beginPath();
+				ctx.moveTo((lineStartEnds[i][0])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+				ctx.lineTo((lineStartEnds[i][1])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+				ctx.stroke();
+			}
 		}
 	}
 
@@ -402,13 +427,8 @@ function redraw(){
 	
 	// Draw the gates
 	for (var i=gateOptions; i<gates.length; i++){
-		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
-
-		// If it's an io, add a corresponding io at the end
-		if (gates[i]["letter"] == "io"){
-			drawGate(gates[i]["letter"], (lineStartEnds[0][1])*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
-		}
-
+		isSel = (i == hover) || (selectionArray.indexOf(i) >= 0);
+		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, gates[i]["size"]);
 	}
 
 	// Toolbox outline 
@@ -437,27 +457,19 @@ function redraw(){
 		drawGate(gates[selected]["letter"], gates[selected]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[selected]["y"]*gridY+gateSize/2, true, gates[i]["size"]);
 	}
 
+	// If box selecting
+	if (selected == -6){
+
+		// Draw the box
+		ctx.fillStyle = "#aaaaaa55";
+		ctx.fillRect(selectStartX, selectStartY, selectEndX-selectStartX, selectEndY-selectStartY);
+
+	}
+
 }
 
-/**
- * FROM: https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
- * Draws a rounded rectangle using the current state of the canvas.
- * If you omit the last three params, it will draw a rectangle
- * outline with a 5 pixel border radius
- * @param {CanvasRenderingContext2D} ctx
- * @param {Number} x The top left x coordinate
- * @param {Number} y The top left y coordinate
- * @param {Number} width The width of the rectangle
- * @param {Number} height The height of the rectangle
- * @param {Number} [radius = 5] The corner radius; It can also be an object
- *                 to specify different radii for corners
- * @param {Number} [radius.tl = 0] Top left
- * @param {Number} [radius.tr = 0] Top right
- * @param {Number} [radius.br = 0] Bottom right
- * @param {Number} [radius.bl = 0] Bottom left
- * @param {Boolean} [fill = false] Whether to fill the rectangle.
- * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
- */
+// FROM: https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+// Draws a rounded rectangle using the current state of the canvas.
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (typeof stroke === 'undefined') {
     stroke = true;
@@ -519,18 +531,8 @@ function mouseMove(e){
 	// By default, hide the delete bar
 	showDelete = false;
 
-	// If dragging an io element TODO
-	if (ioDragging >= 0 && selected >= 0){
-
-		// Get the new size
-		newSize = Math.max(1, Math.abs(Math.round((e.clientY - offsetY + gateSize/2) / gridY) - gates[selected]["y"]));
-		newSize += (newSize-1)*0.2;
-
-		// Set the size
-		gates[selected]["size"] = newSize;
-
 	// Move whatever is selected to the mouse
-	} else if (selected >= 0){
+	if (selected >= 0 && selectionArray.length == 0){
 
 		// If it's a control, lock it to the x
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled"){
@@ -550,11 +552,45 @@ function mouseMove(e){
 			for (var i=0; i<gates[selected]["attached"].length; i++){
 				control = gates[fromID(gates[selected]["attached"][i])]
 				control["x"] = Math.round((e.clientX - offsetX - gateSize / 2) / gridX);
-				control["y"] -= gates[selected]["y"] - newY
+				control["y"] -= gates[selected]["y"] - newY;
 			}
 
 			// Update the new y now the delta has been processed
-			gates[selected]["y"] = newY
+			gates[selected]["y"] = newY;
+
+		}
+
+	// If dragging multiple gates 
+	} else if (selected >= 0 && selectionArray.length > 0){
+
+		// Determine the deltas from the selected gate
+		deltaX = Math.round((e.clientX - offsetX - gateSize / 2) / gridX) - gates[selected]["x"];
+		deltaY = Math.round((e.clientY - offsetY - gateSize / 2) / gridY) - gates[selected]["y"];
+
+		// Show the delete bar
+		showDelete = true;
+
+		// For each gate to move 
+		for (var k=0; k<selectionArray.length; k++){
+
+			// For readability
+			sel = selectionArray[k];
+
+			// If it's not a control
+			if (gates[sel]["letter"] != "controlFilled" && gates[sel]["letter"] != "controlUnfilled"){
+				
+				// Move this gate to the mouse, x and y
+				gates[sel]["x"] += deltaX;
+				gates[sel]["y"] += deltaY;
+
+				// Move any attached controls along with it
+				for (var i=0; i<gates[sel]["attached"].length; i++){
+					control = gates[fromID(gates[sel]["attached"][i])]
+					control["x"] += deltaX;
+					control["y"] += deltaY;
+				}
+
+			}
 
 		}
 
@@ -564,6 +600,44 @@ function mouseMove(e){
 		// Move the offsets
 		offsetX += e.movementX;
 		offsetY += e.movementY;
+
+	// If dragging the background
+	} else if (selected == -6){
+
+		// Set the end X/Y 
+		selectEndX = e.clientX;
+		selectEndY = e.clientY;
+
+		// Invert if needed
+		if (selectStartX < selectEndX){
+			selMinX = selectStartX;
+			selMaxX = selectEndX;
+		} else {
+			selMinX = selectEndX;
+			selMaxX = selectStartX;
+		}
+		if (selectStartY < selectEndY){
+			selMinY = selectStartY;
+			selMaxY = selectEndY;
+		} else {
+			selMinY = selectEndY;
+			selMaxY = selectStartY;
+		}
+
+		// Check over every gate
+		selectionArray = [];
+		for (var i=gateOptions; i<gates.length; i++){
+
+			// Add the offset
+			gx = gates[i]["x"]*gridX+offsetX;
+			gy = gates[i]["y"]*gridY+offsetY;
+
+			// Check for mouse within gate area
+			if (selMinX < gx && selMaxX > gx+gateSize && selMinY < gy && selMaxY > gy+gateSize){
+				selectionArray.push(i);
+			}
+
+		}
 
 	// Otherwise check for hover
 	} else {
@@ -604,7 +678,7 @@ function mouseUp(e){
 	showDelete = false;
 
 	// If something is selected 
-	if (selected >= 0){
+	if (selected >= 0 && selectionArray.length == 0){
 
 		// If it's a control
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled"){
@@ -639,11 +713,39 @@ function mouseUp(e){
 
 		}
 
+	// If many selected 
+	} else if (selectionArray.length > 0){
+
+		// If dropped into the toolbox 
+		if (e.clientX > toolboxOffsetX && e.clientX < toolboxOffsetX+toolboxWidth && e.clientY > 0 && e.clientY < toolboxHeight){
+
+			// Get the list of IDs to remove
+			idsToRemove = [];
+			for (var k=0; k<selectionArray.length; k++){
+				idsToRemove.push(gates[selectionArray[k]]["id"]);
+				for (var i=0; i<gates[selectionArray[k]]["attached"].length; i++){
+					idsToRemove.push(gates[sel]["attached"][i]);
+				}
+			}
+
+			// Remove all of these
+			for (var k=0; k<idsToRemove.length; k++){
+				ind = fromID(idsToRemove[k]);
+				console.log(ind);
+				if (ind >= gateOptions){
+					gates.splice(ind, 1);
+				}
+			}
+
+			// Stop selecting everything since they no longer exist
+			selectionArray = [];
+
+		}
+
 	}
 	
 	// Deselect current gate
 	selected = -1;
-	ioDragging = -1;
 
 	// Update the canvas
 	redraw();
@@ -653,11 +755,11 @@ function mouseUp(e){
 // When mouse button pressed down
 function mouseDown(e){
 
+	// Get the current time in milliseconds
+	var currentTime = new Date().getTime();
+
 	// If hovering over a gate
 	if (hover >= 0){
-
-		// Get the current time in milliseconds
-		var currentTime = new Date().getTime();
 
 		// Double click 
 		if ((currentTime - lastClickTime) < doubleClickMilli){
@@ -677,13 +779,8 @@ function mouseDown(e){
 					// Change it to be unfilled
 					gates[hover]["letter"] = "controlFilled";
 
-				// If it's an io element 
-				} else if (gates[hover]["letter"] == "io"){
-					ioDragging = hover;
-					selected = hover;
-
-				// If it's a normal gate
-				} else {
+				// If it's a normal gate (and not selecting many)
+				} else if (selectionArray.length == 0) {
 
 					// Create a control at the cursor
 					gates.push({"id": nextID, "letter": "controlFilled", "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "og": gates[hover]["id"], "attached":[]})
@@ -733,16 +830,34 @@ function mouseDown(e){
 
 		}
 
-		// Save this time for future double click checks
-		lastClickTime = currentTime;
-
 	// If not hovering over anything
 	} else {
 
-		// The user is now dragging the canvas
-		selected = -5
+		// Stop selecting things
+		selectionArray = [];
+		
+		// Double click
+		if ((currentTime - lastClickTime) < doubleClickMilli){
 
+			// The user is now selecting
+			selected = -6;
+			selectStartX = e.clientX;
+			selectStartY = e.clientY;
+			selectEndX = e.clientX;
+			selectEndY = e.clientY;
+
+		// Single click
+		} else {
+
+			// The user is now dragging the canvas
+			selected = -5
+
+		}
+		
 	}
+
+	// Save this time for future double click checks
+	lastClickTime = currentTime;
 
 	// Update the canvas
 	redraw();
@@ -940,13 +1055,13 @@ function fromQASM(qasmString){
 		if (lines[i].length > 0){
 
 			// Ignore comments
-			if (lines[i][0] != "/"){
+			if (lines[i][0] != "/" && lines[i] != "include"){
 
 				// Split into components
 				words = lines[i].replace(/;/g,"").replace(/,/g," ").replace(/\s+/g," ").split(" ");
 
 				// If it's specifying qubit registers 
-				if (words[0] == "qubit"){
+				if (words[0] == "qubit" || words[0] == "qreg"){
 
 					// Determine how many qubits are in this register
 					startInd = words[1].indexOf("[");
@@ -1006,7 +1121,7 @@ function fromQASM(qasmString){
 
 					// Add the gate 
 					targetID = nextID;
-					gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": 0, "attached": controlIDs})
+					gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs})
 					nextID += 1
 					latestX[target] = latestPos+1;
 					
