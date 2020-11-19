@@ -1,0 +1,15 @@
+OPENQASM 3.0;
+qubit q[2];
+h q[0];
+h q[1];
+i q[1];
+cz q[0], q[1];
+i q[0];
+h q[0];
+i q[1];
+h q[1];
+z q[0];
+z q[1];
+cz q[0], q[1];
+h q[0];
+h q[1];
