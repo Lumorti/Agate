@@ -74,7 +74,7 @@ function init(){
 	toolboxHeight = gateSize+20;
 	toolboxWidth = gridX*(gateOptions+1);
 	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
-	toolboxRel = (toolboxOffsetX / gateSize) - 0.33;
+	toolboxRel = (toolboxOffsetX / gridX)+0.20;
 	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+0+toolboxRel, "size": 1, "draggable": false})
 	gates.push({"letter": "X",    "y": 0.33, "x": 0.5+1+toolboxRel, "size": 1, "draggable": false})
 	gates.push({"letter": "Y",    "y": 0.33, "x": 0.5+2+toolboxRel, "size": 1, "draggable": false})
@@ -91,7 +91,6 @@ function init(){
 
 		// Get it and process it
 		asQasm = decodeURIComponent(document.location.hash);
-		asQasm = asQasm.replace(/;/g, ";\n");
 
 		// Load the gates from this
 		fromQASM(asQasm);
@@ -386,9 +385,6 @@ function redraw(){
 	// Find qubit line rectangles needed ([minX,maxX,minY,maxY])
 	for (var i=gateOptions; i<gates.length; i++){
 
-		// Reset all gate sizes 
-		gates[i]["size"] == 1;
-
 		// Only look at non-function gates first
 		if (gates[i]["letter"] != "sub"){
 
@@ -578,7 +574,7 @@ function redraw(){
 		if (gates[i]["letter"] == "sub"){
 
 			// Draw it
-			drawGate(gates[i]["letter"]+gates[i]["funID"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, gates[i]["size"]);
+			drawGate(gates[i]["letter"]+gates[i]["funID"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, 1);
 
 		// If it's a function call 
 		} else if (gates[i]["letter"] == "fun"){
@@ -633,7 +629,6 @@ function redraw(){
 
 			// Convert gate list to URL-ready QASM
 			newURL = toQASM();
-			newURL = newURL.replace(/\n/g, "");
 
 			// Update URL 
 			document.location.hash = encodeURIComponent(newURL);
@@ -1457,7 +1452,7 @@ function toQASM(){
 	// Required at the start of the QASM file
 	qasmString = "OPENQASM 3.0;\n";
 
-	// Figure out which functions need defining TODO
+	// Figure out which functions need defining 
 	var gatesNeeded = [];
 
 	// For each section
@@ -1504,9 +1499,9 @@ function toQASM(){
 		// Add the bit specifying a gate 
 		if (isFunc){
 			qasmString += "gate f" + lineStartEnds[k][4] + " ";
-			qasmString += "q[0]";
+			qasmString += "q0";
 			for (var i=1; i<1+maxQubit-minQubit; i++){
-				qasmString += ",q[" + i + "]";
+				qasmString += ", "+"q" + i;
 			}
 			qasmString += "\n{\n";
 
@@ -1557,7 +1552,11 @@ function toQASM(){
 					}
 
 					// Add the gate
-					qasmString += letter + " q[" + qubit + "];\n";
+					if (isFunc){
+						qasmString += letter + " q" + qubit + ";\n";
+					} else {
+						qasmString += letter + " q[" + qubit + "];\n";
+					}
 
 					// Update offsets
 					latestX[qubit] = xPos;
@@ -1597,31 +1596,52 @@ function toQASM(){
 
 					// Add identities if there's free space 
 					for (var j=0; j<numIdenNeeded; j++){
-						qasmString += "i q[" + closestIndex + "];\n";
+						if (isFunc){
+							qasmString += "i q" + closestIndex + ";\n";
+						} else {
+							qasmString += "i q[" + closestIndex + "];\n";
+						}
 					}
 
 					// Add the ccc...ch
+					var gateName = "";
 					for (var j=0; j<numControls; j++){
 						controlIndex = controlIndices[j];
 						type = copy[controlIndex]["letter"];
 						if (type == "controlFilled"){
 							qasmString += "c";
+							gateName += "c";
 						} else {
 							qasmString += "o";
+							gateName += "o";
 						}
 					}
 
-					// Add the controls q[1], q[2] etc.
+					// Add the main gate and see if this has already been used
 					qasmString += letter + " ";
+					gateName += letter;
+					if (gatesNeeded.indexOf(gateName) < 0){
+						gatesNeeded.push(gateName);
+					}
+
+					// Add the controls q[1], q[2] etc.
 					for (var j=0; j<numControls; j++){
 						controlIndex = controlIndices[j];
 						controlQubit = copy[controlIndex]["y"]-minQubit;
-						qasmString += "q[" + controlQubit + "], ";
+						if (isFunc){
+							qasmString += "q" + controlQubit + ", ";
+						} else {
+							qasmString += "q[" + controlQubit + "], ";
+						}
 						latestX[controlQubit] = xPos;
 					}
 
 					// Add the target
-					qasmString += "q[" + qubit + "];\n";
+					if (isFunc){
+						qasmString += "q" + qubit + ";\n";
+					} else {
+						qasmString += "q[" + qubit + "];\n";
+					}
 					latestX[qubit] = xPos;
 
 				}
@@ -1638,6 +1658,7 @@ function toQASM(){
 	}
 
 	// Add any functions needed TODO
+	console.log(gatesNeeded);
 
 	// Return to be turned into a file
 	return qasmString;
@@ -1675,14 +1696,19 @@ function onFileChange(e){
 function fromQASM(qasmString){
 
 	// Split into the different lines
-	lines = qasmString.split("\n");
+	var lines = qasmString.split("\n");
 
 	// Things to figure out
-	numQubitsRequired = 0;
-	regToQubit = {};
-	latestX = [];
+	var numQubitsRequired = 0;
+	var regToQubit = {};
+	var latestX = [];
+	var currentFunc = -1;
+	var funIDtoOG = {};
+	var gateOffsetX = 0;
+	var gateOffsetYMin = 0;
+	var gateOffsetYMax = 0;
 
-	// Reset gates
+	// Reset things
 	gates = gatesInit.slice();
 	nextID = 0;
 	nextFunctionID = 0;
@@ -1694,7 +1720,7 @@ function fromQASM(qasmString){
 		if (lines[i].length > 0){
 
 			// Ignore comments
-			if (lines[i][0] != "/" && lines[i] != "include"){
+			if (lines[i][0] != "/" && lines[i] != "include" && lines[i] != "{"){
 
 				// Split into components
 				words = lines[i].replace(/;/g,"").replace(/,/g," ").replace(/\s+/g," ").split(" ");
@@ -1708,15 +1734,46 @@ function fromQASM(qasmString){
 					num = parseInt(words[1].substring(startInd+1, endInd));
 					name = words[1].substring(0, startInd);
 
+					// Update the various offsets
+					numQubitsRequired += num;
+					gateOffsetYMin = gateOffsetYMax + 2;
+					gateOffsetYMax = gateOffsetYMin + num;
+
 					// Add to mapping
 					for (var k=0; k<num; k++){
-						regToQubit[name+"["+k+"]"] = numQubitsRequired + k;
+						regToQubit[name+"["+k+"]"] = gateOffsetYMin + k;
+					}
+
+					// Ensure the x-offset array is big enough
+					while (latestX.length < gateOffsetYMax){
 						latestX.push(0);
 					}
-					numQubitsRequired += num;
 
-				// If defining a new gate (function) TODO
-				} else if (words[0] == "gate"){
+				// If defining a new gate (function)
+				} else if (words[0] == "gate" && words[1][0] == "f"){
+
+					// Get the function id
+					funcInd = parseInt(words[1].substr(1));
+					currentFunc = funcInd;
+					funcSize = words.length - 2;
+					funIDtoOG[funcInd] = nextID;
+
+					// Keep track of where each function starts
+					gateOffsetYMin = gateOffsetYMax + 2;
+					gateOffsetYMax = gateOffsetYMin + funcSize + 1;
+
+					// Ensure the x-offset array is big enough
+					while (latestX.length < gateOffsetYMax){
+						latestX.push(0);
+					}
+
+					// Create the subroutine definition gate
+					gates.push({"id": nextID, "size": 1, "letter": "sub", "x": -2, "y": gateOffsetYMin, "draggable": true, "og": -1, "attached": [], "funID": funcInd})
+					nextID += 1
+
+				// If leaving a gate definition
+				} else if (words[0] == "}"){
+					currentFunc = -1;
 
 				// If an identity
 				} else if (words[0] == "i"){
@@ -1730,7 +1787,11 @@ function fromQASM(qasmString){
 
 					// Determine gate info
 					numControls = words[0].split("o").length + words[0].split("c").length - 2;
-					target = regToQubit[words[words.length-1]];
+					if (currentFunc == -1){
+						target = regToQubit[words[words.length-1]];
+					} else {
+						target = 1+gateOffsetYMin + parseInt(words[words.length-1].substr(1));
+					}
 					letter = words[0].substring(numControls, words[0].length);
 
 					// Standard gate names should be uppercase for display
@@ -1739,10 +1800,10 @@ function fromQASM(qasmString){
 					}
 
 					// Determine control info
-					controls = []
-					controlTypes = [];
-					controlIDs = [];
-					latestPos = latestX[target];
+					var controls = []
+					var controlTypes = [];
+					var controlIDs = [];
+					var latestPos = latestX[target];
 					for (var j=1; j<1+numControls; j++){
 						con = regToQubit[words[j]];
 						controls.push(con);
@@ -1756,8 +1817,8 @@ function fromQASM(qasmString){
 					}
 
 					// Determine the min and max qubits this gate affects
-					minQubit = target;
-					maxQubit = target;
+					var minQubit = target;
+					var maxQubit = target;
 					for (var j=0; j<numControls; j++){
 						if (controls[j] < minQubit){
 							minQubit = controls[j];
@@ -1775,14 +1836,18 @@ function fromQASM(qasmString){
 					}
 
 					// Add the gate 
-					targetID = nextID;
-					gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs})
+					var targetID = nextID;
+					if (letter[0] == "f"){
+						funcInd = parseInt(letter.substr(1));
+						gates.push({"id": targetID, "size": 1, "letter": "fun", "x": latestPos, "y": target, "draggable": true, "og": -1, "funID": funcInd, "attached": controlIDs})
+					} else {
+						gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs})
+					}
 					nextID += 1
 					
 					// Add the controls 
 					for (var j=0; j<numControls; j++){
-						con = controls[j];
-						gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": con, "size": 1, "draggable": true, "og": targetID, "attached": []})
+						gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": controls[j], "size": 1, "draggable": true, "og": targetID, "attached": []})
 					}
 
 					// Update the latestX for all those qubits
@@ -1793,13 +1858,21 @@ function fromQASM(qasmString){
 				}
 				
 			}
+
 		}
 
 	}
 
-	// Recenter the camera 
-	offsetX = gateSize*5;
-	offsetY = gateSize*5;
+	// Ensure all functions have their og set
+	for (var i=0; i<gates.length; i++){
+		if (gates[i]["letter"] == "fun" && gates[i]["og"] == -1){
+			gates[i]["og"] = funIDtoOG[gates[i]["funID"]];
+		}
+	}
+
+	// Recenter the camera  TODO
+	offsetX = Math.max((window.innerWidth/2 - gridX*Math.max.apply(Math, latestX)/2), gateSize*2);
+	offsetY = gateSize*3;
 
 }
 
