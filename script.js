@@ -32,14 +32,15 @@ var spacing = 0.8;
 var toolboxWidth = -1;
 var toolboxHeight = -1;
 var maxRecDepth = 5;
+var settingsOpen = false;
 
 // For dragging the canvas around
 var offsetX = 0;
 var offsetY = 0;
 
-// User-modifiable settings
+// User-modifiable settings TODO settings widget
 var drawGrid = true;
-var numRepeats = 100;
+var numRepeats = 1000;
 var cutoffThresh = 3;
 var doubleClickMilli = 300;
 
@@ -70,20 +71,22 @@ function init(){
 	canvas.addEventListener('mouseup', mouseUp);
 
 	// Add the gate summoning buttons 
-	gateOptions = 9;
+	gateOptions = 11;
 	toolboxHeight = gateSize+20;
-	toolboxWidth = gridX*(gateOptions+1);
+	toolboxWidth = gridX*(gateOptions+1)-30;
 	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
-	toolboxRel = (toolboxOffsetX / gridX)+0.20;
-	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+0+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "X",    "y": 0.33, "x": 0.5+1+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "Y",    "y": 0.33, "x": 0.5+2+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "Z",    "y": 0.33, "x": 0.5+3+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "T",    "y": 0.33, "x": 0.5+4+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "S",    "y": 0.33, "x": 0.5+5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "sub",  "y": 0.33, "x": 0.5+6+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "open", "y": 0.27, "x": 0.5+7.1+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "save", "y": 0.43, "x": 0.5+8.1+toolboxRel, "size": 1, "draggable": false})
+	toolboxRel = (toolboxOffsetX / gridX);
+	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "X",    "y": 0.33, "x": 1.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Y",    "y": 0.33, "x": 2.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Z",    "y": 0.33, "x": 3.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "S",    "y": 0.33, "x": 4.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "T",    "y": 0.33, "x": 5.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "sub",  "y": 0.33, "x": 6.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "text",  "y": 0.33, "x": 7.5+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "open", "y": 0.27, "x": 8.6+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "save", "y": 0.43, "x": 9.6+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "settings", "y": 0.33, "x": 10.5+toolboxRel, "size": 1, "draggable": false})
 	gatesInit = gates.slice();
 
 	// If URL contains QASM info, use it
@@ -97,8 +100,8 @@ function init(){
 
 	}
 
-	// First drawing
-	circuitUpdated = true;
+	// First drawing (twice to ensure consistent functions)
+	circuitUpdated = false;
 	redraw();
 	circuitUpdated = true;
 	redraw();
@@ -178,6 +181,33 @@ function drawGate(letter, x, y, isSelected, size){
 		} else {
 			ctx.fillText(letter.substr(3), 16+x-gateSize/2, 35+y-gateSize/2);
 		}
+		
+	// If it's the create text icon TODO
+	} else if (letter == "text"){
+
+		// Draw the text
+		ctx.font = "40px Serif";
+		if (!isSelected){
+			ctx.fillStyle = "#555555";
+		} else {
+			ctx.fillStyle = "#888888";
+		}
+		ctx.fillText("T", x-11, y+15);
+
+	// If it's the open settings icon TODO
+	} else if (letter == "settings"){
+
+		// Colours
+		if (!isSelected){
+			ctx.fillStyle = "#555555";
+		} else {
+			ctx.fillStyle = "#888888";
+		}
+
+		// Draw the hamburger menu icon
+		roundRect(ctx, x-15, y-12, 30, 5, 3, true, false);
+		roundRect(ctx, x-15, y-2, 30, 5, 3, true, false);
+		roundRect(ctx, x-15, y+8, 30, 5, 3, true, false);
 
 	// If it's the load/open icon
 	} else if (letter == "open"){
@@ -544,7 +574,6 @@ function redraw(){
 				if (gateY >= lineStartEnds[j][2]-1 && gateY <= lineStartEnds[j][3]+1 && gateX == lineStartEnds[j][0]-1){
 					lineStartEnds[j][4] = gates[i]["funID"];
 					funcStartEnds.push(lineStartEnds[j].slice());
-					gates[i]["size"] = lineStartEnds[j][3]-lineStartEnds[j][2]+1;
 					break;
 				}
 
@@ -646,8 +675,8 @@ function redraw(){
 					inputs[i][0][2] += "0";
 				}
 
-				// Simulate circuit
-				results[i] = simulateCircuit(inputs[i], gates, lineStartEnds[i], numRepeats, 0);
+				// Simulate circuit 
+				results[i] = simulateCircuit(inputs[i][0], gates, lineStartEnds[i], numRepeats, 0);
 
 			}
 
@@ -708,6 +737,15 @@ function redraw(){
 
 		// Draw a delete icon 
 		drawGate("delete", toolboxOffsetX+toolboxWidth/2, 30, false, 1);
+
+	}
+
+	// Draw the expanded menu TODO
+	if (settingsOpen){
+
+		// Expanded outline 
+		ctx.fillStyle = "#dddddd";
+		roundRect(ctx, toolboxOffsetX+toolboxWidth-60, toolboxHeight+15, 50, 80, 20, true, false);
 
 	}
 	
@@ -816,10 +854,10 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 }
 
 // Given inputs, gates and a box, simulate the circuit and return the states/counts 
-function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
+function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth){
 
 	// Init the results array
-	var results = [];
+	var resultsLocal = [];
 
 	// List of the gates to apply in order
 	var toApply = [];
@@ -840,8 +878,8 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 	for (var i=0; i<repeats; i++){
 	
 		// Start with input state with coefficient 1+0i
-		var state = inputs[0][2];
-		var coeff = [1, 0];
+		var state = inputLocal[2];
+		var coeff = inputLocal[1].slice();
 
 		// For each gate in order
 		for (var j=0; j<sortedGates.length; j++){
@@ -878,7 +916,7 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 					// 50-50 chance
 					var qubitBefore = state[target];
 					if (randNums[randInd] < 0.5){
-						state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target, state.length-1);
+						state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
 					}
 
 					// H|1> = |0>-|1>
@@ -898,24 +936,24 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 				} else if (letter == "X"){
 
 					// Bit flip
-					state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target, state.length-1);
+					state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
 
 				// If it's a Y
 				} else if (letter == "Y"){
 
 					// Update coefficient
 					if (state[target] == "1"){
-						temp = coeff[0];
+						var temp = coeff[0];
 						coeff[0] = -coeff[1];
 						coeff[1] = temp;
 					} else {
-						temp = coeff[0];
+						var temp = coeff[0];
 						coeff[0] = coeff[1];
 						coeff[1] = -temp;
 					}
 
 					// Bit flip
-					state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target, state.length-1);
+					state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
 					
 				// If it's a Z
 				} else if (letter == "Z" && state[target] == "1"){
@@ -928,7 +966,7 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 				} else if (letter == "S" && state[target] == "1"){
 
 					// Update coefficient
-					temp = coeff[0];
+					var temp = coeff[0];
 					coeff[0] = -coeff[1];
 					coeff[1] = temp;
 				
@@ -936,8 +974,8 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 				} else if (letter == "T" && state[target] == "1"){
 
 					// Update coefficient
-					a = coeff[0];
-					b = coeff[1];
+					var a = coeff[0];
+					var b = coeff[1];
 					coeff[0] = (a-b) / Math.sqrt(2);
 					coeff[1] = (a+b) / Math.sqrt(2);
 
@@ -945,18 +983,18 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 				} else if (letter == "fun"){
 					
 					// If gate is valid
-					rectInd = indFromFunID(sortedGates[j]["funID"]);
+					var rectInd = indFromFunID(sortedGates[j]["funID"]);
 					if (rectInd >= 0 && recDepth < maxRecDepth){
 
 						// Prepare the next input state
 						var finInd = target + sortedGates[j]["size"]-1;
-						var newInputs = [[100, coeff, state.substring(target, finInd+1)]];
+						var newInput = [100, coeff, state.substring(target, finInd+1)];
 
 						// Sim the function section once
-						var newResults = simulateCircuit(newInputs, gates, lineStartEnds[rectInd], 1, recDepth+1);
+						var newResults = simulateCircuit(newInput, gates, lineStartEnds[rectInd], 1, recDepth+1);
 
 						// Update the main state 
-						state = state.substring(0, target) + newResults[0][2] + state.substring(finInd, state.length-1);
+						state = state.substring(0, target) + newResults[0][2] + state.substring(finInd+1, state.length);
 						coeff = newResults[0][1];
 
 					}
@@ -968,43 +1006,48 @@ function simulateCircuit(inputs, gates, boundingBox, repeats, recDepth){
 		}
 
 		// Check if this state has already been added
-		exists = -1;
-		for (var k=0; k<results.length; k++){
-			if (results[k][2] == state){
+		var exists = -1;
+		for (var k=0; k<resultsLocal.length; k++){
+			if (resultsLocal[k][2] == state){
 				exists = k;
 			}
 		}
 
 		// If it doesn't exist, add it
 		if (exists < 0){
-			results.push([1, coeff, state]);
+			resultsLocal.push([1, coeff, state]);
 
 		// Otherwise, increment the count 
 		} else {
-			results[exists][0] += 1;
-			results[exists][1][0] += coeff[0];
-			results[exists][1][1] += coeff[1];
+			resultsLocal[exists][0] += 1;
+			resultsLocal[exists][1][0] += coeff[0];
+			resultsLocal[exists][1][1] += coeff[1];
 		}
 
 	}
 
-	// Get mag of total vector and normalise each coefficient
-	var totalMag = 0;
-	for (var i=0; i<results.length; i++){
-		results[i][0] = Math.sqrt(results[i][1][0]**2+results[i][1][1]**2);
-		results[i][1][0] /= results[i][0];
-		results[i][1][1] /= results[i][0];
-		totalMag += results[i][0];
+	// Only normalise the top-level results
+	if (recDepth == 0){
+		
+		// Get mag of total vector and normalise each coefficient
+		var totalMag = 0;
+		for (var i=0; i<resultsLocal.length; i++){
+			resultsLocal[i][0] = Math.sqrt(resultsLocal[i][1][0]**2+resultsLocal[i][1][1]**2);
+			resultsLocal[i][1][0] /= resultsLocal[i][0];
+			resultsLocal[i][1][1] /= resultsLocal[i][0];
+			totalMag += resultsLocal[i][0];
+		}
+
+		// Turn counts into probabilities
+		for (var i=0; i<resultsLocal.length; i++){
+			resultsLocal[i][0] = Math.round(100 * (resultsLocal[i][0] / totalMag));
+		}
+
 	}
 
-	// Turn counts into probabilities
-	for (var i=0; i<results.length; i++){
-		results[i][0] = Math.round(100 * (results[i][0] / totalMag));
-	}
-	
 	// Sort the states in probability order and return
-	results.sort(function(a, b){return b[0] - a[0];});
-	return results;
+	resultsLocal.sort(function(a, b){return b[0] - a[0];});
+	return resultsLocal;
 
 }
 
@@ -1407,6 +1450,15 @@ function mouseDown(e){
 			if (gates[hover]["draggable"]){
 				selected = hover;
 
+			// If it's the text icon TODO
+			} else if (gates[hover]["letter"] == "text"){
+
+			// If it's the settings icon TODO
+			} else if (gates[hover]["letter"] == "settings"){
+
+				// Toggle the menu
+				settingsOpen = !settingsOpen;
+
 			// If it's the save icon 
 			} else if (gates[hover]["letter"] == "save"){
 
@@ -1601,8 +1653,12 @@ function toQASM(){
 					}
 					qasmSubstring += ";\n";
 
-					// Update offsets
-					latestX[qubit] = xPos;
+					// Update the offset between the min and max
+					minGateQubit = qubit;
+					maxGateQubit = qubit+copy[i]["size"]-1;
+					for (var j=minGateQubit; j<maxGateQubit+1; j++){
+						latestX[j] = xPos;
+					}
 
 				// With controls
 				} else {
@@ -1746,8 +1802,7 @@ function onFileChange(e){
 		// Load the QASM 
 		fromQASM(text);
 
-		// Re-sim and redraw
-		circuitUpdated = true;
+		// Re-sim and redraw (twice just to ensure consistent functions)
 		redraw();
 		circuitUpdated = true;
 		redraw();
