@@ -16,7 +16,7 @@
 	</style>
 	<script src="script.js"></script>
 </head>
-<body onload="init()">
+<body onresize="init()" onload="init()">
 	<canvas id="view"></canvas>
 	<input id="fileIn" onchange="onFileChange(event);" type="file" style="display:none;" accept=".qasm"/>
 </body>
