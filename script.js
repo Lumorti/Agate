@@ -25,15 +25,20 @@ var qubitsWithGates = [];
 var funcStartEnds = [];
 
 // General settings
-var gateSize = 50;
-var gridY = 60;
-var gridX = 60;
+var gateSizeFixed = 50;
+var gridYFixed = 60;
+var gridXFixed = 60;
+var fontSize = 35;
+var gateSize = gateSizeFixed;
+var gridY = gridYFixed;
+var gridX = gridXFixed;
 var spacing = 0.8;
 var toolboxWidth = -1;
 var toolboxHeight = -1;
 var maxRecDepth = 5;
 var settingsOpen = false;
 var helpOpen = true;
+var zoomSpeed = 0.08;
 
 // For dragging the canvas around
 var offsetX = 0;
@@ -44,10 +49,12 @@ var drawGrid = true;
 var numRepeats = 1000;
 var cutoffThresh = 3;
 var doubleClickMilli = 300;
+var milliForTooltip = 500;
 
 // For timings
 var lastClickTime = -1;
 var lastSimTime = -1;
+var hoverStartTime = -1;
 var circuitUpdated = true;
 var inputs = [[]];
 var results = [[]];
@@ -58,6 +65,10 @@ var randNums = [];
 for (var i=0; i<numRands; i++){
 	randNums.push(Math.random());
 }
+
+// TODO tooltips
+// TODO load presets
+// TODO mobile optimisations
 
 // Called on body ready
 function init(){
@@ -70,6 +81,7 @@ function init(){
 	canvas.addEventListener('mousemove', mouseMove);
 	canvas.addEventListener('mousedown', mouseDown);
 	canvas.addEventListener('mouseup', mouseUp);
+	canvas.addEventListener('wheel', mouseWheel);
 
 	// Add the gate summoning buttons 
 	gateOptions = 10;
@@ -113,13 +125,13 @@ function init(){
 }
 
 // Given a letter and a position, draw a gate
-function drawGate(letter, x, y, isSelected, size){
+function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 
 	// If it's a filled control
 	if (letter == "controlFilled"){
 
 		// Draw the circle
-		ctx.lineWidth = 5;
+		ctx.lineWidth = fontSize/7;
 		if (!isSelected){
 			ctx.fillStyle = "#555555";
 			ctx.strokeStyle = "#555555";
@@ -136,7 +148,7 @@ function drawGate(letter, x, y, isSelected, size){
 	} else if (letter == "controlUnfilled"){
 
 		// Draw the circle
-		ctx.lineWidth = 5;
+		ctx.lineWidth = fontSize/7;
 		if (!isSelected){
 			ctx.strokeStyle = "#555555";
 		} else {
@@ -151,21 +163,46 @@ function drawGate(letter, x, y, isSelected, size){
 	// If it's an subroutine definition
 	} else if (letter.substr(0,3) == "sub"){
 
-		// Draw the box
-		if (!isSelected){
-			ctx.fillStyle = "#16a300";
+		// If not a toolbar gate
+		if (!fixedSize){
+
+			// Draw the box
+			if (!isSelected){
+				ctx.fillStyle = "#16a300";
+			} else {
+				ctx.fillStyle = "#107800";
+			}
+			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+			
+			// Draw the letter
+			ctx.font = (fontSize*0.9)+"px Arial";
+			ctx.fillStyle = "#ffffff";
+			if (letter.length > 3){
+				ctx.fillText(letter.substr(3), gridX*0.28+x-gateSize/2, gridY*0.59+y-gateSize/2);
+			} else {
+				ctx.fillText("F", gridX*0.28+x-gateSize/2, gridY*0.59+y-gateSize/2);
+			}
+
+		// If a toolbar gate (and thus fixed sizes should be used)
 		} else {
-			ctx.fillStyle = "#107800";
-		}
-		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
-		
-		// Draw the letter
-		ctx.font = "30px Arial";
-		ctx.fillStyle = "#ffffff";
-		if (letter.length > 3){
-			ctx.fillText(letter.substr(3), 16+x-gateSize/2, 35+y-gateSize/2);
-		} else {
-			ctx.fillText("F", 16+x-gateSize/2, 35+y-gateSize/2);
+
+			// Draw the box
+			if (!isSelected){
+				ctx.fillStyle = "#16a300";
+			} else {
+				ctx.fillStyle = "#107800";
+			}
+			ctx.fillRect(x-gateSizeFixed/2, y-gateSizeFixed/2, gateSizeFixed, gateSizeFixed+gridY*(size-1));
+			
+			// Draw the letter
+			ctx.font = "30px Arial";
+			ctx.fillStyle = "#ffffff";
+			if (letter.length > 3){
+				ctx.fillText(letter.substr(3), gridXFixed*0.28+x-gateSizeFixed/2, gridYFixed*0.59+y-gateSizeFixed/2);
+			} else {
+				ctx.fillText("F", gridXFixed*0.28+x-gateSizeFixed/2, gridYFixed*0.59+y-gateSizeFixed/2);
+			}
+
 		}
 
 	// If it's an subroutine call 
@@ -180,12 +217,12 @@ function drawGate(letter, x, y, isSelected, size){
 		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
 		
 		// Draw the letter
-		ctx.font = "30px Arial";
+		ctx.font = (fontSize*0.9)+"px Arial";
 		ctx.fillStyle = "#ffffff";
 		if (letter == "?"){
-			ctx.fillText("?", 16+x-gateSize/2, 35+y-gateSize/2);
+			ctx.fillText("?", 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
 		} else {
-			ctx.fillText(letter.substr(3), 16+x-gateSize/2, 35+y-gateSize/2);
+			ctx.fillText(letter.substr(3), 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
 		}
 		
 	// If it's the create text icon 
@@ -204,12 +241,12 @@ function drawGate(letter, x, y, isSelected, size){
 	} else if (letter.substr(0,4) == "text"){
 
 		// Font and colours
-		ctx.font = "35px Arial";
+		ctx.font = fontSize + "px Arial";
 
 		// Fill a box behind
 		var textWidth = ctx.measureText(letter.substr(4)).width;
 		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(x-15, y-gridY/2+1, textWidth+10, gridY-2);
+		ctx.fillRect(x-gridX*0.25, y-gridY/2+1, textWidth+gridX*0.17, gridY-2);
 
 		// Draw the text
 		if (!isSelected){
@@ -217,7 +254,7 @@ function drawGate(letter, x, y, isSelected, size){
 		} else {
 			ctx.fillStyle = "#888888";
 		}
-		ctx.fillText(letter.substr(4), x-11, y+13);
+		ctx.fillText(letter.substr(4), x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
 
 	// If it's the open settings icon 
 	} else if (letter == "settings"){
@@ -243,8 +280,8 @@ function drawGate(letter, x, y, isSelected, size){
 		frontCol = "#d49f00";
 
 		// To save adding this everywhere
-		x = x-gateSize/2;
-		y = y-gateSize/2+10;
+		x = x-gateSizeFixed/2;
+		y = y-gateSizeFixed/2+10;
 
 		// Draw the back bit of the folder
 		ctx.fillStyle = backCol;
@@ -297,8 +334,8 @@ function drawGate(letter, x, y, isSelected, size){
 	} else if (letter == "save"){
 
 		// To save adding this everywhere
-		x = x-gateSize/2;
-		y = y-gateSize/2;
+		x = x-gateSizeFixed/2;
+		y = y-gateSizeFixed/2;
 
 		// Main plastic bit
 		ctx.fillStyle = "#00bbd4";
@@ -351,7 +388,7 @@ function drawGate(letter, x, y, isSelected, size){
 	} else if (letter == "delete"){
 
 		// To save adding this everywhere
-		x = x-gateSize/2;
+		x = x-gateSizeFixed/2;
 
 		// Colours
 		ctx.fillStyle = "#55555588";
@@ -399,13 +436,30 @@ function drawGate(letter, x, y, isSelected, size){
 			}
 		}
 
-		// Draw the box
-		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+		// If allowed to scale with zoom
+		if (!fixedSize){
 
-		// Draw the letter
-		ctx.font = "30px Arial";
-		ctx.fillStyle = "#ffffff";
-		ctx.fillText(letter, 15+x-gateSize/2, 35+y-gateSize/2);
+			// Draw the box
+			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+
+			// Draw the letter
+			ctx.font = (fontSize*0.9) + "px Arial";
+			ctx.fillStyle = "#ffffff";
+			ctx.fillText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2);
+
+		// If part of the toolbar or something not scalable
+		} else {
+			
+			// Draw the box
+			ctx.fillRect(x-gateSizeFixed/2, y-gateSizeFixed/2, gateSizeFixed, gateSizeFixed+gridY*(size-1));
+
+			// Draw the letter
+			ctx.font = "30px Arial";
+			ctx.fillStyle = "#ffffff";
+			ctx.fillText(letter, 15+x-gateSizeFixed/2, 35+y-gateSizeFixed/2);
+
+		}
+
 
 	}
 
@@ -420,7 +474,7 @@ function redraw(){
 
 	// Draw grid lines
 	if (drawGrid){
-		ctx.lineWidth = 1;
+		ctx.lineWidth = fontSize/35;
 		ctx.strokeStyle = "#aaaaaa";
 		for (var x=offsetX%gridX; x<ctx.canvas.width; x+=gridX){
 			ctx.beginPath();
@@ -610,7 +664,7 @@ function redraw(){
 	for (var i=0; i<lineStartEnds.length; i++){
 		for (var y=lineStartEnds[i][2]; y<=lineStartEnds[i][3]; y++){
 			if (qubitsWithGates.indexOf(y) >= 0){
-				ctx.lineWidth = 5;
+				ctx.lineWidth = fontSize/7;
 				ctx.strokeStyle = "#aaaaaa";
 				ctx.beginPath();
 				ctx.moveTo((lineStartEnds[i][0])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
@@ -621,7 +675,7 @@ function redraw(){
 
 		// If it's a function 
 		if (lineStartEnds[i][4] != -1){
-			ctx.lineWidth = 10;
+			ctx.lineWidth = fontSize/3.5;
 			ctx.strokeStyle = "#16a300";
 			ctx.beginPath();
 			ctx.moveTo((lineStartEnds[i][0]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
@@ -638,7 +692,7 @@ function redraw(){
 	// Draw the control lines
 	for (var i=gateOptions; i<gates.length; i++){
 		for (var j=0; j<gates[i]["attached"].length; j++){
-			ctx.lineWidth = 5;
+			ctx.lineWidth = fontSize/7;
 			ctx.strokeStyle = "#555555";
 			ctx.beginPath();
 			ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2);
@@ -706,7 +760,7 @@ function redraw(){
 		}
 
 		// If not empty
-		if (lineStartEnds.length > 0){
+		if (gates.length > gateOptions){
 
 			// Convert gate list to URL-ready QASM
 			newURL = toQASM();
@@ -756,7 +810,7 @@ function redraw(){
 	
 	// Draw the toolbox gates
 	for (var i=0; i<gateOptions; i++){
-		drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2, gates[i]["y"]*gridY+gateSize/2, i==hover, gates[i]["size"]);
+		drawGate(gates[i]["letter"], gates[i]["x"]*gridXFixed+gateSizeFixed/2, gates[i]["y"]*gridYFixed+gateSizeFixed/2, i==hover, gates[i]["size"], true);
 	}
 
 	// If dragging a gate, change the toolbar
@@ -802,16 +856,16 @@ function redraw(){
 		if (gates[i]["letter"] != "fun"){
 
 			// Draw it
-			drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, gates[i]["size"]);
+			drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, true, gates[i]["size"]);
 
 		// If it's a function call 
 		} else {
 
 			// Draw it normally
 			if (gates[i]["rec"]){
-				drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, gates[i]["size"]);
+				drawGate(gates[i]["letter"], gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, true, gates[i]["size"]);
 			} else {
-				drawGate("?", gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, isSel, gates[i]["size"]);
+				drawGate("?", gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, true, gates[i]["size"]);
 			}
 
 		}
@@ -899,7 +953,7 @@ function redraw(){
 function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 
 	// Style parameters
-	ctx.lineWidth = 5;
+	ctx.lineWidth = fontSize / 7;
 	ctx.strokeStyle = "#555555";
 	ctx.fillStyle = ctx.strokeStyle;
 
@@ -916,9 +970,9 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 				if (qubitsWithGates.indexOf(y+j) >= 0){
 
 					// Draw that qubit's state
-					textX = (x+i)*gridX+offsetX+16;
-					textY = (y+j)*gridY+offsetY+gridY/2+6;
-					ctx.font = "35px Arial";
+					textX = (x+i)*gridX+offsetX+gridX*0.27;
+					textY = (y+j)*gridY+offsetY+gridY*0.6;
+					ctx.font = fontSize + "px Arial";
 					ctx.fillText(states[i][2][j], textX, textY);
 
 				}
@@ -926,8 +980,8 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 			}
 
 			// To simplify the code
-			leftX = (x+i)*gridX+offsetX+gateSize/2-gridX/2+5;
-			rightX = (x+i)*gridX+offsetX+gateSize/2+gridX/2-5;
+			leftX = (x+i)*gridX+offsetX+gateSize/2-gridX*0.4;
+			rightX = (x+i)*gridX+offsetX+gateSize/2+gridX*0.4;
 			topY = y*gridY+offsetY-(gridY-gateSize)/2;
 			bottomY = (y+states[i][2].length)*gridY+offsetY-(gridY-gateSize)/2;
 
@@ -939,20 +993,20 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 
 			// Probability estimate at the top
 			if (states[i][0] >= 100){
-				textX = (x+i)*gridX+offsetX+5;
+				textX = (x+i)*gridX+offsetX+gridX*0.05;
 			} else if (states[i][0] >= 10) {
-				textX = (x+i)*gridX+offsetX+12;
+				textX = (x+i)*gridX+offsetX+gridX*0.15;
 			} else {
-				textX = (x+i)*gridX+offsetX+15;
+				textX = (x+i)*gridX+offsetX+gridX*0.2;
 			}
 			textY = (y-1)*gridY+offsetY+gridY/2+8;
-			ctx.font = "15px Arial";
+			ctx.font = (fontSize/2)+"px Arial";
 			ctx.fillText(states[i][0] + "%", textX, textY);
 
 			// Draw the bottom part of the ket
 			ctx.beginPath();
 			ctx.moveTo(leftX, bottomY);
-			ctx.lineTo((leftX+rightX)/2, bottomY+20);
+			ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
 			ctx.lineTo(rightX, bottomY);
 			ctx.stroke();
 
@@ -1310,7 +1364,11 @@ function mouseMove(e){
 	} else if (selected >= 0 && selectionArray.length > 0){
 
 		// Determine the deltas from the selected gate
-		deltaX = Math.round((e.clientX - offsetX - gateSize / 2) / gridX) - gates[selected]["x"];
+		if (gates[selected]["letter"].substring(0,4) == "text"){
+			deltaX = Math.round(-dragOffset + (e.clientX - offsetX - gateSize / 2) / gridX) - gates[selected]["x"];
+		} else {
+			deltaX = Math.round((e.clientX - offsetX - gateSize / 2) / gridX) - gates[selected]["x"];
+		}
 		deltaY = Math.round((e.clientY - offsetY - gateSize / 2) / gridY) - gates[selected]["y"];
 
 		// Show the delete bar
@@ -1388,18 +1446,26 @@ function mouseMove(e){
 	// Otherwise check for hover
 	} else {
 
-		// Check over every gate (draggable or not)
+		// Check over every gate (draggable or not) 
 		canvas.style.cursor = "initial";
 		hover = -1;
 		for (var i=0; i<gates.length; i++){
 
 			// If it's a fixed gate, don't add the offset
 			if (gates[i]["draggable"]){
-				gx = gates[i]["x"]*gridX+offsetX;
-				gy = gates[i]["y"]*gridY+offsetY;
+				var gxMin = gates[i]["x"]*gridX+offsetX;
+				var gyMin = gates[i]["y"]*gridY+offsetY;
+				var gxMax = gxMin + gateSize;
+				var gyMax = gyMin + gateSize;
+				var perSizeY = gridY;
+				var perSizeX = gridX;
 			} else {
-				gx = gates[i]["x"]*gridX;
-				gy = gates[i]["y"]*gridY;
+				var gxMin = gates[i]["x"]*gridXFixed;
+				var gyMin = gates[i]["y"]*gridYFixed;
+				var gxMax = gxMin + gateSizeFixed;
+				var gyMax = gyMin + gateSizeFixed;
+				var perSizeY = gridYFixed;
+				var perSizeX = gridXFixed;
 			}
 
 			// If it's not a text object 
@@ -1407,7 +1473,7 @@ function mouseMove(e){
 
 				// Check for mouse within gate area 
 				for (var j=0; j<gates[i]["size"]; j++){
-					if (e.clientX > gx && e.clientX < gx+gateSize && e.clientY > gy && e.clientY < gy+gateSize+j*gridY){
+					if (e.clientX > gxMin && e.clientX < gxMax && e.clientY > gyMin && e.clientY < gyMax+j*perSizeY){
 						canvas.style.cursor = "pointer";
 						hover = i;
 						dragOffset = j;
@@ -1420,7 +1486,7 @@ function mouseMove(e){
 
 				// Check for mouse within gate area 
 				for (var j=0; j<gates[i]["size"]; j++){
-					if (e.clientX > gx && e.clientX < gx+gateSize+j*gridX && e.clientY > gy && e.clientY < gy+gateSize){
+					if (e.clientX > gxMin && e.clientX < gxMax+j*perSizeX && e.clientY > gyMin && e.clientY < gyMax){
 						canvas.style.cursor = "pointer";
 						hover = i;
 						dragOffset = j;
@@ -1430,6 +1496,11 @@ function mouseMove(e){
 
 			}
 
+		}
+
+		// TODO
+		if (hover >= 0){
+			hoverStartTime = new Date().getTime();
 		}
 
 	}
@@ -1608,6 +1679,11 @@ function mouseDown(e){
 		// Single click
 		} else {
 
+			// If selecting something not already selected
+			if (selectionArray.indexOf(hover) == -1){
+				selectionArray = [];
+			}
+			
 			// If it can be dragged, select it
 			if (gates[hover]["draggable"]){
 				selected = hover;
@@ -2022,8 +2098,14 @@ function fromQASM(qasmString){
 	var currentType = -1;
 	for (var i=1; i<lines.length; i++){
 		
+		// If it's a comment, split without replacing commas
+		if (lines[i].substr(0,2) == "//"){
+			var words = lines[i].replace(/\s+/g," ").split(" ");
+
 		// Split into components
-		var words = lines[i].replace(/;/g,"").replace(/,/g," ").replace(/\s+/g," ").split(" ");
+		} else {
+			var words = lines[i].replace(/;/g,"").replace(/,/g," ").replace(/\s+/g," ").split(" ");
+		}
 
 		// Load comments as text objects 
 		if (words[0] == "//" && words.length >= 4){
@@ -2039,7 +2121,7 @@ function fromQASM(qasmString){
 			if (!isNaN(xPos) && !isNaN(yPos) && text.length > 0){
 
 				// Add the gate object
-				gates.push({"id": nextID, "letter": "text"+text, "x": xPos, "y": yPos, "size": Math.round(textWidth/gridX), "draggable": true, "attached":[]})
+				gates.push({"id": nextID, "letter": "text"+text, "x": xPos, "y": yPos, "size": Math.max(1,Math.round(textWidth/gridX)), "draggable": true, "attached":[]})
 				nextID += 1;
 
 			}
@@ -2343,6 +2425,52 @@ function fromQASM(qasmString){
 	}
 	offsetX = Math.max((3-minX)*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
 	offsetY = Math.max((3-minY)*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - minY*gridY);
+
+}
+
+// Triggered when the scroll wheel is moved
+function mouseWheel(e){
+
+	// If scrolling up 
+	if (e.deltaY < 0){
+
+		// Figure out the zoom point before scaling
+		var xs = (e.clientX - offsetX) / (gridX / gridXFixed);
+		var ys = (e.clientY - offsetY) / (gridY / gridYFixed);
+
+		// Expand the dimensions to zoom in
+		var zoomIn = 1.0 + zoomSpeed;
+		gridY *= zoomIn;
+		gridX *= zoomIn;
+		gateSize *= zoomIn;
+		fontSize *= zoomIn;
+
+		// Update now the scale has changed
+		offsetX = e.clientX - xs * (gridX / gridXFixed);
+		offsetY = e.clientY - ys * (gridY / gridYFixed);
+	
+	// If scrolling down
+	} else {
+
+		// Figure out the zoom point before scaling
+		var xs = (e.clientX - offsetX) / (gridX / gridXFixed);
+		var ys = (e.clientY - offsetY) / (gridY / gridYFixed);
+
+		// Contract the dimensions to zoom ou
+		var zoomOut = 1.0 - zoomSpeed;
+		gridY *= zoomOut;
+		gridX *= zoomOut;
+		gateSize *= zoomOut;
+		fontSize *= zoomOut;
+
+		// Update now the scale has changed
+		offsetX = e.clientX - xs * (gridX / gridXFixed);
+		offsetY = e.clientY - ys * (gridY / gridYFixed);
+	
+	}
+
+	// Redraw everything now the sizes have changed
+	redraw();
 
 }
 
