@@ -33,8 +33,8 @@ var gateSize = gateSizeFixed;
 var gridY = gridYFixed;
 var gridX = gridXFixed;
 var spacing = 0.8;
-var toolboxWidth = -1;
-var toolboxHeight = -1;
+var toolbarWidth = -1;
+var toolbarHeight = -1;
 var maxRecDepth = 5;
 var settingsOpen = false;
 var helpOpen = true;
@@ -43,6 +43,20 @@ var zoomSpeed = 0.08;
 // For dragging the canvas around
 var offsetX = 0;
 var offsetY = 0;
+
+// For the tips window
+var nextPrevHover = 0;
+var leftDims = [0, 0, 0, 0];
+var rightDims = [0, 0, 0, 0];
+var tipInd = 0;
+var tips = [
+	["H",               "Create gates by dragging them",      "from the toolbar at the top"],
+	["controlFilled",   "Double-click and drag on a",         "gate to create a control"],
+	["controlUnfilled", "Double-click on controls",           "to toggle them"],
+	["sub",             "Function definition gates",          "snap to existing circuits"],
+	["fun0",            "Double-click and drag a function",   "to create a call gate"],
+	["X",               "Double-click and drag nothing",      "to select multiple gates"],
+];
 
 // User-modifiable settings 
 var drawGrid = true;
@@ -66,12 +80,12 @@ for (var i=0; i<numRands; i++){
 	randNums.push(Math.random());
 }
 
-// TODO tooltips
 // TODO load presets
+// TODO tutorial presets
 // TODO mobile optimisations
 
 // Called on body ready
-function init(){
+function init(recalc){
 
 	// Initialise the canvas
 	canvas = document.getElementById("view");
@@ -83,23 +97,29 @@ function init(){
 	canvas.addEventListener('mouseup', mouseUp);
 	canvas.addEventListener('wheel', mouseWheel);
 
+	// And for touch events
+	canvas.addEventListener("touchstart", touchHandler, true);
+    canvas.addEventListener("touchmove", touchHandler, true);
+    canvas.addEventListener("touchend", touchHandler, true);
+    canvas.addEventListener("touchcancel", touchHandler, true);
+
 	// Add the gate summoning buttons 
 	gateOptions = 10;
-	toolboxHeight = gateSize+20;
-	toolboxWidth = gridX*(gateOptions+1)-20;
-	toolboxOffsetX = window.innerWidth / 2 - toolboxWidth / 2;
-	toolboxRel = (toolboxOffsetX / gridX);
+	toolbarHeight = gateSizeFixed+20;
+	toolbarWidth = gridXFixed*(gateOptions+1)-20;
+	toolbarOffsetX = window.innerWidth / 2 - toolbarWidth / 2;
+	toolbarRel = (toolbarOffsetX / gridXFixed);
 	gates = [];
-	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "X",    "y": 0.33, "x": 1.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "Y",    "y": 0.33, "x": 2.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "Z",    "y": 0.33, "x": 3.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "S",    "y": 0.33, "x": 4.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "T",    "y": 0.33, "x": 5.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "sub",  "y": 0.33, "x": 6.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "text",  "y": 0.33, "x": 7.5+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "open", "y": 0.27, "x": 8.6+toolboxRel, "size": 1, "draggable": false})
-	gates.push({"letter": "save", "y": 0.43, "x": 9.6+toolboxRel, "size": 1, "draggable": false})
+	gates.push({"letter": "H",    "y": 0.33, "x": 0.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "X",    "y": 0.33, "x": 1.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Y",    "y": 0.33, "x": 2.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "Z",    "y": 0.33, "x": 3.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "S",    "y": 0.33, "x": 4.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "T",    "y": 0.33, "x": 5.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "sub",  "y": 0.33, "x": 6.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "text",  "y": 0.33, "x": 7.5+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "open", "y": 0.27, "x": 8.6+toolbarRel, "size": 1, "draggable": false})
+	gates.push({"letter": "save", "y": 0.43, "x": 9.6+toolbarRel, "size": 1, "draggable": false})
 	gatesInit = gates.slice();
 
 	// If URL contains QASM info, use it
@@ -119,8 +139,10 @@ function init(){
 	// First drawing (twice to ensure consistent functions)
 	circuitUpdated = false;
 	redraw();
-	circuitUpdated = true;
-	redraw();
+	if (recalc){
+		circuitUpdated = true;
+		redraw();
+	}
 
 }
 
@@ -482,7 +504,7 @@ function redraw(){
 			ctx.lineTo(x-(gridX/2)+(gateSize/2), ctx.canvas.height);
 			ctx.stroke();
 		}
-		for (var y=offsetY%gridY; y<ctx.canvas.width; y+=gridY){
+		for (var y=offsetY%gridY; y<ctx.canvas.height; y+=gridY){
 			ctx.beginPath();
 			ctx.moveTo(0, y-(gridY/2)+(gateSize/2));
 			ctx.lineTo(ctx.canvas.width, y-(gridY/2)+(gateSize/2));
@@ -768,6 +790,11 @@ function redraw(){
 			// Update URL 
 			document.location.hash = encodeURIComponent(newURL);
 
+		} else {
+
+			// Reset URL 
+			document.location.hash = "";
+
 		}
 
 		// Circuit no longer needs re-simulating
@@ -804,11 +831,11 @@ function redraw(){
 		}
 	}
 
-	// Toolbox outline 
+	// Toolbar outline 
 	ctx.fillStyle = "#dddddd";
-	roundRect(ctx, toolboxOffsetX, 10, toolboxWidth, toolboxHeight, 20, true, false);
+	roundRect(ctx, toolbarOffsetX, 10, toolbarWidth, toolbarHeight, 20, true, false);
 	
-	// Draw the toolbox gates
+	// Draw the toolbar gates
 	for (var i=0; i<gateOptions; i++){
 		drawGate(gates[i]["letter"], gates[i]["x"]*gridXFixed+gateSizeFixed/2, gates[i]["y"]*gridYFixed+gateSizeFixed/2, i==hover, gates[i]["size"], true);
 	}
@@ -818,10 +845,10 @@ function redraw(){
 
 		// Fade everything
 		ctx.fillStyle = "#aaaaaa55";
-		roundRect(ctx, toolboxOffsetX, 10, toolboxWidth, toolboxHeight, 20, true, false);
+		roundRect(ctx, toolbarOffsetX, 10, toolbarWidth, toolbarHeight, 20, true, false);
 
 		// Draw a delete icon 
-		drawGate("delete", toolboxOffsetX+toolboxWidth/2, 30, false, 1);
+		drawGate("delete", toolbarOffsetX+toolbarWidth/2, 30, false, 1);
 
 	}
 
@@ -834,15 +861,15 @@ function redraw(){
 
 		// Expanded outline 
 		ctx.fillStyle = "#dddddd";
-		roundRect(ctx, toolboxOffsetX+toolboxWidth-settingsWidth, toolboxHeight+15, settingsWidth, settingsHeight, 20, true, false);
+		roundRect(ctx, toolbarOffsetX+toolbarWidth-settingsWidth, toolbarHeight+15, settingsWidth, settingsHeight, 20, true, false);
 
 		// Repeats 
 		ctx.font = "25px Arial";
 		ctx.fillStyle = "#000000";
-		ctx.fillText("Repeats", toolboxOffsetX+toolboxWidth-settingsWidth+40, toolboxHeight+60);
+		ctx.fillText("Repeats", toolbarOffsetX+toolbarWidth-settingsWidth+40, toolbarHeight+60);
 		ctx.font = "25px Arial";
 		ctx.fillStyle = "#000000";
-		ctx.fillText(numRepeats, toolboxOffsetX+toolboxWidth-settingsWidth+180, toolboxHeight+60);
+		ctx.fillText(numRepeats, toolbarOffsetX+toolbarWidth-settingsWidth+180, toolbarHeight+60);
 
 	}
 	
@@ -885,65 +912,64 @@ function redraw(){
 	if (helpOpen){
 
 		var helpWidth = 500;
-		var helpHeight = 650;
+		var helpHeight = 300;
 		var helpLeft = window.innerWidth / 2 - helpWidth / 2;
-		var helpTop = 150;
+		var helpTop = window.innerHeight / 2 - helpHeight / 2;
 
+		// Draw the outline
 		ctx.fillStyle = "#dddddd";
 		roundRect(ctx, helpLeft, helpTop, helpWidth, helpHeight, 20, true, false);
 
+		// Draw the title inner rect
 		ctx.fillStyle = "#eeeeee";
 		roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-60, 80, 10, true, false);
 
+		// Draw the title text
 		ctx.font = "35px bold Arial";
 		ctx.fillStyle = "#e3970b";
 		ctx.fillStyle = "#37abc8";
 		ctx.fillStyle = "#555555";
-		ctx.fillText("Welcome to Agate!", helpLeft+75, helpTop+85);
+		ctx.fillText("Welcome to Agate!", helpLeft+80, helpTop+85);
 
-		// "Create gates by dragging them from the toolbar at the top"
-		var sectionHeight = 170;
-		drawGate("H", helpLeft+70, helpTop+sectionHeight, false, 1);
+		// Draw the current tip 
+		drawGate(tips[tipInd][0], helpLeft+75, helpTop+170, false, 1);
 		ctx.font = "20px bold Arial";
 		ctx.fillStyle = "#555555";
-		ctx.fillText("Create gates by dragging them", helpLeft+130, helpTop+sectionHeight-7);
-		ctx.fillText("from the toolbar at the top", helpLeft+130, helpTop+sectionHeight+25);
+		ctx.fillText(tips[tipInd][1], helpLeft+125, helpTop+160);
+		ctx.fillText(tips[tipInd][2], helpLeft+125, helpTop+195);
 
-		// "Create controls from a gate by double-clicking and dragging" 
-		var sectionHeight = 270;
-		drawGate("controlFilled", helpLeft+70, helpTop+sectionHeight, false, 1);
-		ctx.font = "20px bold Arial";
-		ctx.fillStyle = "#555555";
-		ctx.fillText("Create controls from a gate", helpLeft+130, helpTop+sectionHeight-7);
-		ctx.fillText("by double-clicking and dragging", helpLeft+130, helpTop+sectionHeight+25);
+		// Draw the "out-of" text
+		ctx.fillText("(tip " + (tipInd+1) + "/" + tips.length + ")", helpLeft+205, helpTop+255);
+		
+		// Draw the left arrow
+		leftDims = [helpLeft+60, helpLeft+160, helpTop+240, helpTop+260];
+		if (nextPrevHover == 1){
+			ctx.fillStyle = "#222222";
+		} else {
+			ctx.fillStyle = "#555555";
+		}
+		ctx.beginPath();
+		ctx.moveTo(helpLeft+80, helpTop+240);
+		ctx.lineTo(helpLeft+80, helpTop+260);
+		ctx.lineTo(helpLeft+60, helpTop+250);
+		ctx.lineTo(helpLeft+80, helpTop+240);
+		ctx.fill();
+		ctx.fillText("prev", helpLeft+95, helpTop+255);
 
-		// "Double-click controls to toggle them"
-		var sectionHeight = 370;
-		drawGate("controlUnfilled", helpLeft+70, helpTop+sectionHeight, false, 1);
-		ctx.font = "20px bold Arial";
-		ctx.fillStyle = "#555555";
-		ctx.fillText("Double-click on controls", helpLeft+130, helpTop+sectionHeight-7);
-		ctx.fillText("to toggle them", helpLeft+130, helpTop+sectionHeight+25);
-
-		// "Function definition gates snap onto existing circuits"
-		var sectionHeight = 470;
-		drawGate("sub", helpLeft+70, helpTop+sectionHeight, false, 1);
-		ctx.font = "20px bold Arial";
-		ctx.fillStyle = "#555555";
-		ctx.fillText("Function definition gates", helpLeft+130, helpTop+sectionHeight-7);
-		ctx.fillText("snap to existing circuits", helpLeft+130, helpTop+sectionHeight+25);
-
-		// "Double-click and drag one to create a function call gate"
-		var sectionHeight = 570;
-		drawGate("fun0", helpLeft+70, helpTop+sectionHeight, false, 1);
-		ctx.font = "20px bold Arial";
-		ctx.fillStyle = "#555555";
-		ctx.fillText("Double-click and drag one", helpLeft+130, helpTop+sectionHeight-7);
-		ctx.fillText("to create a function call gate", helpLeft+130, helpTop+sectionHeight+25);
-
-		//ctx.font = "20px bold Arial";
-		//ctx.fillStyle = "#555555";
-		//ctx.fillText("(click anywhere to close)", helpLeft+100, helpTop+sectionHeight+120);
+		// Draw the right arrow
+		rightDims = [helpLeft+340, helpLeft+440, helpTop+240, helpTop+260];
+		if (nextPrevHover == 2){
+			ctx.fillStyle = "#222222";
+		} else {
+			ctx.fillStyle = "#555555";
+		}
+		ctx.beginPath();
+		ctx.moveTo(helpLeft+420, helpTop+240);
+		ctx.lineTo(helpLeft+420, helpTop+260);
+		ctx.lineTo(helpLeft+440, helpTop+250);
+		ctx.lineTo(helpLeft+420, helpTop+240);
+		ctx.fill();
+		ctx.fillText("next", helpLeft+355, helpTop+255);
 
 	}
 
@@ -961,7 +987,7 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 	for (var i=0; i<states.length; i++){
 
 		// If of significant probability
-		if (states[i][0] >= cutoffThresh){
+		if ((i < 10) && (i < 3 || states[i][0] >= cutoffThresh)){
 		
 			// For each qubit of the state
 			for (var j=0; j<states[i][2].length; j++){
@@ -1297,7 +1323,14 @@ function mouseMove(e){
 
 		// If it's a control, lock it to the x
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled"){
+
+			// Move the control
+			gates[selected]["x"] = Math.round((e.clientX - offsetX - gateSize / 2) / gridX);
 			gates[selected]["y"] = Math.round((e.clientY - offsetY - gateSize / 2) / gridY);
+
+			// Move the og too
+			og = gates[fromID(gates[selected]["og"])];
+			og["x"] = gates[selected]["x"];
 
 		// If it's a function
 		} else if (gates[selected]["letter"] == "sub"){
@@ -1352,7 +1385,6 @@ function mouseMove(e){
 			for (var i=0; i<gates[selected]["attached"].length; i++){
 				control = gates[fromID(gates[selected]["attached"][i])]
 				control["x"] = Math.round((e.clientX - offsetX - gateSize / 2) / gridX);
-				control["y"] -= gates[selected]["y"] - newY;
 			}
 
 			// Update the new y now the delta has been processed
@@ -1391,8 +1423,25 @@ function mouseMove(e){
 				for (var i=0; i<gates[sel]["attached"].length; i++){
 					control = gates[fromID(gates[sel]["attached"][i])]
 					control["x"] += deltaX;
-					control["y"] += deltaY;
 				}
+
+			// If a control 
+			} else {
+
+				// Who's og isn't in the selection
+				og = fromID(gates[sel]["og"]);
+				if (selectionArray.indexOf(og) < 0){
+				
+					// Move this gate to the mouse x
+					gates[sel]["x"] += deltaX;
+
+					// Move the og too
+					og["x"] += deltaX;
+
+				}
+
+				// Follow the y always
+				gates[sel]["y"] += deltaY;
 
 			}
 
@@ -1405,8 +1454,11 @@ function mouseMove(e){
 		offsetX += e.movementX;
 		offsetY += e.movementY;
 
-	// If dragging the background
+	// If selecting
 	} else if (selected == -6){
+
+		// Change the pointer
+		canvas.style.cursor = "pointer";
 
 		// Set the end X/Y 
 		selectEndX = e.clientX;
@@ -1498,6 +1550,18 @@ function mouseMove(e){
 
 		}
 
+		// Check for prev/next button hover 
+		if (e.clientX > leftDims[0] && e.clientX < leftDims[1] && e.clientY > leftDims[2] && e.clientY < leftDims[3]){
+			nextPrevHover = 1;
+			canvas.style.cursor = "pointer";
+		} else if (e.clientX > rightDims[0] && e.clientX < rightDims[1] && e.clientY > rightDims[2] && e.clientY < rightDims[3]){
+			nextPrevHover = 2;
+			canvas.style.cursor = "pointer";
+		} else if (hover == -1 && selected == -1) {
+			nextPrevHover = 0;
+			canvas.style.cursor = "initial";
+		}
+
 		// TODO
 		if (hover >= 0){
 			hoverStartTime = new Date().getTime();
@@ -1537,8 +1601,8 @@ function mouseUp(e){
 		// If not a control
 		} else {
 
-			// If dropped into the toolbox 
-			if (e.clientX > toolboxOffsetX && e.clientX < toolboxOffsetX+toolboxWidth && e.clientY > 0 && e.clientY < toolboxHeight){
+			// If dropped into the toolbar 
+			if (e.clientX > toolbarOffsetX && e.clientX < toolbarOffsetX+toolbarWidth && e.clientY > 0 && e.clientY < toolbarHeight){
 
 				// Remove all its controls
 				for (var i=0; i<gates[selected]["attached"].length; i++){
@@ -1552,14 +1616,19 @@ function mouseUp(e){
 
 		}
 
+		// If no longer any gates
+		if (gates.length == gateOptions){
+			helpOpen = true;
+		}
+
 		// Circuit has changed
 		circuitUpdated = true;
 
 	// If many selected 
 	} else if (selected > 0 && selectionArray.length > 0){
 
-		// If dropped into the toolbox 
-		if (e.clientX > toolboxOffsetX && e.clientX < toolboxOffsetX+toolboxWidth && e.clientY > 0 && e.clientY < toolboxHeight){
+		// If dropped into the toolbar 
+		if (e.clientX > toolbarOffsetX && e.clientX < toolbarOffsetX+toolbarWidth && e.clientY > 0 && e.clientY < toolbarHeight){
 
 			// Get the list of IDs to remove
 			idsToRemove = [];
@@ -1583,13 +1652,19 @@ function mouseUp(e){
 
 		}
 
+		// If no longer any gates
+		if (gates.length == gateOptions){
+			helpOpen = true;
+		}
+
 		// Circuit has changed
 		circuitUpdated = true;
 
 	}
 	
-	// Deselect current gate
+	// Deselect current gate 
 	selected = -1;
+	mouseMove(e);
 
 	// Update the canvas
 	redraw();
@@ -1613,7 +1688,7 @@ function mouseDown(e){
 		// Double click 
 		if ((currentTime - lastClickTime) < doubleClickMilli){
 
-			// If it can be dragged (i.e. not in the toolbox)
+			// If it can be dragged (i.e. not in the toolbar)
 			if (gates[hover]["draggable"]){
 
 				// If it's a filled control
@@ -1734,6 +1809,24 @@ function mouseDown(e){
 			}
 
 
+		}
+
+	// If hovering over the next/prev tip buttons
+	} else if (nextPrevHover > 0) {
+
+		// If the prev tip button
+		if (nextPrevHover == 1){
+			tipInd -= 1;
+			if (tipInd < 0){
+				tipInd = tips.length-1;
+			}
+
+		// If the next tip button
+		} else if (nextPrevHover == 2){
+			tipInd += 1;
+			if (tipInd >= tips.length){
+				tipInd = 0;
+			}
 		}
 
 	// If not hovering over anything
@@ -2080,6 +2173,7 @@ function fromQASM(qasmString){
 	// Things to figure out
 	var numQubitsRequired = 0;
 	var regToQubit = {};
+	var regSizes = {};
 	var latestX = [];
 	var currentFunc = -1;
 	var funIDtoOG = {};
@@ -2207,8 +2301,9 @@ function fromQASM(qasmString){
 						var num = parseInt(words[1].substring(startInd+1, endInd));
 						var name = words[1].substring(0, startInd);
 
-						// Update the various offsets
+						// Update the various offsets 
 						numQubitsRequired += num;
+						regSizes[name] = num;
 						gateOffsetYMin = gateOffsetYMax + 2;
 						gateOffsetYMax = gateOffsetYMin + num;
 
@@ -2216,6 +2311,7 @@ function fromQASM(qasmString){
 						if (explicitPosition){
 
 							// Add to mapping
+							regToQubit[name] = explicitY;
 							for (var k=0; k<num; k++){
 								regToQubit[name+"["+k+"]"] = explicitY + k;
 							}
@@ -2232,6 +2328,7 @@ function fromQASM(qasmString){
 						} else {
 
 							// Add to mapping
+							regToQubit[name] = gateOffsetYMin;
 							for (var k=0; k<num; k++){
 								regToQubit[name+"["+k+"]"] = gateOffsetYMin + k;
 							}
@@ -2316,75 +2413,115 @@ function fromQASM(qasmString){
 					// If specifying a standard gate operation 
 					} else {
 
-						// Determine gate info
-						var numControls = words[0].split("o").length + words[0].split("c").length - 2;
-						if (currentFunc == -1){
-							var target = regToQubit[words[1+numControls]];
-						} else {
-							var target = 1+gateOffsetYMin + parseInt(words[1+numControls].substr(1));
-						}
-						var letter = words[0].substring(numControls, words[0].length);
+						// If given specific registers 
+						if (lines[i].indexOf("[") >= 0){
 
-						// Standard gate names should be uppercase for display
-						if (["x", "y", "z", "s", "t", "h"].indexOf(letter) >= 0){
-							letter = letter.toUpperCase();
-						}
-
-						// Determine control info
-						var controls = []
-						var controlTypes = [];
-						var controlIDs = [];
-						var latestPos = latestX[target];
-						for (var j=1; j<1+numControls; j++){
-							var con = regToQubit[words[j]];
-							controls.push(con);
-							controlIDs.push(nextID);
-							nextID += 1;
-							if (words[0][j-1] == "c"){
-								controlTypes.push("controlFilled");
+							// Determine gate info
+							var numControls = words[0].split("o").length + words[0].split("c").length - 2;
+							if (currentFunc == -1){
+								var target = regToQubit[words[1+numControls]];
 							} else {
-								controlTypes.push("controlUnfilled");
+								var target = 1+gateOffsetYMin + parseInt(words[1+numControls].substr(1));
 							}
-						}
+							var letter = words[0].substring(numControls, words[0].length);
 
-						// Determine the min and max qubits this gate affects
-						var gateSize = words.length - 1 - numControls;
-						var minQubit = target;
-						var maxQubit = target + gateSize - 1;
-						for (var j=0; j<numControls; j++){
-							if (controls[j] < minQubit){
-								minQubit = controls[j];
+							// Standard gate names should be uppercase for display
+							if (["x", "y", "z", "s", "t", "h"].indexOf(letter) >= 0){
+								letter = letter.toUpperCase();
 							}
-							if (controls[j] > maxQubit){
-								maxQubit = controls[j];
-							}
-						}
 
-						// Determine the latest offset required
-						for (j=minQubit; j<maxQubit+1; j++){
-							if (latestX[j] > latestPos){
-								latestPos = latestX[j];
+							// Determine control info
+							var controls = []
+							var controlTypes = [];
+							var controlIDs = [];
+							var latestPos = latestX[target];
+							for (var j=1; j<1+numControls; j++){
+								var con = regToQubit[words[j]];
+								controls.push(con);
+								controlIDs.push(nextID);
+								nextID += 1;
+								if (words[0][j-1] == "c"){
+									controlTypes.push("controlFilled");
+								} else {
+									controlTypes.push("controlUnfilled");
+								}
 							}
-						}
 
-						// Add the gate 
-						var targetID = nextID;
-						if (letter[0] == "f"){
-							funcInd = parseInt(letter.substr(1));
-							gates.push({"id": targetID, "size": 1, "letter": "fun", "x": latestPos, "y": target, "draggable": true, "og": -1, "funID": funcInd, "attached": controlIDs})
+							// Determine the min and max qubits this gate affects
+							var gateSize = words.length - 1 - numControls;
+							var minQubit = target;
+							var maxQubit = target + gateSize - 1;
+							for (var j=0; j<numControls; j++){
+								if (controls[j] < minQubit){
+									minQubit = controls[j];
+								}
+								if (controls[j] > maxQubit){
+									maxQubit = controls[j];
+								}
+							}
+
+							// Determine the latest offset required
+							for (j=minQubit; j<maxQubit+1; j++){
+								if (latestX[j] > latestPos){
+									latestPos = latestX[j];
+								}
+							}
+
+							// Add the gate 
+							var targetID = nextID;
+							if (letter[0] == "f"){
+								funcInd = parseInt(letter.substr(1));
+								gates.push({"id": targetID, "size": 1, "letter": "fun", "x": latestPos, "y": target, "draggable": true, "og": -1, "funID": funcInd, "attached": controlIDs})
+							} else {
+								gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs})
+							}
+							nextID += 1
+							
+							// Add the controls
+							for (var j=0; j<numControls; j++){
+								gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": controls[j], "size": 1, "draggable": true, "og": targetID, "attached": []})
+							}
+
+							// Update the latestX for all those qubits
+							for (j=minQubit; j<maxQubit+1; j++){
+								latestX[j] = latestPos+1;
+							}
+
+						// If given a whole register 
 						} else {
-							gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs})
-						}
-						nextID += 1
-						
-						// Add the controls
-						for (var j=0; j<numControls; j++){
-							gates.push({"id": controlIDs[j], "letter": controlTypes[j], "x": latestPos, "y": controls[j], "size": 1, "draggable": true, "og": targetID, "attached": []})
-						}
 
-						// Update the latestX for all those qubits
-						for (j=minQubit; j<maxQubit+1; j++){
-							latestX[j] = latestPos+1;
+							var targetReg = words[1];
+							var regStart = regToQubit[targetReg];
+							var regSize = regSizes[targetReg];
+							var letter = words[0];
+
+							// Standard gate names should be uppercase for display
+							if (["x", "y", "z", "s", "t", "h"].indexOf(letter) >= 0){
+								letter = letter.toUpperCase();
+							}
+
+							// Determine the min and max qubits this gate affects
+							var minQubit = regStart;
+							var maxQubit = regStart + regSize - 1;
+
+							// For each qubit that needs a gate
+							for (j=minQubit; j<maxQubit+1; j++){
+								latestPos = latestX[j];
+
+								// Add the gate 
+								if (letter[0] == "f"){
+									funcInd = parseInt(letter.substr(1));
+									gates.push({"id": nextID, "size": 1, "letter": "fun", "x": latestPos, "y": j, "draggable": true, "og": -1, "funID": funcInd, "attached": []})
+								} else {
+									gates.push({"id": nextID, "size": 1, "letter": letter, "x": latestPos, "y": j, "draggable": true, "og": -1, "attached": []})
+								}
+								nextID += 1
+								
+								// Update the latestX for all those qubits
+								latestX[j] = latestPos+1;
+
+							}
+
 						}
 
 					}
@@ -2485,3 +2622,29 @@ function download(filename, text) {
 	document.body.removeChild(element);
 }
 
+// Convert touch -> mouse, from https://stackoverflow.com/questions/1517924/javascript-mapping-touch-events-to-mouse-events
+function touchHandler(event)
+{
+    var touches = event.changedTouches,
+        first = touches[0],
+        type = "";
+
+    switch(event.type)
+    {
+        case "touchstart":  type = "mousedown"; break;
+        case "touchmove":   type = "mousemove"; break;
+        case "touchend":    type = "mouseup";   break;
+        case "touchcancel": type = "mouseup";   break;
+        default:           return;
+    }
+
+    var simulatedEvent = document.createEvent("MouseEvent");
+    simulatedEvent.initMouseEvent(type, true, true, window, 1,
+                                  first.screenX, first.screenY,
+                                  first.clientX, first.clientY, false,
+                                  false, false, false, 0, null);
+
+    first.target.dispatchEvent(simulatedEvent);
+	event.preventDefault();
+
+}
