@@ -25,19 +25,18 @@ var qubitsWithGates = [];
 var funcStartEnds = [];
 
 // General settings
+var initialZoom = 0.6;
 var gateSizeFixed = 50;
 var gridYFixed = 60;
 var gridXFixed = 60;
-var fontSize = 35;
-var gateSize = gateSizeFixed;
-var gridY = gridYFixed;
-var gridX = gridXFixed;
+var fontSize = initialZoom*35;
+var gateSize = initialZoom*gateSizeFixed;
+var gridY = initialZoom*gridYFixed;
+var gridX = initialZoom*gridXFixed;
 var spacing = 0.8;
 var toolbarWidth = -1;
 var toolbarHeight = -1;
 var maxRecDepth = 5;
-var settingsOpen = false;
-var helpOpen = true;
 var zoomSpeed = 0.08;
 
 // For dragging the canvas around
@@ -45,17 +44,33 @@ var offsetX = 0;
 var offsetY = 0;
 
 // For the tips window
+var helpOpen = true;
 var nextPrevHover = 0;
 var leftDims = [0, 0, 0, 0];
 var rightDims = [0, 0, 0, 0];
 var tipInd = 0;
 var tips = [
+	["open",            "If you're new, load the tutorial",   "using the open icon at the top"],
 	["H",               "Create gates by dragging them",      "from the toolbar at the top"],
 	["controlFilled",   "Double-click and drag on a",         "gate to create a control"],
 	["controlUnfilled", "Double-click on controls",           "to toggle them"],
 	["sub",             "Function definition gates",          "snap to existing circuits"],
 	["fun0",            "Double-click and drag a function",   "to create a call gate"],
 	["X",               "Double-click and drag nothing",      "to select multiple gates"],
+];
+
+// List of the loadable presets 
+var loadOpen = false;
+var inputBox = null;
+var openHover = false;
+var openDims = [0, 0, 0, 0];
+var presets = [
+	["Local File",       ""],
+	["Preset: Blank",    ""],
+	["Preset: Tutorial", "OPENQASM 3.0%3B%0Agate f0 q0%2Cq1 %2F%2F -1 15%0A{%0Ax q0%3B%0Ax q1%3B%0A}%0A%2F%2F -4 -14 Add gates by dragging them from the top%0A%2F%2F -4 -12 Double-click and drag on the background to select multiple gates%0A%2F%2F -5 -14 >%0A%2F%2F -1 -20 Agate Tutorial%0A%2F%2F -2 -21 ----------------------------%0A%2F%2F -2 -19 ----------------------------%0A%2F%2F -5 -12 >%0A%2F%2F -5 -17 >%0A%2F%2F -4 -5 Controls can be added to any gate by double-clicking and dragging%0A%2F%2F -4 -4 Toggle controls by double-clicking on them%0A%2F%2F -5 -5 >%0A%2F%2F -5 -4 >%0A%2F%2F -4 -3 Remove controls by dragging them back to their parent gate%0A%2F%2F -5 -3 >%0A%2F%2F -4 -13 Remove gates by dragging them back to the toolbar%0A%2F%2F -5 -13 >%0A%2F%2F -4 -17 Zoom with the mouse wheel (or pinching on mobile)%0A%2F%2F -4 -16 Move the camera by dragging the background%0A%2F%2F -5 -16 >%0A%2F%2F -4 8 Function definition gates will snap to existing circuits%0A%2F%2F -4 9 They can then be double-clicked and dragged to create a function call gate%0A%2F%2F -5 8 >%0A%2F%2F -5 9 >%0Aqubit q[2]%3B %2F%2F -1 -9%0Ah q[0]%3B%0Ax q[0]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ax q[1]%3B%0Aqubit q[2]%3B %2F%2F 0 0%0Ah q[0]%3B%0Acx q[0]%2Cq[1]%3B%0Aqubit q[2]%3B %2F%2F 0 4%0Ah q[0]%3B%0Aox q[0]%2Cq[1]%3B%0Aqubit q[2]%3B %2F%2F 1 12%0Af0 q[0]%2Cq[1]%3B%0A"],
+	["Preset: Gates",    "OPENQASM 3.0%3B%0A%2F%2F 5 2 -- Hadamard --%0A%2F%2F 6 3 This allows the creation of superposition%2C%0A%2F%2F 14 6 input%0A%2F%2F 17 6 output (unnormalised)%0A%2F%2F 14 7 |0>%0A%2F%2F 17 7 |0> %2B |1>%0A%2F%2F 14 8 |1>%0A%2F%2F 17 8 |0> - |1>%0A%2F%2F 6 4 where the circuit exists in multiple states at once%0A%2F%2F 5 -5 -- Pauli X --%0A%2F%2F 6 -4 This is basically the equivalent of the classical NOT gate%0A%2F%2F 14 -2 input%0A%2F%2F 17 -2 output%0A%2F%2F 14 -1 |0>%0A%2F%2F 17 -1 |1>%0A%2F%2F 14 0 |1>%0A%2F%2F 17 0 |0>%0A%2F%2F 5 10 -- Pauli Z (and other phase gates) --%0A%2F%2F 6 11 These all add some sort of global phase to the state%2C%0A%2F%2F 6 12 assuming an input of |1>%0A%2F%2F 14 29 input%0A%2F%2F 14 14 input%0A%2F%2F 14 18 input%0A%2F%2F 14 22 input%0A%2F%2F 17 29 output%0A%2F%2F 17 14 output%0A%2F%2F 17 18 output%0A%2F%2F 17 22 output%0A%2F%2F 14 30 |0>%0A%2F%2F 14 31 |1>%0A%2F%2F 14 15 |0>%0A%2F%2F 14 16 |1>%0A%2F%2F 14 19 |0>%0A%2F%2F 14 20 |1>%0A%2F%2F 14 23 |0>%0A%2F%2F 14 24 |1>%0A%2F%2F 17 30 i |1>%0A%2F%2F 17 31 -i |0>%0A%2F%2F 17 15 |0>%0A%2F%2F 17 16 - |1>%0A%2F%2F 17 19 |0>%0A%2F%2F 17 20 i |1>%0A%2F%2F 17 24 |1>%0A%2F%2F 17 23 |0>%0A%2F%2F 5 26 -- Pauli Y --%0A%2F%2F 6 27 Performs a NOT as well as adding a phase%0A%2F%2F 10 -8 Agate Gates List%0A%2F%2F 9 -9 ----------------------------------%0A%2F%2F 9 -7 ----------------------------------%0Aqubit q[1]%3B %2F%2F 8 7%0Ah q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 -1%0Ax q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 30%0Ay q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 15%0Az q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 19%0As q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 23%0At q[0]%3B%0A"],
+	["Preset: Grover",   "OPENQASM 3.0%3B%0Agate f2 q0%2Cq1 %2F%2F -2 15%0A{%0Ah q0%3B%0Ah q1%3B%0Az q0%3B%0Az q1%3B%0Acz q0%2Cq1%3B%0Ah q0%3B%0Ah q1%3B%0A}%0Agate f1 q0%2Cq1 %2F%2F -2 10%0A{%0Acz q0%2Cq1%3B%0A}%0Agate f0 q0%2Cq1 %2F%2F -2 5%0A{%0Ah q0%3B%0Ah q1%3B%0A}%0A%2F%2F 3 6 this function prepares the search space%0A%2F%2F 3 11 this function adds a negative phase to a state%0A%2F%2F 3 12 (in this case%3A |11> -> -|11>)%0A%2F%2F 6 16 this function amplifies the coefficient%0A%2F%2F 6 17 of the state with negative phase%0A%2F%2F -1 -7 --------------------------------------------------------%0A%2F%2F -3 -3 This algorithm amplifies the chance of measuring a certain %0A%2F%2F -3 -2 state from a big list of possible states%0A%2F%2F 3 7 (in this case%3A a full superposition)%0A%2F%2F 0 -6 Grover's Algorithm Implementation%0A%2F%2F -1 -5 --------------------------------------------------------%0A%2F%2F -1 20 Sources%3A%0A%2F%2F 0 21 https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F 0 22 https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0Aqubit q[2]%3B %2F%2F 2 1%0Af0 q[0]%2Cq[1]%3B%0Af1 q[0]%2Cq[1]%3B%0Af2 q[0]%2Cq[1]%3B%0A"],
+	["Preset: Shor",     "TODO"],
 ];
 
 // User-modifiable settings 
@@ -68,7 +83,6 @@ var milliForTooltip = 500;
 // For timings
 var lastClickTime = -1;
 var lastSimTime = -1;
-var hoverStartTime = -1;
 var circuitUpdated = true;
 var inputs = [[]];
 var results = [[]];
@@ -80,9 +94,8 @@ for (var i=0; i<numRands; i++){
 	randNums.push(Math.random());
 }
 
-// TODO load presets
-// TODO tutorial presets
 // TODO mobile optimisations
+// TODO more than 9 functions
 
 // Called on body ready
 function init(recalc){
@@ -121,6 +134,19 @@ function init(recalc){
 	gates.push({"letter": "open", "y": 0.27, "x": 8.6+toolbarRel, "size": 1, "draggable": false})
 	gates.push({"letter": "save", "y": 0.43, "x": 9.6+toolbarRel, "size": 1, "draggable": false})
 	gatesInit = gates.slice();
+
+	// Setup the hidden preset load element 
+	inputBox = document.createElement("SELECT");
+	inputBox.style.position = "absolute";
+	inputBox.style.font = "20px Arial";
+	inputBox.style.padding = "10px";
+	inputBox.value = "test";
+	for (var k=0; k<presets.length; k++){
+		var option = document.createElement("option");
+		option.text = presets[k][0];
+		inputBox.add(option);
+	}
+	document.getElementsByTagName("BODY")[0].appendChild(inputBox);
 
 	// If URL contains QASM info, use it
 	if (document.location.hash.length > 1){
@@ -230,21 +256,46 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 	// If it's an subroutine call 
 	} else if (letter.substr(0,3) == "fun" || letter == "?"){
 
-		// Draw the box
-		if (!isSelected){
-			ctx.fillStyle = "#16a300";
+		// If not a toolbar gate
+		if (!fixedSize){
+
+			// Draw the box
+			if (!isSelected){
+				ctx.fillStyle = "#16a300";
+			} else {
+				ctx.fillStyle = "#107800";
+			}
+			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+			
+			// Draw the letter
+			ctx.font = (fontSize*0.9)+"px Arial";
+			ctx.fillStyle = "#ffffff";
+			if (letter == "?"){
+				ctx.fillText("?", 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
+			} else {
+				ctx.fillText(letter.substr(3), 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
+			}
+
+		// If a toolbar gate (and thus fixed sizes should be used)
 		} else {
-			ctx.fillStyle = "#107800";
-		}
-		ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
-		
-		// Draw the letter
-		ctx.font = (fontSize*0.9)+"px Arial";
-		ctx.fillStyle = "#ffffff";
-		if (letter == "?"){
-			ctx.fillText("?", 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
-		} else {
-			ctx.fillText(letter.substr(3), 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
+
+			// Draw the box
+			if (!isSelected){
+				ctx.fillStyle = "#16a300";
+			} else {
+				ctx.fillStyle = "#107800";
+			}
+			ctx.fillRect(x-gateSizeFixed/2, y-gateSizeFixed/2, gateSizeFixed, gateSizeFixed+gridYFixed*(size-1));
+			
+			// Draw the letter
+			ctx.font = "30px Arial";
+			ctx.fillStyle = "#ffffff";
+			if (letter == "?"){
+				ctx.fillText("?", 0.28*gridXFixed+x-gateSizeFixed/2, 0.59*gridYFixed+y-gateSizeFixed/2);
+			} else {
+				ctx.fillText(letter.substr(3), 0.28*gridXFixed+x-gateSizeFixed/2, 0.59*gridYFixed+y-gateSizeFixed/2);
+			}
+
 		}
 		
 	// If it's the create text icon 
@@ -788,12 +839,12 @@ function redraw(){
 			newURL = toQASM();
 
 			// Update URL 
-			document.location.hash = encodeURIComponent(newURL);
+			history.replaceState(null, null, document.location.pathname + '#' + encodeURIComponent(newURL));
 
 		} else {
 
 			// Reset URL 
-			document.location.hash = "";
+			history.replaceState(null, null, document.location.pathname);
 
 		}
 
@@ -852,27 +903,6 @@ function redraw(){
 
 	}
 
-	// Draw the expanded menu 
-	if (settingsOpen){
-
-		// Settings settings
-		var settingsWidth = 260;
-		var settingsHeight = 160;
-
-		// Expanded outline 
-		ctx.fillStyle = "#dddddd";
-		roundRect(ctx, toolbarOffsetX+toolbarWidth-settingsWidth, toolbarHeight+15, settingsWidth, settingsHeight, 20, true, false);
-
-		// Repeats 
-		ctx.font = "25px Arial";
-		ctx.fillStyle = "#000000";
-		ctx.fillText("Repeats", toolbarOffsetX+toolbarWidth-settingsWidth+40, toolbarHeight+60);
-		ctx.font = "25px Arial";
-		ctx.fillStyle = "#000000";
-		ctx.fillText(numRepeats, toolbarOffsetX+toolbarWidth-settingsWidth+180, toolbarHeight+60);
-
-	}
-	
 	// Draw the selected gate on top
 	if (selected >= 0){
 
@@ -926,13 +956,11 @@ function redraw(){
 
 		// Draw the title text
 		ctx.font = "35px bold Arial";
-		ctx.fillStyle = "#e3970b";
-		ctx.fillStyle = "#37abc8";
 		ctx.fillStyle = "#555555";
 		ctx.fillText("Welcome to Agate!", helpLeft+80, helpTop+85);
 
 		// Draw the current tip 
-		drawGate(tips[tipInd][0], helpLeft+75, helpTop+170, false, 1);
+		drawGate(tips[tipInd][0], helpLeft+75, helpTop+170, false, 1, true);
 		ctx.font = "20px bold Arial";
 		ctx.fillStyle = "#555555";
 		ctx.fillText(tips[tipInd][1], helpLeft+125, helpTop+160);
@@ -971,6 +999,34 @@ function redraw(){
 		ctx.fill();
 		ctx.fillText("next", helpLeft+355, helpTop+255);
 
+	}
+
+	// If the load window is open 
+	if (loadOpen){
+
+		// Settings to be updated here in case of window resize
+		var loadWidth = 400;
+		var loadHeight = 120;
+		var loadLeft = window.innerWidth / 2 - loadWidth / 2;
+		var loadTop = window.innerHeight / 2 - loadHeight / 2;
+
+		// Draw the outline
+		ctx.fillStyle = "#dddddd";
+		roundRect(ctx, loadLeft, loadTop, loadWidth, loadHeight, 20, true, false);
+
+		// Update the preset selection box 
+		inputBox.style.top = (loadTop+30) + "px";
+		inputBox.style.left = (loadLeft+30) + "px";
+		inputBox.style.width = (loadWidth-150) + "px";
+		inputBox.style.display = "block";
+		
+		// Draw the second load button
+		openDims = [loadLeft+305, loadLeft+365, loadTop+23, loadTop+83];
+		drawGate("open", loadLeft+335, loadTop+53, openHover, 1);
+
+	// Otherwise, hide the selection box DOM element
+	} else {
+		inputBox.style.display = "none";
 	}
 
 }
@@ -1498,30 +1554,65 @@ function mouseMove(e){
 	// Otherwise check for hover
 	} else {
 
-		// Check over every gate (draggable or not) 
+		// Reset things
 		canvas.style.cursor = "initial";
 		hover = -1;
-		for (var i=0; i<gates.length; i++){
 
-			// If it's a fixed gate, don't add the offset
+		// Check over every draggable gate 
+		for (var i=0; i<gates.length; i++){
 			if (gates[i]["draggable"]){
+
+				// Get the dimensions to check
 				var gxMin = gates[i]["x"]*gridX+offsetX;
 				var gyMin = gates[i]["y"]*gridY+offsetY;
 				var gxMax = gxMin + gateSize;
 				var gyMax = gyMin + gateSize;
 				var perSizeY = gridY;
 				var perSizeX = gridX;
-			} else {
+
+				// If it's not a text object 
+				if (gates[i]["letter"].substring(0,4) != "text"){
+
+					// Check for mouse within gate area 
+					for (var j=0; j<gates[i]["size"]; j++){
+						if (e.clientX > gxMin && e.clientX < gxMax && e.clientY > gyMin && e.clientY < gyMax+j*perSizeY){
+							canvas.style.cursor = "pointer";
+							hover = i;
+							dragOffset = j;
+							break;
+						}
+					}
+					
+				// If it's a text object 
+				} else {
+
+					// Check for mouse within gate area 
+					for (var j=0; j<gates[i]["size"]; j++){
+						if (e.clientX > gxMin && e.clientX < gxMax+j*perSizeX && e.clientY > gyMin && e.clientY < gyMax){
+							canvas.style.cursor = "pointer";
+							hover = i;
+							dragOffset = j;
+							break;
+						}
+					}
+
+				}
+
+			}
+
+		}
+
+		// Check over every non-draggable (i.e. toolbar) gate 
+		for (var i=0; i<gates.length; i++){
+			if (!gates[i]["draggable"]){
+
+				// Get the dimensions to check
 				var gxMin = gates[i]["x"]*gridXFixed;
 				var gyMin = gates[i]["y"]*gridYFixed;
 				var gxMax = gxMin + gateSizeFixed;
 				var gyMax = gyMin + gateSizeFixed;
 				var perSizeY = gridYFixed;
 				var perSizeX = gridXFixed;
-			}
-
-			// If it's not a text object 
-			if (gates[i]["letter"].substring(0,4) != "text"){
 
 				// Check for mouse within gate area 
 				for (var j=0; j<gates[i]["size"]; j++){
@@ -1532,39 +1623,28 @@ function mouseMove(e){
 						break;
 					}
 				}
-				
-			// If it's a text object 
-			} else {
-
-				// Check for mouse within gate area 
-				for (var j=0; j<gates[i]["size"]; j++){
-					if (e.clientX > gxMin && e.clientX < gxMax+j*perSizeX && e.clientY > gyMin && e.clientY < gyMax){
-						canvas.style.cursor = "pointer";
-						hover = i;
-						dragOffset = j;
-						break;
-					}
-				}
 
 			}
 
 		}
 
-		// Check for prev/next button hover 
+		// Check for other button hover  
 		if (e.clientX > leftDims[0] && e.clientX < leftDims[1] && e.clientY > leftDims[2] && e.clientY < leftDims[3]){
 			nextPrevHover = 1;
+			openHover = false;
 			canvas.style.cursor = "pointer";
 		} else if (e.clientX > rightDims[0] && e.clientX < rightDims[1] && e.clientY > rightDims[2] && e.clientY < rightDims[3]){
 			nextPrevHover = 2;
+			openHover = false;
+			canvas.style.cursor = "pointer";
+		} else if (loadOpen && e.clientX > openDims[0] && e.clientX < openDims[1] && e.clientY > openDims[2] && e.clientY < openDims[3]){
+			openHover = true;
+			nextPrevHover = 0;
 			canvas.style.cursor = "pointer";
 		} else if (hover == -1 && selected == -1) {
 			nextPrevHover = 0;
+			openHover = false;
 			canvas.style.cursor = "initial";
-		}
-
-		// TODO
-		if (hover >= 0){
-			hoverStartTime = new Date().getTime();
 		}
 
 	}
@@ -1677,8 +1757,46 @@ function mouseDown(e){
 	// Get the current time in milliseconds
 	var currentTime = new Date().getTime();
 
+	// If it's the second open icon 
+	if (openHover){
+
+		// See what's in the selection box
+		var ind = inputBox.selectedIndex;
+
+		// If asking to load a local file
+		if (ind == 0){
+
+			// Open the file input box
+			document.getElementById("fileIn").click(); 
+
+		// If loading some sort of preset
+		} else {
+
+			// Hide the load window
+			loadOpen = false;
+			openHover = false;
+			
+			// Get it and process it
+			asQasm = decodeURIComponent(presets[ind][1]);
+
+			// Load the gates from this
+			fromQASM(asQasm);
+
+			// If loading a blank preset, show the help
+			if (asQasm.length == 0){
+				helpOpen = true;
+			}
+
+			// Re-sim and redraw (twice just to ensure consistent functions)
+			circuitUpdated = false;
+			redraw();
+			circuitUpdated = true;
+			redraw();
+
+		}
+		
 	// If hovering over a gate
-	if (hover >= 0){
+	} else if (hover >= 0){
 
 		// If showing the help, close it 
 		if (helpOpen){
@@ -1771,12 +1889,6 @@ function mouseDown(e){
 				selected = gates.length-1;
 				hover = gates.length-1;
 
-			// If it's the settings icon 
-			} else if (gates[hover]["letter"] == "settings"){
-
-				// Toggle the menu
-				settingsOpen = !settingsOpen;
-
 			// If it's the save icon 
 			} else if (gates[hover]["letter"] == "save"){
 
@@ -1788,9 +1900,9 @@ function mouseDown(e){
 
 			// If it's the open icon 
 			} else if (gates[hover]["letter"] == "open"){
-				
-				// Open the file input box
-				document.getElementById("fileIn").click(); 
+
+				// Open the loading choice box
+				loadOpen = true;
 
 			// If it's a new function
 			} else if (gates[hover]["letter"] == "sub"){
@@ -1800,12 +1912,13 @@ function mouseDown(e){
 				selected = gates.length-1;
 				hover = gates.length-1;
 
-			// If it can't, create a new gate and select that
+			// If it can't, create a new gate and select that 
 			} else {
 				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "attached":[]})
 				nextID += 1;
 				selected = gates.length-1;
 				hover = gates.length-1;
+				mouseMove(e);
 			}
 
 
@@ -1828,12 +1941,13 @@ function mouseDown(e){
 				tipInd = 0;
 			}
 		}
-
+	
 	// If not hovering over anything
 	} else {
 
 		// Stop selecting things
 		selectionArray = [];
+		loadOpen = false;
 		
 		// Double click
 		if ((currentTime - lastClickTime) < doubleClickMilli){
@@ -2149,10 +2263,15 @@ function onFileChange(e){
 		// Get the text
 		var text = reader.result;
 
+		// Hide the load window
+		loadOpen = false;
+		openHover = false;
+
 		// Load the QASM 
 		fromQASM(text);
 
 		// Re-sim and redraw (twice just to ensure consistent functions)
+		circuitUpdated = false;
 		redraw();
 		circuitUpdated = true;
 		redraw();
@@ -2414,7 +2533,7 @@ function fromQASM(qasmString){
 					} else {
 
 						// If given specific registers 
-						if (lines[i].indexOf("[") >= 0){
+						if (lines[i].indexOf("[") >= 0 || sectionStartEnds[n][2] >= 0){
 
 							// Determine gate info
 							var numControls = words[0].split("o").length + words[0].split("c").length - 2;
@@ -2550,8 +2669,14 @@ function fromQASM(qasmString){
 		if (gates[i]["x"] < minX){
 			minX = gates[i]["x"];
 		}
-		if (gates[i]["x"] > maxX){
-			maxX = gates[i]["x"];
+		if (gates[i]["letter"].substr(0,4) == "text"){
+			if (gates[i]["x"]+gates[i]["size"] > maxX){
+				maxX = gates[i]["x"]+gates[i]["size"];
+			}
+		} else {
+			if (gates[i]["x"] > maxX){
+				maxX = gates[i]["x"];
+			}
 		}
 		if (gates[i]["y"] < minY){
 			minY = gates[i]["y"];
@@ -2560,8 +2685,10 @@ function fromQASM(qasmString){
 			maxY = gates[i]["y"];
 		}
 	}
-	offsetX = Math.max((3-minX)*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
-	offsetY = Math.max((3-minY)*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - minY*gridY);
+	offsetX = Math.max(3*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
+	offsetY = Math.max(2*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+	console.log(offsetX, minX, maxX, gridXFixed, gridX);
+	console.log(offsetY, minY, maxY, gridYFixed, gridY);
 
 }
 
