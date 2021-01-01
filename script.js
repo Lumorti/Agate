@@ -1,6 +1,21 @@
 // The big script file for Agate that I never expect anyone to read
 // Lumorti 2020 
 
+// List of the loadable presets 
+var loadOpen = false;
+var inputBox = null;
+var openHover = false;
+var openDims = [0, 0, 0, 0];
+var presets = [
+	["Local QASM File",       ""],
+	["Preset: Tutorial", "OPENQASM%203.0%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%20-2%20-25%20Agate%20Basic%20Tutorial%0A%2F%2F%20-3%20-26%20-------------------------------------%0A%2F%2F%20-3%20-23%20-------------------------------------%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%20-1%20-24%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20cannot%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2024%20The%20URL%20at%20the%20top%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%0A%2F%2F%20-4%2023%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2025%20Use%20the%20save%20button%20to%20save%20a%20local%20QASM%20file%20for%20the%20circuit%20(plus%20text%2Fposition%20info))%0A%2F%2F%20-5%2024%20%3E%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-5%2025%20%3E%0Aqreg%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0A"],
+	["Preset: Blank",    ""],
+	["Preset: Gates",    "OPENQASM%203.0%3B%0A%2F%2F%2010%201%20--%20Hadamard%20--%0A%2F%2F%206%202%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2014%206%20input%0A%2F%2F%2017%206%20output%20(unnormalised)%0A%2F%2F%2014%207%20%5Cket%7B0%7D%0A%2F%2F%2017%207%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2014%208%20%5Cket%7B1%7D%0A%2F%2F%2017%208%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%203%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%2C%0A%2F%2F%2011%20-8%20--%20Pauli%20X%20--%0A%2F%2F%206%20-7%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2014%20-5%20input%0A%2F%2F%2017%20-5%20output%0A%2F%2F%2014%20-4%20%5Cket%7B0%7D%0A%2F%2F%2017%20-4%20%5Cket%7B1%7D%0A%2F%2F%2014%20-3%20%5Cket%7B1%7D%0A%2F%2F%2017%20-3%20%5Cket%7B0%7D%0A%2F%2F%208%2012%20--%20Pauli%20Z%20(and%20other%20phase%20gates)%20--%0A%2F%2F%206%2013%20These%20all%20add%20some%20sort%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%209%2014%20assuming%20an%20input%20of%20%5Cket%7B1%7D%0A%2F%2F%2014%2033%20input%0A%2F%2F%2014%2016%20input%0A%2F%2F%2014%2020%20input%0A%2F%2F%2014%2024%20input%0A%2F%2F%2017%2033%20output%0A%2F%2F%2017%2016%20output%0A%2F%2F%2017%2020%20output%0A%2F%2F%2017%2024%20output%20(unnormalised)%0A%2F%2F%2014%2034%20%5Cket%7B0%7D%0A%2F%2F%2014%2035%20%5Cket%7B1%7D%0A%2F%2F%2014%2017%20%5Cket%7B0%7D%0A%2F%2F%2014%2018%20%5Cket%7B1%7D%0A%2F%2F%2014%2021%20%5Cket%7B0%7D%0A%2F%2F%2014%2022%20%5Cket%7B1%7D%0A%2F%2F%2014%2025%20%5Cket%7B0%7D%0A%2F%2F%2014%2026%20%5Cket%7B1%7D%0A%2F%2F%2017%2034%20i%20%5Cket%7B1%7D%0A%2F%2F%2017%2035%20-i%20%5Cket%7B0%7D%0A%2F%2F%2017%2017%20%5Cket%7B0%7D%0A%2F%2F%2017%2018%20-%20%5Cket%7B1%7D%0A%2F%2F%2017%2021%20%5Cket%7B0%7D%0A%2F%2F%2017%2022%20i%20%5Cket%7B1%7D%0A%2F%2F%2017%2026%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2017%2025%20%5Cket%7B0%7D%0A%2F%2F%2011%2030%20--%20Pauli%20Y%20--%0A%2F%2F%207%2031%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-13%20Agate%20Gates%20List%0A%2F%2F%209%20-14%20----------------------------------%0A%2F%2F%209%20-11%20----------------------------------%0A%2F%2F%2011%20-12%20by%20Lumorti%0A%2F%2F%206%204%20resulting%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%207%0Ah%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%20-4%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2034%0Ay%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2017%0Az%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2021%0As%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2025%0At%20q%5B0%5D%3B%0A"],
+	["Preset: Grover's", "OPENQASM%203.0%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0Az%20q0%3B%0Az%20q1%3B%0Acz%20q0%2Cq1%3B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Acz%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20prepares%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20a%20state%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%206%2016%20this%20function%20amplifies%20the%20coefficient%0A%2F%2F%206%2017%20of%20the%20state%20with%20negative%20phase%0A%2F%2F%20-1%20-11%20--------------------------------------------------------%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-10%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%20-8%20--------------------------------------------------------%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%203%20-9%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
+	["Preset: Shor's",   "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-1%20TODO%0A"], // TODO
+	["Preset: Testing",  "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-3%20%3E%20Highlighted%20links%0A%2F%2F%200%20-1%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%200%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%200%20-7%20%5C%20bra%7B5%7D%0A%2F%2F%2011%20-9%20%5C%20sqrt25%0A%2F%2F%200%20-6%20%5C%20ket%7B5%7D%0A%2F%2F%2011%20-5%20%5C%20to%0A%2F%2F%2011%20-6%20%5C%20pm2%0A%2F%2F%200%20-5%20%5C%20braket%7B1%7C3%7D%0A%2F%2F%20-2%20-14%20TODO%0A%2F%2F%20-2%20-13%20This%20is%20the%20test-bed%20for%20features%20I'm%20currently%20working%20on%0A%2F%2F%20-2%20-11%20%3E%20Simple%20LaTeX%20support%0A%2F%2F%20-2%202%20%3E%20Keyboard%20shortcuts%0A%2F%2F%20-2%208%20%3E%20Toggle%20input%20state%0A%2F%2F%200%204%20ctrl-c%0A%2F%2F%200%205%20ctrl-v%0A%2F%2F%203%204%20ctrl-z%0A%2F%2F%203%205%20ctrl-r%0A%2F%2F%206%204%20delete%0A%2F%2F%200%206%20ctrl-x%0A%2F%2F%2016%20-6%20%5Cpm2%0A%2F%2F%205%20-5%20%5Cbraket%7B1%7C3%7D%0A%2F%2F%205%20-7%20%5Cbra%7B5%7D%0A%2F%2F%205%20-6%20%5Cket%7B5%7D%0A%2F%2F%2016%20-5%20%5Cto%0A%2F%2F%2016%20-9%20%5Csqrt25%0A%2F%2F%2011%20-8%203%5C%20times5%0A%2F%2F%2016%20-8%203%5Ctimes5%0A%2F%2F%2011%20-7%203%5C%20cdot5%0A%2F%2F%2016%20-7%203%5Ccdot5%0A%2F%2F%200%20-9%20%5C%20langle%0A%2F%2F%205%20-9%20%5Clangle%0A%2F%2F%200%20-8%20%5C%20rangle%0A%2F%2F%205%20-8%20%5Crangle%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2011%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2015%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0A"], 
+];
+
 // User-modifiable settings 
 var drawGrid = true;
 var numRepeats = 1000;
@@ -36,7 +51,7 @@ var qubitsWithGates = [];
 var funcStartEnds = [];
 
 // General settings
-var onMobile = false;
+var onMobile = 0;
 var gateSizeFixed = 50;
 var gridYFixed = 60;
 var gridXFixed = 60;
@@ -53,6 +68,8 @@ var zoomSpeed = 0.08;
 // For dragging the canvas around
 var offsetX = 0;
 var offsetY = 0;
+var prevTouchX = 0;
+var prevTouchY = 0;
 
 // For the tips window
 var helpOpen = true;
@@ -70,20 +87,6 @@ var tips = [
 	["X",               "Double-click and drag nothing",      "to select multiple gates"],
 ];
 
-// List of the loadable presets 
-var loadOpen = false;
-var inputBox = null;
-var openHover = false;
-var openDims = [0, 0, 0, 0];
-var presets = [
-	["Local File",       ""],
-	["Preset: Tutorial", "OPENQASM 3.0%3B%0Agate f0 q0%2Cq1 %2F%2F -1 12%0A{%0Ax q0%3B%0Ax q1%3B%0A}%0A%2F%2F -4 -14 Add gates by dragging them from the toolbar at the top%0A%2F%2F -4 -12 Double-click and drag on the background to select multiple gates%0A%2F%2F -5 -14 >%0A%2F%2F -1 -24 Agate Tutorial%0A%2F%2F -2 -25 ----------------------------%0A%2F%2F -2 -23 ----------------------------%0A%2F%2F -5 -12 >%0A%2F%2F -5 -21 >%0A%2F%2F -4 -5 Controls can be added to any gate by double-clicking and dragging%0A%2F%2F -4 -4 Toggle controls by double-clicking on them%0A%2F%2F -5 -5 >%0A%2F%2F -5 -4 >%0A%2F%2F -4 -3 Remove controls by dragging them back to their parent gate%0A%2F%2F -5 -3 >%0A%2F%2F -4 -13 Remove gates by dragging them back to the toolbar%0A%2F%2F -5 -13 >%0A%2F%2F -4 -20 Zoom with the mouse wheel (or pinching on mobile)%0A%2F%2F -4 -21 Move the camera by dragging the background%0A%2F%2F -5 -20 >%0A%2F%2F -4 8 Function definition gates will snap to existing circuits%0A%2F%2F -4 9 They can then be double-clicked and dragged to create a function call gate%0A%2F%2F -5 8 >%0A%2F%2F -5 9 >%0Aqubit q[2]%3B %2F%2F -1 -9%0Ah q[0]%3B%0Ax q[0]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ai q[1]%3B%0Ax q[1]%3B%0Aqubit q[2]%3B %2F%2F 0 0%0Ah q[0]%3B%0Acx q[0]%2Cq[1]%3B%0Aqubit q[2]%3B %2F%2F 0 4%0Ah q[0]%3B%0Aox q[0]%2Cq[1]%3B%0Aqubit q[2]%3B %2F%2F 1 17%0Af0 q[0]%2Cq[1]%3B%0Aqubit q[1]%3B %2F%2F 0 -17%0Ax q[0]%3B%0A"],
-	["Preset: Blank",    ""],
-	["Preset: Gates",    "OPENQASM 3.0%3B%0A%2F%2F 5 2 -- Hadamard --%0A%2F%2F 6 3 This allows the creation of superposition%2C%0A%2F%2F 14 6 input%0A%2F%2F 17 6 output (unnormalised)%0A%2F%2F 14 7 |0>%0A%2F%2F 17 7 |0> %2B |1>%0A%2F%2F 14 8 |1>%0A%2F%2F 17 8 |0> - |1>%0A%2F%2F 6 4 where the circuit exists in multiple states at once%0A%2F%2F 5 -5 -- Pauli X --%0A%2F%2F 6 -4 This is the equivalent of the classical NOT (bit flip) gate%0A%2F%2F 14 -2 input%0A%2F%2F 17 -2 output%0A%2F%2F 14 -1 |0>%0A%2F%2F 17 -1 |1>%0A%2F%2F 14 0 |1>%0A%2F%2F 17 0 |0>%0A%2F%2F 5 10 -- Pauli Z (and other phase gates) --%0A%2F%2F 6 11 These all add some sort of global phase to the state%2C%0A%2F%2F 6 12 assuming an input of |1>%0A%2F%2F 14 29 input%0A%2F%2F 14 14 input%0A%2F%2F 14 18 input%0A%2F%2F 14 22 input%0A%2F%2F 17 29 output%0A%2F%2F 17 14 output%0A%2F%2F 17 18 output%0A%2F%2F 17 22 output (unnormalised)%0A%2F%2F 14 30 |0>%0A%2F%2F 14 31 |1>%0A%2F%2F 14 15 |0>%0A%2F%2F 14 16 |1>%0A%2F%2F 14 19 |0>%0A%2F%2F 14 20 |1>%0A%2F%2F 14 23 |0>%0A%2F%2F 14 24 |1>%0A%2F%2F 17 30 i |1>%0A%2F%2F 17 31 -i |0>%0A%2F%2F 17 15 |0>%0A%2F%2F 17 16 - |1>%0A%2F%2F 17 19 |0>%0A%2F%2F 17 20 i |1>%0A%2F%2F 17 24 (1%2Bi)%20 |1>%0A%2F%2F 17 23 |0>%0A%2F%2F 5 26 -- Pauli Y --%0A%2F%2F 6 27 Performs a NOT as well as adding a phase%0A%2F%2F 10 -8 Agate Gates List%0A%2F%2F 9 -9 ----------------------------------%0A%2F%2F 9 -7 ----------------------------------%0Aqubit q[1]%3B %2F%2F 8 7%0Ah q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 -1%0Ax q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 30%0Ay q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 15%0Az q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 19%0As q[0]%3B%0Aqubit q[1]%3B %2F%2F 8 23%0At q[0]%3B%0A"],
-	["Preset: Grover's", "OPENQASM 3.0%3B%0Agate f2 q0%2Cq1 %2F%2F -2 15%0A{%0Ah q0%3B%0Ah q1%3B%0Az q0%3B%0Az q1%3B%0Acz q0%2Cq1%3B%0Ah q0%3B%0Ah q1%3B%0A}%0Agate f1 q0%2Cq1 %2F%2F -2 10%0A{%0Acz q0%2Cq1%3B%0A}%0Agate f0 q0%2Cq1 %2F%2F -2 5%0A{%0Ah q0%3B%0Ah q1%3B%0A}%0A%2F%2F 3 6 this function prepares the search space%0A%2F%2F 3 11 this function adds a negative phase to a state%0A%2F%2F 3 12 (in this case%3A |11> -> -|11>)%0A%2F%2F 6 16 this function amplifies the coefficient%0A%2F%2F 6 17 of the state with negative phase%0A%2F%2F -1 -7 --------------------------------------------------------%0A%2F%2F -3 -3 This algorithm amplifies the chance of measuring a certain %0A%2F%2F -3 -2 state from a big list of possible states%0A%2F%2F 3 7 (in this case%3A a full superposition)%0A%2F%2F 0 -6 Grover's Algorithm Implementation%0A%2F%2F -1 -5 --------------------------------------------------------%0A%2F%2F -1 20 Sources%3A%0A%2F%2F 0 21 https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F 0 22 https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0Aqubit q[2]%3B %2F%2F 2 1%0Af0 q[0]%2Cq[1]%3B%0Af1 q[0]%2Cq[1]%3B%0Af2 q[0]%2Cq[1]%3B%0A"],
-	["Preset: Shor's",   ""], // TODO
-];
-
 // For timings
 var lastClickTime = -1;
 var lastSimTime = -1;
@@ -97,8 +100,6 @@ var randNums = [];
 for (var i=0; i<numRands; i++){
 	randNums.push(Math.random());
 }
-
-// TODO mobile dragging sometimes doesn't work
 
 // Called on body ready
 function init(recalc){
@@ -123,11 +124,15 @@ function init(recalc){
 	// (needed before they're added to figure out positioning)
 	gateOptions = 10;
 
-	// Changes if on mobile
-	if (onMobile || gridXFixed*(gateOptions+1)-20 > 0.9*window.innerWidth){
+	// Check if mobile 
+	if (gridXFixed*(gateOptions+1)-20 > 0.9*window.innerWidth){
+		onMobile = 1;
+	} else if (window.innerHeight < 400){
+		onMobile = 2;
+	}
 
-		// Note that probably on something mobile-like
-		onMobile = true;
+	// Changes if on mobile (vertical)
+	if (onMobile == 1){
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gridYFixed*2+10;
@@ -351,19 +356,62 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 	// If it's a gate-like text object 
 	} else if (letter.substr(0,4) == "text"){
 
-		// Fill a box behind
-		ctx.font = fontSize + "px Arial";
-		var textWidth = ctx.measureText(letter.substr(4)).width;
-		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(x-gridX*0.25, y-gridY/2+1, textWidth+gridX*0.05, gridY-2);
+		// The text of the gate
+		var gateText = letter.substr(4);
 
-		// Draw the text
-		if (!isSelected){
-			ctx.fillStyle = "#555555";
+		// If it's a link
+		if (gateText.substr(0, 4) == "http"){
+			
+			// Fill a box behind
+			ctx.font = fontSize + "px Arial";
+			var textWidth = ctx.measureText(gateText).width;
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(x-gridX*0.25, y-gridY/2+1, textWidth+gridX*0.05, gridY-2);
+
+			// Draw the text
+			if (!isSelected){
+				ctx.fillStyle = "#037a8c";
+			} else {
+				ctx.fillStyle = "#003740";
+			}
+			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+
+		// If it's normal text
 		} else {
-			ctx.fillStyle = "#888888";
+
+			// More complex LaTeX replaces
+			gateText = gateText.replace(/\\braket{(.+?)}/g, "\\langle$1\\rangle");
+			gateText = gateText.replace(/\\bra{(.+?)}/g, "\\langle$1|");
+			gateText = gateText.replace(/\\ket{(.+?)}/g, "|$1\\rangle");
+			
+			// Simple LaTeX replaces
+			gateText = gateText.replace(/\\pm/g, "\u00B1");
+			gateText = gateText.replace(/\\sqrt/g, "\u221A");
+			gateText = gateText.replace(/\\rangle/g, "\u27E9");
+			gateText = gateText.replace(/\\langle/g, "\u27E8");
+			gateText = gateText.replace(/\\to/g, "\u2192");
+			gateText = gateText.replace(/\\cdot/g, "\u22C5");
+			gateText = gateText.replace(/\\times/g, "\u00D7");
+
+			// Fill a box behind
+			ctx.font = fontSize + "px Arial";
+			var textWidth = ctx.measureText(gateText).width;
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(x-gridX*0.25, y-gridY/2+1, textWidth+gridX*0.05, gridY-2);
+
+			// Set the colour for both text and LaTeX
+			if (!isSelected){
+				ctx.fillStyle = "#555555";
+				ctx.strokeStyle = "#555555";
+			} else {
+				ctx.fillStyle = "#888888";
+				ctx.strokeStyle = "#888888";
+			}
+
+			// Draw the text
+			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+
 		}
-		ctx.fillText(letter.substr(4), x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
 
 	// If it's the open settings icon 
 	} else if (letter == "settings"){
@@ -997,7 +1045,7 @@ function redraw(){
 	if (helpOpen){
 
 		// If not on mobile 
-		if (!onMobile){
+		if (onMobile == 0){
 
 			var helpWidth = 500;
 			var helpHeight = 300;
@@ -1031,8 +1079,8 @@ function redraw(){
 			ctx.fillText(tips[tipInd][2], helpLeft+60, helpTop+255);
 			drawGate(tips[tipInd][0], helpLeft+425, helpTop+230, false, 1, true);
 
-		// If on mobile
-		} else {
+		// If on mobile (vertical)
+		} else if (onMobile == 1) {
 
 			var helpWidth = 300;
 			var helpHeight = 360;
@@ -1067,6 +1115,36 @@ function redraw(){
 			ctx.fillText("tutorial using the open", helpLeft+40, helpTop+290);
 			ctx.fillText("icon at the top", helpLeft+40, helpTop+320);
 
+		// If on mobile (horizontal) 
+		} else if (onMobile == 2) {
+
+			var helpWidth = 600;
+			var helpHeight = 240;
+			var helpLeft = window.innerWidth / 2 - helpWidth / 2;
+			var helpTop = window.innerHeight / 1.7 - helpHeight / 2;
+
+			// Draw the outline
+			ctx.fillStyle = "#dddddd";
+			roundRect(ctx, helpLeft, helpTop, helpWidth, helpHeight, 20, true, false);
+
+			// Draw the title inner rect
+			ctx.fillStyle = "#eeeeee";
+			roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-180, 80, 10, true, false);
+			
+			// Logo section
+			drawGate("logo", helpLeft+520, helpTop+70, false, 2.2, true);
+
+			// Draw the title text
+			ctx.font = "35px bold Arial";
+			ctx.fillStyle = "#555555";
+			ctx.fillText("Welcome to Agate!", helpLeft+70, helpTop+85);
+
+			// Draw the intro text 
+			ctx.fillStyle = "#555555";
+			ctx.font = "17px bold Arial";
+			ctx.fillText("Agate is a quantum circuit designer and simulator by Lumorti", helpLeft+40, helpTop+155);
+			ctx.fillText(tips[tipInd][1] + " " + tips[tipInd][2], helpLeft+40, helpTop+190);
+
 		}
 
 	}
@@ -1074,25 +1152,52 @@ function redraw(){
 	// If the load window is open 
 	if (loadOpen){
 
-		// Settings to be updated here in case of window resize
-		var loadWidth = 400;
-		var loadHeight = 120;
-		var loadLeft = window.innerWidth / 2 - loadWidth / 2;
-		var loadTop = window.innerHeight / 2 - loadHeight / 2;
+		// If mobile (vertical)
+		if (onMobile == 1){
 
-		// Draw the outline
-		ctx.fillStyle = "#dddddd";
-		roundRect(ctx, loadLeft, loadTop, loadWidth, loadHeight, 20, true, false);
+			// Settings to be updated here in case of window resize
+			var loadWidth = 300;
+			var loadHeight = 180;
+			var loadLeft = window.innerWidth / 2 - loadWidth / 2;
+			var loadTop = window.innerHeight / 2 - loadHeight / 2;
 
-		// Update the preset selection box 
-		inputBox.style.top = (loadTop+30) + "px";
-		inputBox.style.left = (loadLeft+30) + "px";
-		inputBox.style.width = (loadWidth-150) + "px";
-		inputBox.style.display = "block";
-		
-		// Draw the second load button
-		openDims = [loadLeft+305, loadLeft+365, loadTop+23, loadTop+83];
-		drawGate("open", loadLeft+335, loadTop+53, openHover, 1);
+			// Draw the outline
+			ctx.fillStyle = "#dddddd";
+			roundRect(ctx, loadLeft, loadTop, loadWidth, loadHeight, 20, true, false);
+
+			// Update the preset selection box 
+			inputBox.style.top = (loadTop+30) + "px";
+			inputBox.style.left = (loadLeft+30) + "px";
+			inputBox.style.width = (loadWidth-60) + "px";
+			inputBox.style.display = "block";
+			
+			// Draw the second load button
+			openDims = [loadLeft+120, loadLeft+180, loadTop+90, loadTop+150];
+			drawGate("open", loadLeft+150, loadTop+120, openHover, 1);
+
+		} else {
+
+			// Settings to be updated here in case of window resize
+			var loadWidth = 400;
+			var loadHeight = 120;
+			var loadLeft = window.innerWidth / 2 - loadWidth / 2;
+			var loadTop = window.innerHeight / 2 - loadHeight / 2;
+
+			// Draw the outline
+			ctx.fillStyle = "#dddddd";
+			roundRect(ctx, loadLeft, loadTop, loadWidth, loadHeight, 20, true, false);
+
+			// Update the preset selection box 
+			inputBox.style.top = (loadTop+30) + "px";
+			inputBox.style.left = (loadLeft+30) + "px";
+			inputBox.style.width = (loadWidth-150) + "px";
+			inputBox.style.display = "block";
+			
+			// Draw the second load button
+			openDims = [loadLeft+305, loadLeft+365, loadTop+23, loadTop+83];
+			drawGate("open", loadLeft+335, loadTop+53, openHover, 1);
+
+		}
 
 	// Otherwise, hide the selection box DOM element
 	} else {
@@ -2748,10 +2853,15 @@ function fromQASM(qasmString){
 			maxY = gates[i]["y"];
 		}
 	}
-	offsetX = Math.max(3*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
-	offsetY = Math.max(2*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
-	console.log(offsetX, minX, maxX, gridXFixed, gridX);
-	console.log(offsetY, minY, maxY, gridYFixed, gridY);
+
+	// If vertical mobile, get closer to the left of the screen
+	if (onMobile == 1){
+		offsetX = Math.max(0.5*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
+		offsetY = Math.max(3*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+	} else {
+		offsetX = Math.max(3*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
+		offsetY = Math.max(2*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+	}
 
 }
 
@@ -2827,41 +2937,53 @@ function touchHandler(event){
 	if (event.type == "touchstart"){
 
 		// First act as a hover
-		var simulatedEvent = document.createEvent("MouseEvent");
-		simulatedEvent.initMouseEvent("mousemove", true, true, window, 1,
-									  first.screenX, first.screenY,
-									  first.clientX, first.clientY, false,
-									  false, false, false, 0, null);
+		var simulatedEvent = new MouseEvent("mousemove", {
+			clientX: first.clientX,
+			clientY: first.clientY,
+			movementX: 0,
+			movementY: 0,
+		});
 		first.target.dispatchEvent(simulatedEvent);
 
 		// Then trigger down
-		var simulatedEvent = document.createEvent("MouseEvent");
-		simulatedEvent.initMouseEvent("mousedown", true, true, window, 1,
-									  first.screenX, first.screenY,
-									  first.clientX, first.clientY, false,
-									  false, false, false, 0, null);
+		var simulatedEvent = new MouseEvent("mousedown", {
+			clientX: first.clientX,
+			clientY: first.clientY,
+		});
 		first.target.dispatchEvent(simulatedEvent);
+
+		// Log the latest touch location
+		prevTouchX = first.clientX;
+		prevTouchY = first.clientY;
 
 	// If the finger is dragged along the screen
 	} else if (event.type == "touchmove"){
 
-		// Same drag event
-		var simulatedEvent = document.createEvent("MouseEvent");
-		simulatedEvent.initMouseEvent("mousemove", true, true, window, 1,
-									  first.screenX, first.screenY,
-									  first.clientX, first.clientY, false,
-									  false, false, false, 0, null);
+		// Drag event
+		var simulatedEvent = new MouseEvent("mousemove", {
+			clientX: first.clientX,
+			clientY: first.clientY,
+			movementX: first.clientX - prevTouchX,
+			movementY: first.clientY - prevTouchY,
+		});
+
+		// Log the latest touch location
+		prevTouchX = first.clientX;
+		prevTouchY = first.clientY;
+
+		// Trigger the event
 		first.target.dispatchEvent(simulatedEvent);
 
 	// When the finger is lifted up
 	} else if (event.type == "touchend" || event.type == "touchcancel"){
 
-		// Same as with the mouse
-		var simulatedEvent = document.createEvent("MouseEvent");
-		simulatedEvent.initMouseEvent("mouseup", true, true, window, 1,
-									  first.screenX, first.screenY,
-									  first.clientX, first.clientY, false,
-									  false, false, false, 0, null);
+		// Mouse up event
+		var simulatedEvent = new MouseEvent("mouseup", {
+			clientX: first.clientX,
+			clientY: first.clientY,
+		});
+
+		// Trigger the event
 		first.target.dispatchEvent(simulatedEvent);
 
 	}
