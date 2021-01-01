@@ -8,12 +8,12 @@ var openHover = false;
 var openDims = [0, 0, 0, 0];
 var presets = [
 	["Local QASM File",       ""],
-	["Preset: Tutorial", "OPENQASM%203.0%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%20-2%20-25%20Agate%20Basic%20Tutorial%0A%2F%2F%20-3%20-26%20-------------------------------------%0A%2F%2F%20-3%20-23%20-------------------------------------%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%20-1%20-24%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20cannot%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2024%20The%20URL%20at%20the%20top%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%0A%2F%2F%20-4%2023%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2025%20Use%20the%20save%20button%20to%20save%20a%20local%20QASM%20file%20for%20the%20circuit%20(plus%20text%2Fposition%20info))%0A%2F%2F%20-5%2024%20%3E%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-5%2025%20%3E%0Aqreg%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0A"],
+	["Preset: Tutorial", "OPENQASM%203.0%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%20-2%20-25%20Agate%20Basic%20Tutorial%0A%2F%2F%20-3%20-26%20-------------------------------------%0A%2F%2F%20-3%20-23%20-------------------------------------%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%20-1%20-24%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2033%20The%20URL%20at%20the%20top%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%2C%20or%20to%20add%20links%0A%2F%2F%20-4%2032%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2034%20Use%20the%20save%20button%20to%20save%20a%20local%20QASM%20file%20for%20the%20circuit%20(plus%20text%2Fposition%20info))%0A%2F%2F%20-5%2033%20%3E%0A%2F%2F%20-5%2032%20%3E%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2023%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2024%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%3A%0A%2F%2F%20-3%2026%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-3%2027%20%5C%20bra%7B1%7D%0A%2F%2F%201%2027%20%5Cbra%7B1%7D%0A%2F%2F%201%2026%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-3%2028%20%5C%20ket%7B1%7D%0A%2F%2F%201%2028%20%5Cket%7B1%7D%0A%2F%2F%204%2026%20%5C%20sqrt2%0A%2F%2F%204%2027%201%20%5C%20pm%202%0A%2F%2F%208%2026%20%5Csqrt2%0A%2F%2F%208%2027%201%20%5Cpm%202%0A%2F%2F%208%2028%202%5Ctimes2%0A%2F%2F%204%2028%201%5C%20times2%0A%2F%2F%208%2029%201%5Ccdot2%0A%2F%2F%204%2029%201%5C%20cdot2%0A%2F%2F%204%2030%201%20%5C%20to%202%0A%2F%2F%208%2030%201%20%5Cto%202%0A%2F%2F%20-3%2029%20%5C%20langle%0A%2F%2F%201%2029%20%5Clangle%0A%2F%2F%20-3%2030%20%5C%20rangle%0A%2F%2F%201%2030%20%5Crangle%0A%2F%2F%20-5%2024%20%3E%0Aqreg%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0A"],
 	["Preset: Blank",    ""],
 	["Preset: Gates",    "OPENQASM%203.0%3B%0A%2F%2F%2010%201%20--%20Hadamard%20--%0A%2F%2F%206%202%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2014%206%20input%0A%2F%2F%2017%206%20output%20(unnormalised)%0A%2F%2F%2014%207%20%5Cket%7B0%7D%0A%2F%2F%2017%207%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2014%208%20%5Cket%7B1%7D%0A%2F%2F%2017%208%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%203%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%2C%0A%2F%2F%2011%20-8%20--%20Pauli%20X%20--%0A%2F%2F%206%20-7%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2014%20-5%20input%0A%2F%2F%2017%20-5%20output%0A%2F%2F%2014%20-4%20%5Cket%7B0%7D%0A%2F%2F%2017%20-4%20%5Cket%7B1%7D%0A%2F%2F%2014%20-3%20%5Cket%7B1%7D%0A%2F%2F%2017%20-3%20%5Cket%7B0%7D%0A%2F%2F%208%2012%20--%20Pauli%20Z%20(and%20other%20phase%20gates)%20--%0A%2F%2F%206%2013%20These%20all%20add%20some%20sort%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%209%2014%20assuming%20an%20input%20of%20%5Cket%7B1%7D%0A%2F%2F%2014%2033%20input%0A%2F%2F%2014%2016%20input%0A%2F%2F%2014%2020%20input%0A%2F%2F%2014%2024%20input%0A%2F%2F%2017%2033%20output%0A%2F%2F%2017%2016%20output%0A%2F%2F%2017%2020%20output%0A%2F%2F%2017%2024%20output%20(unnormalised)%0A%2F%2F%2014%2034%20%5Cket%7B0%7D%0A%2F%2F%2014%2035%20%5Cket%7B1%7D%0A%2F%2F%2014%2017%20%5Cket%7B0%7D%0A%2F%2F%2014%2018%20%5Cket%7B1%7D%0A%2F%2F%2014%2021%20%5Cket%7B0%7D%0A%2F%2F%2014%2022%20%5Cket%7B1%7D%0A%2F%2F%2014%2025%20%5Cket%7B0%7D%0A%2F%2F%2014%2026%20%5Cket%7B1%7D%0A%2F%2F%2017%2034%20i%20%5Cket%7B1%7D%0A%2F%2F%2017%2035%20-i%20%5Cket%7B0%7D%0A%2F%2F%2017%2017%20%5Cket%7B0%7D%0A%2F%2F%2017%2018%20-%20%5Cket%7B1%7D%0A%2F%2F%2017%2021%20%5Cket%7B0%7D%0A%2F%2F%2017%2022%20i%20%5Cket%7B1%7D%0A%2F%2F%2017%2026%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2017%2025%20%5Cket%7B0%7D%0A%2F%2F%2011%2030%20--%20Pauli%20Y%20--%0A%2F%2F%207%2031%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-13%20Agate%20Gates%20List%0A%2F%2F%209%20-14%20----------------------------------%0A%2F%2F%209%20-11%20----------------------------------%0A%2F%2F%2011%20-12%20by%20Lumorti%0A%2F%2F%206%204%20resulting%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%207%0Ah%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%20-4%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2034%0Ay%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2017%0Az%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2021%0As%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2025%0At%20q%5B0%5D%3B%0A"],
 	["Preset: Grover's", "OPENQASM%203.0%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0Az%20q0%3B%0Az%20q1%3B%0Acz%20q0%2Cq1%3B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Acz%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20prepares%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20a%20state%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%206%2016%20this%20function%20amplifies%20the%20coefficient%0A%2F%2F%206%2017%20of%20the%20state%20with%20negative%20phase%0A%2F%2F%20-1%20-11%20--------------------------------------------------------%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-10%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%20-8%20--------------------------------------------------------%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%203%20-9%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
-	["Preset: Shor's",   "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-1%20TODO%0A"], // TODO
-	["Preset: Testing",  "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-3%20%3E%20Highlighted%20links%0A%2F%2F%200%20-1%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%200%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%200%20-7%20%5C%20bra%7B5%7D%0A%2F%2F%2011%20-9%20%5C%20sqrt25%0A%2F%2F%200%20-6%20%5C%20ket%7B5%7D%0A%2F%2F%2011%20-5%20%5C%20to%0A%2F%2F%2011%20-6%20%5C%20pm2%0A%2F%2F%200%20-5%20%5C%20braket%7B1%7C3%7D%0A%2F%2F%20-2%20-14%20TODO%0A%2F%2F%20-2%20-13%20This%20is%20the%20test-bed%20for%20features%20I'm%20currently%20working%20on%0A%2F%2F%20-2%20-11%20%3E%20Simple%20LaTeX%20support%0A%2F%2F%20-2%202%20%3E%20Keyboard%20shortcuts%0A%2F%2F%20-2%208%20%3E%20Toggle%20input%20state%0A%2F%2F%200%204%20ctrl-c%0A%2F%2F%200%205%20ctrl-v%0A%2F%2F%203%204%20ctrl-z%0A%2F%2F%203%205%20ctrl-r%0A%2F%2F%206%204%20delete%0A%2F%2F%200%206%20ctrl-x%0A%2F%2F%2016%20-6%20%5Cpm2%0A%2F%2F%205%20-5%20%5Cbraket%7B1%7C3%7D%0A%2F%2F%205%20-7%20%5Cbra%7B5%7D%0A%2F%2F%205%20-6%20%5Cket%7B5%7D%0A%2F%2F%2016%20-5%20%5Cto%0A%2F%2F%2016%20-9%20%5Csqrt25%0A%2F%2F%2011%20-8%203%5C%20times5%0A%2F%2F%2016%20-8%203%5Ctimes5%0A%2F%2F%2011%20-7%203%5C%20cdot5%0A%2F%2F%2016%20-7%203%5Ccdot5%0A%2F%2F%200%20-9%20%5C%20langle%0A%2F%2F%205%20-9%20%5Clangle%0A%2F%2F%200%20-8%20%5C%20rangle%0A%2F%2F%205%20-8%20%5Crangle%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2011%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2015%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0A"], 
+	["Preset: Shor's",   "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-1%20TODO%0A"],
+	["Preset: Testing",  "OPENQASM%203.0%3B%0A%2F%2F%20-2%20-3%20%3E%20Highlighted%20links%0A%2F%2F%200%20-1%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%200%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%200%20-7%20%5C%20bra%7B5%7D%0A%2F%2F%2011%20-9%20%5C%20sqrt25%0A%2F%2F%200%20-6%20%5C%20ket%7B5%7D%0A%2F%2F%2011%20-5%20%5C%20to%0A%2F%2F%2011%20-6%20%5C%20pm2%0A%2F%2F%200%20-5%20%5C%20braket%7B1%7C3%7D%0A%2F%2F%20-2%20-14%20TODO%0A%2F%2F%20-2%20-13%20This%20is%20the%20test-bed%20for%20features%20I'm%20currently%20working%20on%0A%2F%2F%20-2%20-11%20%3E%20Simple%20LaTeX%20support%0A%2F%2F%20-2%202%20%3E%20Keyboard%20shortcuts%0A%2F%2F%20-2%208%20%3E%20Toggle%20input%20state%0A%2F%2F%200%204%20ctrl-c%0A%2F%2F%200%205%20ctrl-v%0A%2F%2F%203%204%20ctrl-z%0A%2F%2F%203%205%20ctrl-r%0A%2F%2F%206%204%20delete%0A%2F%2F%200%206%20ctrl-x%0A%2F%2F%2016%20-6%20%5Cpm2%0A%2F%2F%205%20-5%20%5Cbraket%7B1%7C3%7D%0A%2F%2F%205%20-7%20%5Cbra%7B5%7D%0A%2F%2F%205%20-6%20%5Cket%7B5%7D%0A%2F%2F%2016%20-5%20%5Cto%0A%2F%2F%2016%20-9%20%5Csqrt25%0A%2F%2F%2011%20-8%203%5C%20times5%0A%2F%2F%2016%20-8%203%5Ctimes5%0A%2F%2F%2011%20-7%203%5C%20cdot5%0A%2F%2F%2016%20-7%203%5Ccdot5%0A%2F%2F%200%20-9%20%5C%20langle%0A%2F%2F%205%20-9%20%5Clangle%0A%2F%2F%200%20-8%20%5C%20rangle%0A%2F%2F%205%20-8%20%5Crangle%0A%2F%2F%204%202%20%5Ccheck%0A%2F%2F%204%20-3%20%5Ccheck%0A%2F%2F%205%20-11%20%5Ccheck%0A%2F%2F%2021%20-9%20%5C%20check%0A%2F%2F%2025%20-9%20%5Ccheck%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2011%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2015%0Acx%20q%5B1%5D%2Cq%5B0%5D%3B%0A"], 
 ];
 
 // User-modifiable settings 
@@ -24,10 +24,16 @@ var doubleClickMilli = 300;
 var milliForTooltip = 500;
 var initialZoom = 0.6;
 var qasmVersion = 3;
+var maxHistory = 10;
 
 // Empty global vars to be initialised later
 var canvas = null;
 var ctx = null;
+var copyElement = null;
+
+// For managing the history
+var qasmHistory = [];
+var historyIndex = -1;
 
 // The list of gates
 var gates = [];
@@ -51,6 +57,8 @@ var qubitsWithGates = [];
 var funcStartEnds = [];
 
 // General settings
+var mx = 0;
+var my = 0;
 var onMobile = 0;
 var gateSizeFixed = 50;
 var gridYFixed = 60;
@@ -113,6 +121,10 @@ function init(recalc){
 	canvas.addEventListener('mousedown', mouseDown);
 	canvas.addEventListener('mouseup',   mouseUp);
 	canvas.addEventListener('wheel',     mouseWheel);
+
+	// For keyboard events 
+	window.addEventListener('keydown',   keyDown);
+	copyElement = document.getElementById("hiddenText");
 
 	// And for touch events
 	canvas.addEventListener("touchstart",  touchHandler, true);
@@ -341,6 +353,21 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 
 		}
 		
+	// If it's the link go button 
+	} else if (letter == "go"){
+
+		// Draw the arrow
+		if (!isSelected){
+			ctx.fillStyle = "#555555";
+		} else {
+			ctx.fillStyle = "#888888";
+		}
+		ctx.beginPath();
+		ctx.moveTo(x-gateSize/3, y-gateSize/3);
+		ctx.lineTo(x-gateSize/3, y+gateSize/3);
+		ctx.lineTo(x, y);
+		ctx.fill();
+
 	// If it's the create text icon 
 	} else if (letter == "text"){
 
@@ -392,6 +419,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			gateText = gateText.replace(/\\to/g, "\u2192");
 			gateText = gateText.replace(/\\cdot/g, "\u22C5");
 			gateText = gateText.replace(/\\times/g, "\u00D7");
+			gateText = gateText.replace(/\\check/g, "\u2713");
 
 			// Fill a box behind
 			ctx.font = fontSize + "px Arial";
@@ -642,7 +670,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 }
 
 // Called whenever something is changed
-function redraw(){
+function redraw(noHistory=false){
 
 	// Ensure it's scaled to the window
 	ctx.canvas.width  = window.innerWidth;
@@ -674,7 +702,7 @@ function redraw(){
 	for (var i=gateOptions; i<gates.length; i++){
 
 		// Only look at non-function gates first
-		if (gates[i]["letter"] != "sub" && gates[i]["letter"].substring(0,4) != "text"){
+		if (gates[i]["letter"] != "sub" && gates[i]["letter"].substring(0,4) != "text" && gates[i]["letter"] != "go"){
 
 			// Gate info caches
 			var gateX = gates[i]["x"];
@@ -922,7 +950,7 @@ function redraw(){
 			// If not a function
 			if (lineStartEnds[i][4] == -1){
 
-				// Get the inputs
+				// Get the inputs TODO
 				inputs[i] = [[100, [1, 0], ""]]
 				for (var j=0; j<1+lineStartEnds[i][3]-lineStartEnds[i][2]; j++){
 					inputs[i][0][2] += "0";
@@ -939,10 +967,23 @@ function redraw(){
 		if (gates.length > gateOptions){
 
 			// Convert gate list to URL-ready QASM
-			newURL = toQASM(qasmVersion);
+			var newURL = toQASM(qasmVersion);
+			var encoded = encodeURIComponent(newURL);
 
 			// Update URL 
-			history.replaceState(null, null, document.location.pathname + '#' + encodeURIComponent(newURL));
+			history.replaceState(null, null, document.location.pathname + '#' + encoded);
+
+			// If not told to not add to the history
+			if (!noHistory){
+
+				// Add to history
+				qasmHistory.push(encoded);
+				if (qasmHistory.length > maxHistory){
+					qasmHistory.splice(0, qasmHistory.length-maxHistory);
+				}
+				historyIndex = qasmHistory.length-1;
+
+			}
 
 		} else {
 
@@ -1546,6 +1587,10 @@ function fromIDArray(id, arr){
 // When mouse is moved above the canvas
 function mouseMove(e){
 
+	// Cache for pasting
+	mx = e.clientX;
+	my = e.clientY;
+
 	// By default, hide the delete bar
 	showDelete = false;
 
@@ -1601,6 +1646,13 @@ function mouseMove(e){
 
 			// Update the new y now the delta has been processed
 			gates[selected]["y"] = newY;
+
+			// Move any attached (go buttons) too
+			if (gates[selected]["attached"].length > 0){
+				goButton = gates[fromID(gates[selected]["attached"][0])]
+				goButton["x"] = gates[selected]["x"] + gates[selected]["size"];
+				goButton["y"] = gates[selected]["y"];
+			}
 
 		// If it's a normal gate
 		} else {
@@ -1916,6 +1968,201 @@ function mouseUp(e){
 
 }
 
+// When key pressed down 
+function keyDown(e){
+
+	// If something that requires selection
+	var copyArray = [];
+	var ids = [];
+	if (e.key == "Delete" || (e.ctrlKey && (e.key == "c" || e.key == "x"))){
+
+		// Also select hover
+		if (selectionArray.length == 0){
+			if (hover >= 0 && selectionArray.indexOf(hover) < 0){
+				selectionArray.push(hover);
+			}
+			if (selected >= 0 && selectionArray.indexOf(selected) < 0){
+				selectionArray.push(selected);
+			}
+		}
+
+		// Add everything in the selection array
+		if (selectionArray.length > 0){
+			for (var i=0; i<selectionArray.length; i++){
+
+				// Add that gate
+				var newID = gates[selectionArray[i]]["id"];
+				if (ids.indexOf(newID) < 0){
+					copyArray.push(gates[selectionArray[i]]);
+					ids.push(newID);
+				}
+
+				// Also add controls
+				var ind = selectionArray[i];
+				for (var j=0; j<gates[ind]["attached"].length; j++){
+					var newID = gates[ind]["attached"][j];
+					if (ids.indexOf(newID) < 0){
+						copyArray.push(gates[fromID(newID)]);
+						ids.push(newID);
+					}
+				}
+
+				// Also og
+				if (gates[ind]["og"] >= 0){
+					var newID = gates[ind]["og"];
+					if (ids.indexOf(newID) < 0){
+						copyArray.push(gates[fromID(newID)]);
+						ids.push(newID);
+					}
+				}
+
+			}
+
+		}
+
+	// Undo ctrl-z 
+	} else if (e.ctrlKey && e.key == "z"){
+
+		// If not at the earliest
+		if (historyIndex > 0){
+
+			// Move the index back one
+			historyIndex -= 1;
+			
+			// Get it and process it
+			asQasm = decodeURIComponent(qasmHistory[historyIndex]);
+
+			// Load the gates from this
+			fromQASM(asQasm, true);
+		
+			// Things have changed, update and redraw
+			selectionArray = [];
+			circuitUpdated = true;
+			redraw(true);
+
+		}
+
+	// Redo ctrl-r 
+	} else if (e.ctrlKey && e.shiftKey && e.key == "Z"){
+
+		// If not at the end of the history
+		if (historyIndex < qasmHistory.length-1){
+
+			// Move the index forward one
+			historyIndex += 1;
+
+			// Get it and process it
+			asQasm = decodeURIComponent(qasmHistory[historyIndex]);
+
+			// Load the gates from this
+			fromQASM(asQasm, true);
+
+			// Things have changed, update and redraw
+			selectionArray = [];
+			circuitUpdated = true;
+			redraw(true);
+
+		}
+
+	}
+
+	// Copying with ctrl-c or ctrl-x
+	if (e.ctrlKey && (e.key == "c" || e.key == "x")){
+
+		// Copy to invis object and then copy that
+		copyElement.value = JSON.stringify(copyArray);
+		copyElement.select();
+		document.execCommand("copy");
+
+	// Pasting with ctrl-v
+	} else if (e.ctrlKey && e.key == "v"){
+
+		// Force the user to paste into an invis box
+		copyElement.select();
+		copyElement.focus();
+
+	}
+
+	// If deleting or cutting
+	if (e.key == "x" || e.key == "Delete"){
+
+		// Delete everything selected 
+		for (var i=0; i<ids.length; i++){
+			ind = fromID(ids[i]);
+			if (ind >= 0){
+				for (var j=0; j<gates[ind]["attached"].length; j++){
+					var conInd = fromID(gates[ind]["attached"][j]);
+					if (conInd >= 0){
+						gates.splice(conInd, 1);
+					}
+				}
+				gates.splice(ind, 1);
+			}
+		}
+
+		// Things have changed, update and redraw
+		selectionArray = [];
+		circuitUpdated = true;
+		redraw();
+
+	}
+
+}
+
+// Trigged on paste
+function onTextPaste(t){
+
+	// Turn back into JS objects
+	var asArray = JSON.parse(t.data);
+
+	// Hide the help if pasting onto a new page
+	helpOpen = false;
+
+	// Ensure something valid is pasted
+	if (asArray != null){
+
+		// Determine the top left coord
+		var minX = 99999999;
+		var minY = 99999999;
+		for (var i=0; i<asArray.length; i++){
+			if (asArray[i]["x"] < minX){
+				minX = asArray[i]["x"];
+			} 
+			if (asArray[i]["y"] < minY){
+				minY = asArray[i]["y"];
+			} 
+		}
+
+		// Add all these to the main array, with updated indices 
+		selectionArray = [];
+		beforeToAfter = {"-1": -1};
+		for (var i=0; i<asArray.length; i++){
+			var newGate = asArray[i];
+			beforeToAfter[newGate["id"].toString()] = nextID;
+			newGate["id"] = nextID;
+			newGate["x"] += Math.round(((mx-offsetX) / gridX) - minX);
+			newGate["y"] += Math.round(((my-offsetY) / gridY) - minY);
+			nextID += 1;
+			gates.push(newGate);
+			selectionArray.push(gates.length-1);
+		}
+
+		// Ensure og/attached are consistent
+		for (var i=gates.length-asArray.length; i<gates.length; i++){
+			for (var j=0; j<gates[i]["attached"].length; j++){
+				gates[i]["attached"][j] = beforeToAfter[gates[i]["attached"][j].toString()];
+			}
+			gates[i]["og"] = beforeToAfter[gates[i]["og"].toString()];
+		}
+
+		// Things have changed, update and redraw
+		circuitUpdated = true;
+		redraw();
+
+	}
+	
+}
+
 // When mouse button pressed down
 function mouseDown(e){
 
@@ -1967,7 +2214,7 @@ function mouseDown(e){
 		if ((currentTime - lastClickTime) < doubleClickMilli){
 
 			// If it can be dragged (i.e. not in the toolbar)
-			if (gates[hover]["draggable"]){
+			if (gates[hover]["draggable"] && gates[hover]["letter"] != "go"){
 
 				// If it's a filled control
 				if (gates[hover]["letter"] == "controlFilled"){
@@ -2009,6 +2256,24 @@ function mouseDown(e){
 						gates[hover]["size"] = Math.max(1, Math.ceil(ctx.measureText(newText).width / gridX))
 						circuitUpdated = true;
 
+						// If it's a link 
+						if (newText.substr(0,4) == "http"){
+
+							// Create a go button
+							gates.push({"id": nextID, "letter": "go", "x": Math.round(gates[hover]["x"]+gates[hover]["size"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "og": gates[hover]["id"], "attached":[]})
+							gates[hover]["attached"].push(nextID);
+							nextID += 1;
+
+						// If link no longer valid
+						} else if (gates[hover]["attached"].length > 0){
+
+							// Remove the go button
+							var ind = fromID(gates[hover]["attached"]);
+							gates.splice(ind, 1);
+							gates[hover]["attached"] = [];
+
+						}
+
 					}
 
 				// If it's a normal gate (and not selecting many)
@@ -2037,8 +2302,16 @@ function mouseDown(e){
 				selectionArray = [];
 			}
 			
+			// If it's a link's go button
+			if (gates[hover]["letter"] == "go"){
+
+				// Get and open the URL
+				var ogInd = fromID(gates[hover]["og"]);
+				var url = gates[ogInd]["letter"].substr(4);
+				window.open(url);
+
 			// If it can be dragged, select it
-			if (gates[hover]["draggable"]){
+			} else if (gates[hover]["draggable"]){
 				selected = hover;
 
 			// If it's the text icon, create a text object 
@@ -2074,7 +2347,7 @@ function mouseDown(e){
 
 			// If it can't, create a new gate and select that 
 			} else {
-				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "attached":[]})
+				gates.push({"id": nextID, "letter": gates[hover]["letter"], "x": Math.round(gates[hover]["x"]), "y": Math.round(gates[hover]["y"]), "size": 1, "draggable": true, "og": -1, "attached":[]})
 				nextID += 1;
 				selected = gates.length-1;
 				hover = gates.length-1;
@@ -2452,7 +2725,7 @@ function onFileChange(e){
 }
 
 // Load the gates from a QASM string
-function fromQASM(qasmString){
+function fromQASM(qasmString, noCameraUpdate=false){
 
 	// Split into the different lines
 	var lines = qasmString.split("\n");
@@ -2504,6 +2777,16 @@ function fromQASM(qasmString){
 				// Add the gate object
 				gates.push({"id": nextID, "letter": "text"+text, "x": xPos, "y": yPos, "size": Math.max(1, Math.ceil(textWidth/gridX)), "draggable": true, "attached":[]})
 				nextID += 1;
+
+				// If it's a link
+				if (text.substr(0,4) == "http"){
+
+					// Create a go button 
+					gates[gates.length-1]["attached"].push(nextID);
+					gates.push({"id": nextID, "letter": "go", "x": xPos+gates[gates.length-1]["size"], "y": yPos, "size": 1, "draggable": true, "og": nextID-1, "attached":[]})
+					nextID += 1;
+
+				}
 
 			}
 
@@ -2828,39 +3111,44 @@ function fromQASM(qasmString){
 		}
 	}
 
-	// Recenter the camera
-	var minX = 9999;
-	var maxX = -9999;
-	var minY = 9999;
-	var maxY = -9999;
-	for (var i=gateOptions; i<gates.length; i++){
-		if (gates[i]["x"] < minX){
-			minX = gates[i]["x"];
-		}
-		if (gates[i]["letter"].substr(0,4) == "text"){
-			if (gates[i]["x"]+gates[i]["size"] > maxX){
-				maxX = gates[i]["x"]+gates[i]["size"];
+	// Recenter the camera if haven't just ctrl-z'd
+	if (!noCameraUpdate){
+		
+		// Get the min/maxs so know how to center everything
+		var minX = 9999;
+		var maxX = -9999;
+		var minY = 9999;
+		var maxY = -9999;
+		for (var i=gateOptions; i<gates.length; i++){
+			if (gates[i]["x"] < minX){
+				minX = gates[i]["x"];
 			}
-		} else {
-			if (gates[i]["x"] > maxX){
-				maxX = gates[i]["x"];
+			if (gates[i]["letter"].substr(0,4) == "text"){
+				if (gates[i]["x"]+gates[i]["size"] > maxX){
+					maxX = gates[i]["x"]+gates[i]["size"];
+				}
+			} else {
+				if (gates[i]["x"] > maxX){
+					maxX = gates[i]["x"];
+				}
+			}
+			if (gates[i]["y"] < minY){
+				minY = gates[i]["y"];
+			}
+			if (gates[i]["y"] > maxY){
+				maxY = gates[i]["y"];
 			}
 		}
-		if (gates[i]["y"] < minY){
-			minY = gates[i]["y"];
-		}
-		if (gates[i]["y"] > maxY){
-			maxY = gates[i]["y"];
-		}
-	}
 
-	// If vertical mobile, get closer to the left of the screen
-	if (onMobile == 1){
-		offsetX = Math.max(0.5*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
-		offsetY = Math.max(3*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
-	} else {
-		offsetX = Math.max(3*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
-		offsetY = Math.max(2*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+		// If vertical mobile, get closer to the left of the screen
+		if (onMobile == 1){
+			offsetX = Math.max(0.5*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
+			offsetY = Math.max(3*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+		} else {
+			offsetX = Math.max(3*gridXFixed-minX*gridX, window.innerWidth / 2 - (maxX-minX+1)*gridX / 2 - (minX+1)*gridX);
+			offsetY = Math.max(2*gridYFixed-minY*gridY, window.innerHeight / 2 - (maxY-minY+1)*gridY / 2 - (minY+1)*gridY);
+		}
+
 	}
 
 }
