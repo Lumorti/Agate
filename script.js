@@ -7,11 +7,19 @@ var inputBox = null;
 var openHover = false;
 var openDims = [0, 0, 0, 0];
 var presets = [
-	["Local QASM File",       ""],
+	["QASM File",       ""],
 	["Preset: Tutorial", "OPENQASM%203.0%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%20-1%20-25%20Agate%20Tutorial%0A%2F%2F%20-2%20-26%20-----------------------------%0A%2F%2F%20-2%20-23%20-----------------------------%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%20-1%20-24%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2034%20The%20URL%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%2C%20or%20to%20add%20links%0A%2F%2F%20-4%2033%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2035%20Use%20the%20save%20button%20to%20save%20a%20local%20file%20for%20the%20circuit%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-5%2033%20%3E%0A%2F%2F%20-5%2035%20%3E%0A%2F%2F%20-1%2025%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2023%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%0A%2F%2F%20-3%2027%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-3%2028%20%5C%20bra%7B1%7D%0A%2F%2F%201%2028%20%5Cbra%7B1%7D%0A%2F%2F%201%2027%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-3%2029%20%5C%20ket%7B1%7D%0A%2F%2F%201%2029%20%5Cket%7B1%7D%0A%2F%2F%204%2027%20%5C%20sqrt2%0A%2F%2F%204%2028%201%20%5C%20pm%202%0A%2F%2F%208%2027%20%5Csqrt2%0A%2F%2F%208%2028%201%20%5Cpm%202%0A%2F%2F%208%2029%202%5Ctimes2%0A%2F%2F%204%2029%201%5C%20times2%0A%2F%2F%208%2030%201%5Ccdot2%0A%2F%2F%204%2030%201%5C%20cdot2%0A%2F%2F%204%2031%201%20%5C%20to%202%0A%2F%2F%208%2031%201%20%5Cto%202%0A%2F%2F%20-3%2030%20%5C%20langle%0A%2F%2F%201%2030%20%5Clangle%0A%2F%2F%20-3%2031%20%5C%20rangle%0A%2F%2F%201%2031%20%5Crangle%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2036%20Keyboard%20shortcuts%20are%20also%20available%20(delete%2C%20ctrl-c%2C%20ctrl-x%2C%20ctrl-v%2C%20ctrl-z%2C%20ctrl-shift-z)%0A%2F%2F%20-5%2036%20%3E%0Aqreg%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0A%2F%2F%20to%20add%3A%20ox%2Ccx"],
 	["Preset: Gates",    "OPENQASM%203.0%3B%0A%2F%2F%2010%201%20--%20Hadamard%20--%0A%2F%2F%206%202%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2015%206%20input%0A%2F%2F%2018%206%20output%20(unnormalised)%0A%2F%2F%2015%207%20%5Cket%7B0%7D%0A%2F%2F%2018%207%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2015%208%20%5Cket%7B1%7D%0A%2F%2F%2018%208%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%203%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%2C%0A%2F%2F%2011%20-8%20--%20Pauli%20X%20--%0A%2F%2F%206%20-7%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2015%20-5%20input%0A%2F%2F%2018%20-5%20output%0A%2F%2F%2015%20-4%20%5Cket%7B0%7D%0A%2F%2F%2018%20-4%20%5Cket%7B1%7D%0A%2F%2F%2015%20-3%20%5Cket%7B1%7D%0A%2F%2F%2018%20-3%20%5Cket%7B0%7D%0A%2F%2F%208%2012%20--%20Pauli%20Z%20(and%20other%20phase%20gates)%20--%0A%2F%2F%206%2013%20These%20all%20add%20some%20sort%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%209%2014%20assuming%20an%20input%20of%20%5Cket%7B1%7D%0A%2F%2F%2015%2033%20input%0A%2F%2F%2015%2016%20input%0A%2F%2F%2015%2020%20input%0A%2F%2F%2015%2024%20input%0A%2F%2F%2018%2033%20output%0A%2F%2F%2018%2016%20output%0A%2F%2F%2018%2020%20output%0A%2F%2F%2018%2024%20output%20(unnormalised)%0A%2F%2F%2015%2034%20%5Cket%7B0%7D%0A%2F%2F%2015%2035%20%5Cket%7B1%7D%0A%2F%2F%2015%2017%20%5Cket%7B0%7D%0A%2F%2F%2015%2018%20%5Cket%7B1%7D%0A%2F%2F%2015%2021%20%5Cket%7B0%7D%0A%2F%2F%2015%2022%20%5Cket%7B1%7D%0A%2F%2F%2015%2025%20%5Cket%7B0%7D%0A%2F%2F%2015%2026%20%5Cket%7B1%7D%0A%2F%2F%2018%2034%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2035%20-i%20%5Cket%7B0%7D%0A%2F%2F%2018%2017%20%5Cket%7B0%7D%0A%2F%2F%2018%2018%20-%20%5Cket%7B1%7D%0A%2F%2F%2018%2021%20%5Cket%7B0%7D%0A%2F%2F%2018%2022%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2026%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2018%2025%20%5Cket%7B0%7D%0A%2F%2F%2011%2030%20--%20Pauli%20Y%20--%0A%2F%2F%207%2031%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-13%20Agate%20Gates%20List%0A%2F%2F%209%20-14%20----------------------------------%0A%2F%2F%209%20-11%20----------------------------------%0A%2F%2F%2011%20-12%20by%20Lumorti%0A%2F%2F%206%204%20resulting%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0A%2F%2F%2015%2041%20input%0A%2F%2F%2018%2041%20output%0A%2F%2F%2015%2042%20%5Cket%7B00%7D%0A%2F%2F%2018%2042%20%5Cket%7B00%7D%0A%2F%2F%2011%2038%20--%20Swap%20--%0A%2F%2F%209%2039%20Swaps%20the%20two%20qubits%0A%2F%2F%2015%2043%20%5Cket%7B01%7D%0A%2F%2F%2018%2043%20%5Cket%7B10%7D%0A%2F%2F%2015%2044%20%5Cket%7B10%7D%0A%2F%2F%2018%2044%20%5Cket%7B01%7D%0A%2F%2F%2015%2045%20%5Cket%7B11%7D%0A%2F%2F%2018%2045%20%5Cket%7B11%7D%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%207%0Ah%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%20-4%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2034%0Ay%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2017%0Az%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2021%0As%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2025%0At%20q%5B0%5D%3B%0Aqreg%20q%5B3%5D%3B%20%2F%2F%208%2042%0Ax%20q%5B0%5D%3B%0Aswap%20q%5B2%5D%2Cq%5B0%5D%3B%0A%2F%2F%20to%20add%3A%20swap"],
 	["Preset: Grover's", "OPENQASM%203.0%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0Az%20q0%3B%0Az%20q1%3B%0Acz%20q0%2Cq1%3B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Acz%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20prepares%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20a%20state%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%206%2016%20this%20function%20amplifies%20the%20coefficient%0A%2F%2F%206%2017%20of%20the%20state%20with%20negative%20phase%0A%2F%2F%20-1%20-11%20--------------------------------------------------------%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-10%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%20-8%20--------------------------------------------------------%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%203%20-9%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
 ];
+
+// Stuff for svgs
+var svgPadding = 30;
+var svgString = "";
+var svgMinX = 99999;
+var svgMaxX = -99999;
+var svgMinY = 99999;
+var svgMaxY = -99999;
 
 // Save types
 var saveOpen = false;
@@ -21,7 +29,7 @@ var saveDims = [0, 0, 0, 0];
 var saveTypes = [
 	"QASM 3.0",
 	"QASM 2.0",
-	"PDF",
+	"SVG",
 ];
 
 // The gates to put on the toolbar
@@ -279,6 +287,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		ctx.arc(x, y, gateSize/4, 0, 2 * Math.PI, false);
 		ctx.fill();
 		ctx.stroke();
+		svgCircle(x, y, gateSize/4, ctx.fillStyle, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's an unfilled control
 	} else if (letter == "controlUnfilled"){
@@ -295,6 +304,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		ctx.arc(x, y, gateSize/4, 0, 2 * Math.PI, false);
 		ctx.fill();
 		ctx.stroke();
+		svgCircle(x, y, gateSize/4, ctx.fillStyle, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's an subroutine definition
 	} else if (letter.substr(0,3) == "sub"){
@@ -309,12 +319,14 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 				ctx.fillStyle = "#107800";
 			}
 			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 			
-			// Draw the letter
+			// Draw the letter 
 			ctx.fillStyle = "#ffffff";
 			if (letter.length > 3){
 				ctx.font = (fontSize*0.9-2*(letter.length-4)) + "px Arial";
 				ctx.fillText(letter.substr(3), gridX*0.28+x-4*(letter.length-4)-gateSize/2, gridY*0.59+y-gateSize/2);
+				svgText(letter.substr(3), gridX*0.28+x-4*(letter.length-4)-gateSize/2, gridY*0.59+y-gateSize/2, fontSize*0.9-2*(letter.length-4), ctx.measureText(letter.substr(3)).width, ctx.fillStyle);
 			} else {
 				ctx.font = (fontSize*0.9)+"px Arial";
 				ctx.fillText("F", gridX*0.28+x-gateSize/2, gridY*0.59+y-gateSize/2);
@@ -346,7 +358,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 	// If it's an subroutine call 
 	} else if (letter.substr(0,3) == "fun" || letter == "?"){
 
-		// If not a toolbar gate
+		// If not a toolbar gate 
 		if (!fixedSize){
 
 			// Draw the box
@@ -356,15 +368,18 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 				ctx.fillStyle = "#107800";
 			}
 			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 			
 			// Draw the letter
 			ctx.fillStyle = "#ffffff";
 			if (letter == "?"){
 				ctx.font = (fontSize*0.9)+"px Arial";
 				ctx.fillText("?", 0.28*gridX+x-gateSize/2, 0.59*gridY+y-gateSize/2);
+				svgText("?", 0.28*gridX+x-gateSize/2, 0.28*gridX+x-gateSize/2, (fontSize*0.9), ctx.measureText("?").width, ctx.fillStyle);
 			} else {
 				ctx.font = (fontSize*0.9-2*(letter.length-4)) + "px Arial";
 				ctx.fillText(letter.substr(3), 0.28*gridX-4*(letter.length-4)+x-gateSize/2, 0.59*gridY+y-gateSize/2);
+				svgText(letter.substr(3), 0.28*gridX-4*(letter.length-4)+x-gateSize/2, 0.59*gridY+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter.substr(3)).width, ctx.fillStyle);
 			}
 
 		// If a toolbar gate (and thus fixed sizes should be used)
@@ -428,12 +443,13 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		ctx.arc(x+gateSizeFixed/3, y, gateSizeFixed/3, 0.5*Math.PI, 1.0*Math.PI);
 		ctx.stroke();
 
-	// If it's the top part of a swap gate 
+	// If it's the top part of a swap gate
 	} else if (letter == "swaptop"){
 
 		// Clear the standard qubit line
 		ctx.fillStyle = "#ffffff";
 		ctx.fillRect(x-(gridX*0.820)/2, y-gridY/5, gridX*0.820, gridY/2);
+		svgRect(x-(gridX*0.820)/2, y-gridY/5, gridX*0.820, gridY/2, ctx.fillStyle);
 
 		// Draw the curved section
 		if (!isSelected){
@@ -445,9 +461,11 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		ctx.beginPath();
 		ctx.arc(x-gateSize/2, y+gateSize/2, gateSize/2, 1.5*Math.PI, 0);
 		ctx.stroke();
+		svgArc(x-gateSize/2, y, x, y, x, y+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 		ctx.beginPath();
 		ctx.arc(x+gateSize/2, y+gateSize/2, gateSize/2, 1*Math.PI, 1.5*Math.PI);
 		ctx.stroke();
+		svgArc(x+gateSize/2, y, x, y, x, y+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's the bottom part of a swap gate 
 	} else if (letter == "swapbottom"){
@@ -455,6 +473,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		// Clear the standard qubit line
 		ctx.fillStyle = "#ffffff";
 		ctx.fillRect(x-(gridX*0.820)/2, y-gridY/4, gridX*0.820, gridY/2);
+		svgRect(x-(gridX*0.820)/2, y-gridY/4, gridX*0.820, gridY/2, ctx.fillStyle);
 
 		// Draw the curved section
 		if (!isSelected){
@@ -466,9 +485,11 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		ctx.beginPath();
 		ctx.arc(x-gateSize/2, y-gateSize/2, gateSize/2, 0*Math.PI, 0.5*Math.PI);
 		ctx.stroke();
+		svgArc(x-gateSize/2, y, x, y, x, y-gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 		ctx.beginPath();
 		ctx.arc(x+gateSize/2, y-gateSize/2, gateSize/2, 0.5*Math.PI, 1.0*Math.PI);
 		ctx.stroke();
+		svgArc(x+gateSize/2, y, x, y, x, y-gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's the create text icon 
 	} else if (letter == "text"){
@@ -504,6 +525,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 				ctx.fillStyle = "#003740";
 			}
 			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+			svgText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2, fontSize, ctx.measureText(gateText).width, ctx.fillStyle);
 
 		// If it's normal text
 		} else {
@@ -540,6 +562,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 
 			// Draw the text
 			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+			svgText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2, fontSize, ctx.measureText(gateText).width, ctx.fillStyle);
 
 		}
 
@@ -772,16 +795,18 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			}
 		}
 
-		// If allowed to scale with zoom
+		// If allowed to scale with zoom 
 		if (!fixedSize){
 
 			// Draw the box
 			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
+			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 
-			// Draw the letter
+			// Draw the letter 
 			ctx.font = (fontSize*0.9) + "px Arial";
 			ctx.fillStyle = "#ffffff";
 			ctx.fillText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2);
+			svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
 
 		// If part of the toolbar or something not scalable
 		} else {
@@ -803,6 +828,9 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 
 // Called whenever something is changed
 function redraw(noHistory=false){
+
+	// Reset the svg string
+	svgString = "";
 
 	// Ensure it's scaled to the window
 	ctx.canvas.width  = window.innerWidth;
@@ -1003,9 +1031,10 @@ function redraw(noHistory=false){
 				ctx.lineWidth = fontSize/7;
 				ctx.strokeStyle = "#aaaaaa";
 				ctx.beginPath();
-				ctx.moveTo((lineStartEnds[i][0])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-				ctx.lineTo((lineStartEnds[i][1])*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+				ctx.moveTo(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+				ctx.lineTo(lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
 				ctx.stroke();
+				svgLine(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
 		}
 
@@ -1021,6 +1050,10 @@ function redraw(noHistory=false){
 			ctx.lineTo((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][0]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
 			ctx.stroke();
+			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, (lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2+3, ctx.strokeStyle, ctx.lineWidth);
+			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+			svgLine((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2+3, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2-3, ctx.strokeStyle, ctx.lineWidth);
 		}
 
 	}
@@ -1037,6 +1070,7 @@ function redraw(noHistory=false){
 				ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2);
 				ctx.lineTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][j])]["y"]*gridY+gateSize/2);
 				ctx.stroke();
+				svgLine(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][j])]["y"]*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
 
 		// For swap gates 
@@ -1045,12 +1079,13 @@ function redraw(noHistory=false){
 			// The line between the swaps (only need to draw once)
 			ctx.lineWidth = fontSize/7;
 			ctx.strokeStyle = "#aaaaaa";
-			ctx.beginPath();
 			if (gates[i]["letter"] == "swaptop"){
+				ctx.beginPath();
 				ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2);
 				ctx.lineTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][0])]["y"]*gridY+gateSize/2);
+				ctx.stroke();
+				svgLine(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][0])]["y"]*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
-			ctx.stroke();
 
 			// The lines to any actual controls
 			ctx.strokeStyle = "#555555";
@@ -1572,7 +1607,7 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 			} else {
 				textX = (x+i)*gridX+offsetX+gridX*0.2;
 			}
-			textY = (y-1)*gridY+offsetY+gridY/2+8;
+			textY = (y-1)*gridY+offsetY+gridY/1.4;
 			ctx.font = (fontSize/2)+"px Arial";
 			ctx.fillText(states[i][0] + "%", textX, textY);
 
@@ -1720,7 +1755,7 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth){
 					coeff[0] = (a-b) / Math.sqrt(2);
 					coeff[1] = (a+b) / Math.sqrt(2);
 
-				// If it's a swap 
+				// If it's a swap
 				} else if (letter == "swaptop"){
 
 					// Get the location to swap with
@@ -2563,14 +2598,19 @@ function mouseDown(e){
 			fileText = toQASM(2);
 			extension = ".qasm";
 
-		// If PDF TODO
-		} else if (type == "PDF"){
-			fileText = "";
-			extension = ".pdf";
+		// If SVG 
+		} else if (type == "SVG"){
+			svgWrap()
+			fileText = svgString;
+			extension = ".svg";
 		}
 
 		// Prompt the user to download the file
 		download("circuit"+extension, fileText);
+
+		// Hide the save window
+		saveOpen = false;
+		saveHover = false;
 		
 	// If hovering over a gate
 	} else if (hover >= 0){
@@ -3705,4 +3745,137 @@ function touchHandler(event){
 	// Don't do whatever the default is
 	event.preventDefault();
 
+}
+
+// Finish up the svg, adding the wrapper etc. 
+function svgWrap(){
+
+	// Go through and adjust all the x/y values so they start at 0
+	for (var i=0; i<svgString.length; i++){
+
+		// Replace the x values
+		if (svgString.substr(i, 3) == "x=\""){
+
+			// Figure out where it starts/stops
+			var numStart = i+3;
+			var numEnd = i+svgString.substr(i+3).indexOf("\"")+3;
+
+			// Get the value, then update it based on the minX
+			var oldVal = parseFloat(svgString.substring(numStart, numEnd));
+			var newVal = oldVal - svgMinX + svgPadding;
+			svgString = svgString.substring(0, numStart) + newVal + svgString.substr(numEnd);
+
+		// Replace the x values (for lines)
+		} else if (svgString.substr(i, 4) == "x1=\"" || svgString.substr(i, 4) == "x2=\""){
+
+			// Figure out where it starts/stops
+			var numStart = i+4;
+			var numEnd = i+svgString.substr(i+4).indexOf("\"")+4;
+
+			// Get the value, then update it based on the minX
+			var oldVal = parseFloat(svgString.substring(numStart, numEnd));
+			var newVal = oldVal - svgMinX + svgPadding;
+			svgString = svgString.substring(0, numStart) + newVal + svgString.substr(numEnd);
+
+		// Replace the y values
+		} else if (svgString.substr(i, 3) == "y=\""){
+
+			// Figure out where it starts/stops
+			var numStart = i+3;
+			var numEnd = i+svgString.substr(i+3).indexOf("\"")+3;
+
+			// Get the value, then update it based on the minX
+			var oldVal = parseFloat(svgString.substring(numStart, numEnd));
+			var newVal = oldVal - svgMinY + svgPadding;
+			svgString = svgString.substring(0, numStart) + newVal + svgString.substr(numEnd);
+
+		// Replace the y values (for lines)
+		} else if (svgString.substr(i, 4) == "y1=\"" || svgString.substr(i, 4) == "y2=\""){
+
+			// Figure out where it starts/stops
+			var numStart = i+4;
+			var numEnd = i+svgString.substr(i+4).indexOf("\"")+4;
+
+			// Get the value, then update it based on the minX
+			var oldVal = parseFloat(svgString.substring(numStart, numEnd));
+			var newVal = oldVal - svgMinY + svgPadding;
+			svgString = svgString.substring(0, numStart) + newVal + svgString.substr(numEnd);
+
+		// Replace the values in any arc calls 
+		} else if (svgString.substr(i, 3) == "\"M "){
+
+			// Figure out where it starts/stops
+			var sectionStart = i+3;
+			var sectionEnd = i+3+svgString.substr(i+3).indexOf("\"");
+
+			// Split this section based on spaces for easier processing
+			var spl = svgString.substring(sectionStart, sectionEnd).split(" ");
+
+			// For every float, adjust
+			spl[0] = spl[0] - svgMinX + svgPadding;
+			spl[1] = spl[1] - svgMinY + svgPadding;
+			spl[3] = spl[3] - svgMinX + svgPadding;
+			spl[4] = spl[4] - svgMinY + svgPadding;
+			spl[5] = spl[5] - svgMinX + svgPadding;
+			spl[6] = spl[6] - svgMinY + svgPadding;
+
+			// Combine the array and put it back
+			var reverted = spl.join(" ");
+			svgString = svgString.substring(0, sectionStart) + reverted + svgString.substr(sectionEnd);
+
+		}
+
+	}
+
+	// Get the width and height of the svg
+	var svgWidth = svgMaxX - svgMinX + svgPadding*2;
+	var svgHeight = svgMaxY - svgMinY + svgPadding*2;
+
+	// Add the svg header
+	svgString = "<svg width=\"" + svgWidth + "\" height=\"" + svgHeight + "\" xmlns=\"http://www.w3.org/2000/svg\">\n" + svgString + "</svg>"
+}
+
+// Place next to each fillRect that should be copied to the svg 
+function svgRect(x, y, w, h, col){
+	svgString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + w + "\" height=\"" + h + "\" fill=\"" + col + "\"/>\n";
+	svgMinX = Math.min(svgMinX, x);
+	svgMinY = Math.min(svgMinY, y);
+	svgMaxX = Math.max(svgMaxX, x+w);
+	svgMaxY = Math.max(svgMaxY, y+h);
+}
+
+// Place next to each circle/arc that should be copied to the svg 
+function svgCircle(x, y, r, fill, stroke, strokeWidth){
+	svgString += "<circle cx=\"" + x + "\" cy=\"" + y + "\" r=\"" + r + "\" fill=\"" + fill + "\" stroke-width=\"" + strokeWidth + "\" stroke=\"" + stroke + "\"/>\n";
+	svgMinX = Math.min(svgMinX, x-r);
+	svgMinY = Math.min(svgMinY, y-r);
+	svgMaxX = Math.max(svgMaxX, x+r);
+	svgMaxY = Math.max(svgMaxY, y+r);
+}
+
+// Place next to each fillText that should be copied to the svg 
+function svgText(t, x, y, size, w, col){
+	svgString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"font-family:Arial\" font-size=\"" + size + "\" fill=\"" + col + "\">" + t + "</text>\n";
+	svgMinX = Math.min(svgMinX, x);
+	svgMinY = Math.min(svgMinY, y);
+	svgMaxX = Math.max(svgMaxX, x+w);
+	svgMaxY = Math.max(svgMaxY, y+size);
+}
+
+// Place next to each line stroke that should be copied to the svg 
+function svgLine(x1, y1, x2, y2, col, w){
+	svgString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" stroke=\"" + col + "\" stroke-width=\"" + w + "\"/>\n";
+	svgMinX = Math.min(svgMinX, x1, x2);
+	svgMinY = Math.min(svgMinY, y1, y2);
+	svgMaxX = Math.max(svgMaxX, x1, x2);
+	svgMaxY = Math.max(svgMaxY, y1, y2);
+}
+
+// Place next to each fillText that should be copied to the svg 
+function svgArc(x1, y1, c1, c2, x2, y2, col, w){
+	svgString += "<path d=\"M " + x1 + " " + y1 + " Q " + c1 + " " + c2 + " " + x2 + " " + y2 + "\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"" + w + "\"/>\n";
+	svgMinX = Math.min(svgMinX, x1, x2);
+	svgMinY = Math.min(svgMinY, y1, y2);
+	svgMaxX = Math.max(svgMaxX, x1, x2);
+	svgMaxY = Math.max(svgMaxY, y1, y2);
 }
