@@ -16,6 +16,8 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 
 [<img src="https://github.com/lumorti/Agate/blob/master/example.png?raw=true">](https://lumorti.github.io/Agate/)
 
+<a href="https://lumorti.github.io/Agate/" rel="">![Example](https://github.com/lumorti/Agate/blob/master/example.png?raw=true)</a>
+
 ### Embedding
 
 By adding "view" before "OPENQASM" in the sharable URL (so it becomes "#viewOPENQASM..."), the resulting page will be put into no-edit mode. This is designed to allow such links to be better embedded in pages as iframes. I'd put one here to show you, but GitHub markdown doesn't allow them.
