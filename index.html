@@ -168,9 +168,9 @@ function init(recalc){
 	ctx = canvas.getContext("2d");
 
 	// Make sure it's a high DPI canvas TODO
-	var ratio = 1;
+	var ratio = 10;
 	canvas.style.width = window.innerWidth;
-	canvas.style.height = window.innerHeight;
+	canvas.style.height = window.innerHeight-20;
 	canvas.width = canvas.style.width * ratio;
 	canvas.height = canvas.style.height * ratio;
 
@@ -3780,19 +3780,28 @@ function touchHandler(event){
 				var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
 									e.touches[0].clientY - e.touches[1].clientY);
 
-				// If pinch is expanding TODO
+				// Whether expanding or contracting
+				var delta = 0;
 				if (dist > lastPinchDist){
-					window.scrollTo(window.scrollX, window.scrollY - 1);
-
-				// If it's contracting
+					delta = -1;
 				} else {
-					window.scrollTo(window.scrollX, window.scrollY + 1);
+					delta = 1;
 				}
+
+				// Mouse wheel event
+				var simulatedEvent = new MouseEvent("wheel", {
+					clientX: first.clientX,
+					clientY: first.clientY+mobileOffsetY,
+					deltaY: delta,
+				});
 
 			}
 
 			// Update the last pinch distance
 			lastPinchDist = dist;
+
+			// Trigger the event
+			first.target.dispatchEvent(simulatedEvent);
 
 		} else {
 
