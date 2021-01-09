@@ -124,6 +124,11 @@ var offsetY = 0;
 var prevTouchX = 0;
 var prevTouchY = 0;
 
+// Stuff for mobile
+var isPinching = false;
+var mobileOffsetY = -30;
+var lastPinchDist = -1;
+
 // For the tips window
 var helpOpen = true;
 var tipInd = 0;
@@ -162,8 +167,10 @@ function init(recalc){
 	canvas = document.getElementById("view");
 	ctx = canvas.getContext("2d");
 
-	// Make sure high DPI canvas TODO
-	var ratio = 2;
+	// Make sure it's a high DPI canvas TODO
+	var ratio = 1;
+	canvas.style.width = window.innerWidth;
+	canvas.style.height = window.innerHeight;
 	canvas.width = canvas.style.width * ratio;
 	canvas.height = canvas.style.height * ratio;
 
@@ -3725,19 +3732,25 @@ function download(filename, text) {
 	document.body.removeChild(element);
 }
 
-// Convert touch -> mouse, from https://stackoverflow.com/questions/1517924/javascript-mapping-touch-events-to-mouse-events
+// Convert touch -> mouse, based on https://stackoverflow.com/questions/1517924/javascript-mapping-touch-events-to-mouse-events
 function touchHandler(event){
 
+	// Get the touch info
 	var touches = event.changedTouches;
 	var first = touches[0];
 
 	// When the finger is first put down
 	if (event.type == "touchstart"){
 
+		// If starting a pinch zoom TODO
+		if (event.touches.length == 2){
+			isPinching = true;
+		}
+
 		// First act as a hover
 		var simulatedEvent = new MouseEvent("mousemove", {
 			clientX: first.clientX,
-			clientY: first.clientY,
+			clientY: first.clientY+mobileOffsetY,
 			movementX: 0,
 			movementY: 0,
 		});
@@ -3746,7 +3759,7 @@ function touchHandler(event){
 		// Then trigger down
 		var simulatedEvent = new MouseEvent("mousedown", {
 			clientX: first.clientX,
-			clientY: first.clientY,
+			clientY: first.clientY+mobileOffsetY,
 		});
 		first.target.dispatchEvent(simulatedEvent);
 
@@ -3757,20 +3770,48 @@ function touchHandler(event){
 	// If the finger is dragged along the screen
 	} else if (event.type == "touchmove"){
 
-		// Drag event
-		var simulatedEvent = new MouseEvent("mousemove", {
-			clientX: first.clientX,
-			clientY: first.clientY,
-			movementX: first.clientX - prevTouchX,
-			movementY: first.clientY - prevTouchY,
-		});
+		// If currently has two fingers on screen
+		if (isPinching){
 
-		// Log the latest touch location
-		prevTouchX = first.clientX;
-		prevTouchY = first.clientY;
+			// If it's not the first trigger
+			if (lastPinchDist != -1){
 
-		// Trigger the event
-		first.target.dispatchEvent(simulatedEvent);
+				// Get the distance between them
+				var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+									e.touches[0].clientY - e.touches[1].clientY);
+
+				// If pinch is expanding TODO
+				if (dist > lastPinchDist){
+					window.scrollTo(window.scrollX, window.scrollY - 1);
+
+				// If it's contracting
+				} else {
+					window.scrollTo(window.scrollX, window.scrollY + 1);
+				}
+
+			}
+
+			// Update the last pinch distance
+			lastPinchDist = dist;
+
+		} else {
+
+			// Drag event
+			var simulatedEvent = new MouseEvent("mousemove", {
+				clientX: first.clientX,
+				clientY: first.clientY+mobileOffsetY,
+				movementX: first.clientX - prevTouchX,
+				movementY: first.clientY - prevTouchY,
+			});
+
+			// Log the latest touch location
+			prevTouchX = first.clientX;
+			prevTouchY = first.clientY;
+
+			// Trigger the event
+			first.target.dispatchEvent(simulatedEvent);
+
+		}
 
 	// When the finger is lifted up
 	} else if (event.type == "touchend" || event.type == "touchcancel"){
@@ -3778,11 +3819,15 @@ function touchHandler(event){
 		// Mouse up event
 		var simulatedEvent = new MouseEvent("mouseup", {
 			clientX: first.clientX,
-			clientY: first.clientY,
+			clientY: first.clientY+mobileOffsetY,
 		});
 
 		// Trigger the event
 		first.target.dispatchEvent(simulatedEvent);
+
+		// Stop pinching if pinching
+		isPinching = false;
+		lastPinchDist = -1;
 
 	}
 
