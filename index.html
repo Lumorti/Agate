@@ -3777,7 +3777,8 @@ function touchHandler(event){
 			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
 								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
-			alert(dist, lastPinchDist);
+			alert("dist:" + dist);
+			alert("last:" + lastPinchDist);
 
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
