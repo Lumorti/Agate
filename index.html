@@ -106,6 +106,7 @@ var mx = 0;
 var my = 0;
 var onMobile = 0;
 var gateSizeFixed = 50;
+var debugData = "";
 var gridYFixed = 60;
 var gridXFixed = 60;
 var fontSize = initialZoom*35;
@@ -1605,6 +1606,13 @@ function redraw(noHistory=false){
 
 		}
 
+	}
+
+	// Draw any debug text, if applicable
+	if (debugData.length > 0){
+		ctx.fillStyle = "#000000";
+		ctx.font = "30px Arial";
+		ctx.fillText(debugData, 100, 100);
 	}
 
 }
@@ -3778,9 +3786,7 @@ function touchHandler(event){
 			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
 								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
-			ctx.fillStyle = "#000000";
-			ctx.font = "30px Arial";
-			ctx.fillText("dist:" + dist + ", last:" + lastPinchDist, 100, 100);
+			debugData = "dist:" + dist + ", last:" + lastPinchDist;
 
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
