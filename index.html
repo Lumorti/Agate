@@ -3742,7 +3742,7 @@ function touchHandler(event){
 	// When the finger is first put down
 	if (event.type == "touchstart"){
 
-		// If starting a pinch zoom TODO
+		// If starting a pinch zoom 
 		if (event.targetTouches.length == 2){
 			isPinching = true;
 		}
@@ -3777,10 +3777,12 @@ function touchHandler(event){
 			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
 								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
+			alert(dist, lastPinchDist);
+
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
 
-				// Whether expanding or contracting
+				// Whether expanding or contracting TODO
 				var delta = 0;
 				if (dist > lastPinchDist){
 					delta = -1;
