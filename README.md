@@ -5,6 +5,8 @@ View the GitHub hosted version here: https://lumorti.github.io/Agate/
 
 Agate exists as a single portable HTML file with no dependencies, as such it can be downloaded for easy offline access.
 
+![Agate Example](example.png)
+
 ### Features
 * support for H, X, Y, Z, S, T and swap gates, plus custom gates and any number of controls
 * support for custom text objects for labelling circuits (allowing links and some LaTeX)
@@ -13,8 +15,6 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 * can export as SVG
 * page URL is updated with the QASM for easy sharing
 * optimised for both mobile and desktop
-
-![Agate Example](example.png)
 
 ### Embedding
 
