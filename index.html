@@ -173,6 +173,7 @@ function init(recalc){
 	canvas.style.height = window.innerHeight-20;
 	canvas.width = canvas.style.width * ratio;
 	canvas.height = canvas.style.height * ratio;
+	ctx.translate(0.5, 0.5);
 
 	// Add listeners for mouse events
 	canvas.addEventListener('mousemove', mouseMove);
@@ -3777,8 +3778,7 @@ function touchHandler(event){
 			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
 								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
-			alert("dist:" + dist);
-			alert("last:" + lastPinchDist);
+			alert("dist:" + dist + ", last:" + lastPinchDist);
 
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
