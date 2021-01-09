@@ -14,7 +14,7 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 * page URL is updated with the QASM for easy sharing
 * optimised for both mobile and desktop
 
-![Agate Example](https://github.com/lumorti/Agate/blob/master/example.png)
+![Agate Example](example.png)
 
 ### Embedding
 
