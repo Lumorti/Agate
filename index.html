@@ -3773,12 +3773,12 @@ function touchHandler(event){
 		// If currently has two fingers on screen
 		if (isPinching){
 
+			// Get the distance between them
+			var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+								e.touches[0].clientY - e.touches[1].clientY);
+
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
-
-				// Get the distance between them
-				var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-									e.touches[0].clientY - e.touches[1].clientY);
 
 				// Whether expanding or contracting
 				var delta = 0;
@@ -3787,6 +3787,8 @@ function touchHandler(event){
 				} else {
 					delta = 1;
 				}
+
+				alert(delta);
 
 				// Mouse wheel event
 				var simulatedEvent = new MouseEvent("wheel", {
