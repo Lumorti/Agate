@@ -1,7 +1,7 @@
 # Agate
 An open-source quantum circuit designer and simulator.
 
-View the GitHub hosted version here: [https://lumorti.github.io/Agate/]
+View the GitHub hosted version here: https://lumorti.github.io/Agate/
 
 Agate exists as a single portable HTML file with no dependencies, as such it can be downloaded for easy offline access.
 
@@ -14,7 +14,7 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 * page URL is updated with the QASM for easy sharing
 * optimised for both mobile and desktop
 
-[![Example of Agate](https://github.com/lumorti/Agate/blob/master/example.png?raw=true)](https://lumorti.github.io/Agate/)
+[<img src="https://github.com/lumorti/Agate/blob/master/example.png?raw=true">](https://lumorti.github.io/Agate/)
 
 ### Embedding
 
