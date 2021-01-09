@@ -207,10 +207,10 @@ function init(recalc){
 
 		// Zoom out a bit 
 		var change = 1.0 - 0.4;
-		gridY = gridYFixed * change;
-		gridX = gridXFixed * change;
-		gateSize = gateSizeFixed * change;
-		fontSize = initialZoom*35 * change;
+		gridY = initialZoom * gridYFixed * change;
+		gridX = initialZoom * gridXFixed * change;
+		gateSize = initialZoom * gateSizeFixed * change;
+		fontSize = initialZoom * 35 * change;
 
 		// Show less gates at once on mobile
 		numGatesToShow = 3;
@@ -236,10 +236,10 @@ function init(recalc){
 
 		// Zoom out a bit 
 		var change = 1.0 - 0.2;
-		gridY = gridYFixed * change;
-		gridX = gridXFixed * change;
-		gateSize = gateSizeFixed * change;
-		fontSize = initialZoom*35 * change;
+		gridY = initialZoom * gridYFixed * change;
+		gridX = initialZoom * gridXFixed * change;
+		gateSize = initialZoom * gateSizeFixed * change;
+		fontSize = initialZoom * 35 * change;
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gateSizeFixed+20;
@@ -265,6 +265,7 @@ function init(recalc){
 	inputBox.style.position = "absolute";
 	inputBox.style.font = "20px Arial";
 	inputBox.style.padding = "10px";
+	inputBox.style.zIndex = "100";
 	for (var k=0; k<presets.length; k++){
 		var option = document.createElement("option");
 		option.text = presets[k][0];
@@ -277,6 +278,7 @@ function init(recalc){
 	outputBox.style.position = "absolute";
 	outputBox.style.font = "20px Arial";
 	outputBox.style.padding = "10px";
+	outputBox.style.zIndex = "101";
 	for (var k=0; k<saveTypes.length; k++){
 		var option = document.createElement("option");
 		option.text = saveTypes[k];
