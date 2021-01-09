@@ -3745,7 +3745,6 @@ function touchHandler(event){
 		// If starting a pinch zoom TODO
 		if (event.touches.length == 2){
 			isPinching = true;
-			alert("touch");
 		}
 
 		// First act as a hover
@@ -3775,10 +3774,8 @@ function touchHandler(event){
 		if (isPinching){
 
 			// Get the distance between them
-			var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-								e.touches[0].clientY - e.touches[1].clientY);
-
-			alert(dist);
+			var dist = Math.hypot(event.touches[0].clientX - event.touches[1].clientX,
+								event.touches[0].clientY - event.touches[1].clientY);
 
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
