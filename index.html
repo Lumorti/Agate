@@ -162,6 +162,24 @@ function init(recalc){
 	canvas = document.getElementById("view");
 	ctx = canvas.getContext("2d");
 
+	// Make sure high DPI canvas TODO
+	var devicePixelRatio = window.devicePixelRatio || 1;
+    var backingStoreRatio = context.webkitBackingStorePixelRatio ||
+                        context.mozBackingStorePixelRatio ||
+                        context.msBackingStorePixelRatio ||
+                        context.oBackingStorePixelRatio ||
+                        context.backingStorePixelRatio || 1;
+    var ratio = devicePixelRatio / backingStoreRatio;
+    if (devicePixelRatio !== backingStoreRatio){
+        var oldWidth = canvas.width;
+        var oldHeight = canvas.height;
+        canvas.width = oldWidth * ratio;
+        canvas.height = oldHeight * ratio;
+        canvas.style.width = oldWidth + 'px';
+        canvas.style.height = oldHeight + 'px';
+        ctx.scale(ratio, ratio);
+    }
+
 	// Add listeners for mouse events
 	canvas.addEventListener('mousemove', mouseMove);
 	canvas.addEventListener('mousedown', mouseDown);
