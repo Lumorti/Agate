@@ -205,12 +205,12 @@ function init(recalc){
 	// Changes if on mobile (vertical)
 	if (onMobile == 1){
 
-		// Zoom out a bit TODO
+		// Zoom out a bit 
 		var change = 1.0 - 0.4;
-		gridY *= change;
-		gridX *= change;
-		gateSize *= change;
-		fontSize *= change;
+		gridY = gridYFixed * change;
+		gridX = gridXFixed * change;
+		gateSize = gateSizeFixed * change;
+		fontSize = initialZoom*35 * change;
 
 		// Show less gates at once on mobile
 		numGatesToShow = 3;
@@ -222,24 +222,24 @@ function init(recalc){
 		toolbarRel = (toolbarOffsetX / gridXFixed);
 		gates = [];
 		toolbarIndex = 0;
-		gates.push({"letter": "left",   "y": 0.33, "x": 0.2+toolbarRel, "size": 1, "attached": [], "og": -1, "draggable": false})
+		gates.push({"letter": "left",   "y": 0.33, "x": 0.15+toolbarRel, "size": 1, "attached": [], "og": -1, "draggable": false})
 		for (var i=0; i<toolbarGates.length; i++){
-			gates.push({"letter": toolbarGates[i], "attached": [], "og": -1, "y": 0.33, "x": (i%numGatesToShow)+1.2+toolbarRel, "size": 1, "draggable": false})
+			gates.push({"letter": toolbarGates[i], "attached": [], "og": -1, "y": 0.33, "x": (i%numGatesToShow)+1.15+toolbarRel, "size": 1, "draggable": false})
 		}
 		gates.push({"letter": "right",  "y": 0.33, "x": numGatesToShow+1.2+toolbarRel, "attached": [], "og": -1, "size": 1, "draggable": false})
-		gates.push({"letter": "open", "attached": [], "og": -1, "y": 1.27, "x": 1.8+toolbarRel, "size": 1, "draggable": false})
-		gates.push({"letter": "save", "attached": [], "og": -1, "y": 1.43, "x": 2.8+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "open", "attached": [], "og": -1, "y": 1.27, "x": 1.75+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "save", "attached": [], "og": -1, "y": 1.43, "x": 2.75+toolbarRel, "size": 1, "draggable": false})
 		gatesInit = gates.slice();
 		gateOptions = gates.length;
 
 	} else {
 
-		// Zoom out a bit TODO
+		// Zoom out a bit 
 		var change = 1.0 - 0.2;
-		gridY *= change;
-		gridX *= change;
-		gateSize *= change;
-		fontSize *= change;
+		gridY = gridYFixed * change;
+		gridX = gridXFixed * change;
+		gateSize = gateSizeFixed * change;
+		fontSize = initialZoom*35 * change;
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gateSizeFixed+20;
@@ -3785,16 +3785,16 @@ function touchHandler(event){
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
 
-				// Whether expanding or contracting TODO
+				// Whether expanding or contracting 
 				var delta = 0.05*Math.abs(dist-lastPinchDist);
 				if (dist > lastPinchDist){
 					delta = -delta;
 				}
 
-				// Mouse wheel event
+				// Mouse wheel event TODO zoom to center point
 				var simulatedEvent = new WheelEvent("wheel", {
-					clientX: first.clientX,
-					clientY: first.clientY+mobileOffsetY,
+					clientX: (event.targetTouches[0].clientX+event.targetTouches[1].clientX)/2,
+					clientY: (event.targetTouches[0].clientY+event.targetTouches[1].clientY)/2,
 					deltaY: delta,
 				});
 
