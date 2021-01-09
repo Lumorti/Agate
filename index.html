@@ -3769,11 +3769,9 @@ function touchHandler(event){
 			if (lastPinchDist != -1){
 
 				// Whether expanding or contracting TODO
-				var delta = 0;
+				var delta = 0.01*(dist-lastPinchDist);
 				if (dist > lastPinchDist){
-					delta = -0.1;
-				} else {
-					delta = 0.1;
+					delta = -delta;
 				}
 
 				// Mouse wheel event
