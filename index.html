@@ -117,7 +117,6 @@ var spacing = 0.8;
 var toolbarWidth = -1;
 var toolbarHeight = -1;
 var maxRecDepth = 5;
-var zoomSpeed = 0.08;
 
 // For dragging the canvas around
 var offsetX = 0;
@@ -3685,43 +3684,23 @@ function mouseWheel(e){
 	// Only handle if the help isn't open
 	if (!helpOpen){
 
-		// If scrolling up 
-		if (e.deltaY < 0){
+		// Figure out the zoom point before scaling
+		var xs = (e.clientX - offsetX) / (gridX / gridXFixed);
+		var ys = (e.clientY - offsetY) / (gridY / gridYFixed);
 
-			// Figure out the zoom point before scaling
-			var xs = (e.clientX - offsetX) / (gridX / gridXFixed);
-			var ys = (e.clientY - offsetY) / (gridY / gridYFixed);
+		// How fast to zoom
+		var zoomSpeed = 0.05 * e.deltaY;
 
-			// Expand the dimensions to zoom in
-			var zoomIn = 1.0 + zoomSpeed;
-			gridY *= zoomIn;
-			gridX *= zoomIn;
-			gateSize *= zoomIn;
-			fontSize *= zoomIn;
+		// Change the dimensions
+		var change = 1.0 - zoomSpeed;
+		gridY *= change;
+		gridX *= change;
+		gateSize *= change;
+		fontSize *= change;
 
-			// Update now the scale has changed
-			offsetX = e.clientX - xs * (gridX / gridXFixed);
-			offsetY = e.clientY - ys * (gridY / gridYFixed);
-		
-		// If scrolling down
-		} else {
-
-			// Figure out the zoom point before scaling
-			var xs = (e.clientX - offsetX) / (gridX / gridXFixed);
-			var ys = (e.clientY - offsetY) / (gridY / gridYFixed);
-
-			// Contract the dimensions to zoom ou
-			var zoomOut = 1.0 - zoomSpeed;
-			gridY *= zoomOut;
-			gridX *= zoomOut;
-			gateSize *= zoomOut;
-			fontSize *= zoomOut;
-
-			// Update now the scale has changed
-			offsetX = e.clientX - xs * (gridX / gridXFixed);
-			offsetY = e.clientY - ys * (gridY / gridYFixed);
-		
-		}
+		// Update now the scale has changed
+		offsetX = e.clientX - xs * (gridX / gridXFixed);
+		offsetY = e.clientY - ys * (gridY / gridYFixed);
 
 		// Redraw everything now the sizes have changed
 		redraw();
@@ -3792,12 +3771,10 @@ function touchHandler(event){
 				// Whether expanding or contracting TODO
 				var delta = 0;
 				if (dist > lastPinchDist){
-					delta = -1;
+					delta = -0.1;
 				} else {
-					delta = 1;
+					delta = 0.1;
 				}
-
-				debugData = "" + delta + " " + dist + " " + lastPinchDist;
 
 				// Mouse wheel event
 				var simulatedEvent = new WheelEvent("wheel", {
