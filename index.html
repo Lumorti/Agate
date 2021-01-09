@@ -3786,8 +3786,6 @@ function touchHandler(event){
 			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
 								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
-			debugData = "dist:" + dist + ", last:" + lastPinchDist;
-
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
 
@@ -3799,8 +3797,10 @@ function touchHandler(event){
 					delta = 1;
 				}
 
+				debugData = "" + delta + " " + dist + " " + lastPinchDist;
+
 				// Mouse wheel event
-				var simulatedEvent = new MouseEvent("wheel", {
+				var simulatedEvent = new WheelEvent("wheel", {
 					clientX: first.clientX,
 					clientY: first.clientY+mobileOffsetY,
 					deltaY: delta,
