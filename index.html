@@ -3743,7 +3743,7 @@ function touchHandler(event){
 	if (event.type == "touchstart"){
 
 		// If starting a pinch zoom TODO
-		if (touches.length == 2){
+		if (event.targetTouches.length == 2){
 			isPinching = true;
 		}
 
@@ -3774,8 +3774,8 @@ function touchHandler(event){
 		if (isPinching){
 
 			// Get the distance between them
-			var dist = Math.hypot(touches[0].clientX - touches[1].clientX,
-								touches[0].clientY - touches[1].clientY);
+			var dist = Math.hypot(event.targetTouches[0].clientX - event.targetTouches[1].clientX,
+								event.targetTouches[0].clientY - event.targetTouches[1].clientY);
 
 			// If it's not the first trigger
 			if (lastPinchDist != -1){
