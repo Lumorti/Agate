@@ -1680,7 +1680,7 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// Draw any debug text, if applicable
-	debugData = promptOpen;
+	debugData = "p:" + promptOpen;
 	if (debugData.length > 0){
 		ctx.fillStyle = "#000000";
 		ctx.font = "10px Arial";
