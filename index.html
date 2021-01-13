@@ -176,7 +176,7 @@ function init(newInstance=false, recalc=false){
 	canvas = document.getElementById("view");
 	ctx = canvas.getContext("2d");
 
-	// Make sure it's a high DPI canvas TODO
+	// Make sure it's a high DPI canvas 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerWidth;
 	canvas.style.width = window.innerWidth + "px";
@@ -240,6 +240,11 @@ function init(newInstance=false, recalc=false){
 		onMobile = 1;
 	} else if (window.innerHeight < 400){
 		onMobile = 2;
+	}
+
+	// Don't show the welcome text on mobile TODO
+	if (onMobile > 0){
+		helpOpen = false;
 	}
 
 	// Changes if on mobile (vertical)
@@ -921,7 +926,7 @@ function redraw(t=0, noHistory=false){
 	svgMinY = 99999;
 	svgMaxY = -99999;
 
-	// Ensure it's scaled to the window TODO
+	// Ensure it's scaled to the window 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 	// Draw grid lines
@@ -1692,7 +1697,7 @@ function redraw(t=0, noHistory=false){
 		ctx.fillText(fps, 30, 30);
 	}
 
-	// TODO
+	// Redraw when available 
 	requestAnimationFrame(redraw);
 
 }
@@ -2809,8 +2814,8 @@ function mouseDown(e){
 				// If it's a text object 
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
-					// Open a prompt to change the text
-					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
+					// Open a prompt to change the text TODO weird on mobile
+					var newText = window.prompt("Enter new text:", gates[hover]["letter"].substr(4));
 
 					// If the user didn't cancel
 					if (newText !== null){
@@ -3837,12 +3842,12 @@ function touchHandler(event){
 			if (lastPinchDist != -1){
 
 				// Whether expanding or contracting 
-				var delta = 0.05*Math.abs(dist-lastPinchDist);
+				var delta = 0.06*Math.abs(dist-lastPinchDist);
 				if (dist > lastPinchDist){
 					delta = -delta;
 				}
 
-				// Mouse wheel event TODO zoom to center point
+				// Mouse wheel event 
 				var simulatedEvent = new WheelEvent("wheel", {
 					clientX: (event.targetTouches[0].clientX+event.targetTouches[1].clientX)/2,
 					clientY: (event.targetTouches[0].clientY+event.targetTouches[1].clientY)/2,
