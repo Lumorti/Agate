@@ -174,12 +174,12 @@ function init(recalc){
 	ctx = canvas.getContext("2d");
 
 	// Make sure it's a high DPI canvas TODO
-	var ratio = 2;
-	canvas.width = window.innerWidth / ratio;
-	canvas.height = window.innerWidth / ratio;
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerWidth;
 	canvas.style.width = window.innerWidth + "px";
 	canvas.style.height = window.innerHeight + "px";
-	ctx.scale(ratio, ratio);
+	ctx.canvas.width  = window.innerWidth;
+	ctx.canvas.height = window.innerHeight;
 
 	// Add listeners for mouse events
 	canvas.addEventListener('mousemove', mouseMove);
@@ -896,9 +896,8 @@ function redraw(noHistory=false){
 	// Reset the svg string
 	svgString = "";
 
-	// Ensure it's scaled to the window
-	ctx.canvas.width  = window.innerWidth;
-	ctx.canvas.height = window.innerHeight;
+	// Ensure it's scaled to the window TODO
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 	// Draw grid lines
 	if (drawGrid){
@@ -1646,6 +1645,9 @@ function redraw(noHistory=false){
 		ctx.fillText(fps, 30, 30);
 	}
 
+	// TODO
+	requestAnimationFrame(redraw);
+
 }
 
 // Render the given states at the specified position 
@@ -2328,7 +2330,7 @@ function mouseMove(e){
 	}
 
 	// Update the canvas
-	redraw();
+	/*redraw();*/
 
 }
 
@@ -2421,7 +2423,7 @@ function mouseUp(e){
 	mouseMove(e);
 
 	// Update the canvas
-	redraw();
+	/*redraw();*/
 
 }
 
@@ -2495,9 +2497,9 @@ function keyDown(e){
 			fromQASM(asQasm, true);
 		
 			// Things have changed, update and redraw
-			selectionArray = [];
-			circuitUpdated = true;
-			redraw(true);
+			/*selectionArray = [];*/
+			/*circuitUpdated = true;*/
+			/*redraw(true);*/
 
 		}
 
@@ -2569,7 +2571,7 @@ function keyDown(e){
 		// Things have changed, update and redraw
 		selectionArray = [];
 		circuitUpdated = true;
-		redraw();
+		/*redraw();*/
 
 	}
 
@@ -2623,7 +2625,7 @@ function onTextPaste(t){
 
 		// Things have changed, update and redraw
 		circuitUpdated = true;
-		redraw();
+		/*redraw();*/
 
 	}
 	
@@ -2661,10 +2663,10 @@ function mouseDown(e){
 			fromQASM(asQasm);
 
 			// Re-sim and redraw (twice just to ensure consistent functions)
-			circuitUpdated = false;
-			redraw();
-			circuitUpdated = true;
-			redraw();
+			/*circuitUpdated = false;*/
+			/*redraw();*/
+			/*circuitUpdated = true;*/
+			/*redraw();*/
 
 		}
 
@@ -2926,7 +2928,7 @@ function mouseDown(e){
 	lastClickTime = currentTime;
 
 	// Update the canvas
-	redraw();
+	/*redraw();*/
 
 }
 
@@ -3248,10 +3250,10 @@ function onFileChange(e){
 		fromQASM(text);
 
 		// Re-sim and redraw (twice just to ensure consistent functions)
-		circuitUpdated = false;
-		redraw();
-		circuitUpdated = true;
-		redraw();
+		/*circuitUpdated = false;*/
+		/*redraw();*/
+		/*circuitUpdated = true;*/
+		/*redraw();*/
 
 	};
 
@@ -3735,7 +3737,7 @@ function mouseWheel(e){
 		offsetY = e.clientY - ys * (gridY / gridYFixed);
 
 		// Redraw everything now the sizes have changed
-		redraw();
+		/*redraw();*/
 
 	}
 
