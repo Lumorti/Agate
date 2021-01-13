@@ -152,6 +152,7 @@ var tips = [
 var lastClickTime = -1;
 var lastSimTime = -1;
 var circuitUpdated = true;
+var recalcRecs = true;
 var inputs = [[]];
 var results = [[]];
 
@@ -181,21 +182,52 @@ function init(recalc){
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 
-	// Add listeners for mouse events
-	canvas.addEventListener('mousemove', mouseMove);
-	canvas.addEventListener('mousedown', mouseDown);
-	canvas.addEventListener('mouseup',   mouseUp);
-	canvas.addEventListener('wheel',     mouseWheel);
+	// Add listeners for mouse events TODO reset these
+	if (recalc){
+		canvas.addEventListener('mousemove', mouseMove);
+		canvas.addEventListener('mousedown', mouseDown);
+		canvas.addEventListener('mouseup',   mouseUp);
+		canvas.addEventListener('wheel',     mouseWheel);
 
-	// For keyboard events 
-	window.addEventListener('keydown',   keyDown);
-	copyElement = document.getElementById("hiddenText");
+		// For keyboard events 
+		window.addEventListener('keydown',   keyDown);
+		copyElement = document.getElementById("hiddenText");
 
-	// And for touch events
-	canvas.addEventListener("touchstart",  touchHandler, true);
-	canvas.addEventListener("touchmove",   touchHandler, true);
-	canvas.addEventListener("touchend",    touchHandler, true);
-	canvas.addEventListener("touchcancel", touchHandler, true);
+		// And for touch events
+		canvas.addEventListener("touchstart",  touchHandler, true);
+		canvas.addEventListener("touchmove",   touchHandler, true);
+		canvas.addEventListener("touchend",    touchHandler, true);
+		canvas.addEventListener("touchcancel", touchHandler, true);
+
+		
+
+		// Setup the hidden preset load element 
+		inputBox = document.createElement("SELECT");
+		inputBox.style.position = "absolute";
+		inputBox.style.font = "20px Arial";
+		inputBox.style.padding = "10px";
+		inputBox.style.zIndex = "100";
+		for (var k=0; k<presets.length; k++){
+			var option = document.createElement("option");
+			option.text = presets[k][0];
+			inputBox.add(option);
+		}
+		document.getElementsByTagName("BODY")[0].appendChild(inputBox);
+
+		// Setup the hidden preset save element 
+		outputBox = document.createElement("SELECT");
+		outputBox.style.position = "absolute";
+		outputBox.style.font = "20px Arial";
+		outputBox.style.padding = "10px";
+		outputBox.style.zIndex = "101";
+		for (var k=0; k<saveTypes.length; k++){
+			var option = document.createElement("option");
+			option.text = saveTypes[k];
+			outputBox.add(option);
+		}
+		document.getElementsByTagName("BODY")[0].appendChild(outputBox);
+
+	}
 
 	// Manually update based on the size of the array below 
 	// (needed before they're added to figure out positioning)
@@ -266,36 +298,8 @@ function init(recalc){
 
 	}
 
-	// Setup the hidden preset load element 
-	inputBox = document.createElement("SELECT");
-	inputBox.style.position = "absolute";
-	inputBox.style.font = "20px Arial";
-	inputBox.style.padding = "10px";
-	inputBox.style.zIndex = "100";
-	for (var k=0; k<presets.length; k++){
-		var option = document.createElement("option");
-		option.text = presets[k][0];
-		inputBox.add(option);
-	}
-	document.getElementsByTagName("BODY")[0].appendChild(inputBox);
-
-	// Setup the hidden preset save element 
-	outputBox = document.createElement("SELECT");
-	outputBox.style.position = "absolute";
-	outputBox.style.font = "20px Arial";
-	outputBox.style.padding = "10px";
-	outputBox.style.zIndex = "101";
-	for (var k=0; k<saveTypes.length; k++){
-		var option = document.createElement("option");
-		option.text = saveTypes[k];
-		outputBox.add(option);
-	}
-	document.getElementsByTagName("BODY")[0].appendChild(outputBox);
-
 	// If URL contains QASM info, use it
 	if (document.location.hash.length > 1){
-
-		console.log(document.location.hash.substr(0,4) );
 
 		// If a keyword present 
 		if (document.location.hash.substr(1,4) == "view"){
@@ -323,12 +327,10 @@ function init(recalc){
 	}
 
 	// First drawing (twice to ensure consistent functions)
-	circuitUpdated = false;
-	redraw();
 	if (recalc){
 		circuitUpdated = true;
 		redraw();
-	}
+	} 
 
 }
 
@@ -891,10 +893,14 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 }
 
 // Called whenever something is changed
-function redraw(noHistory=false){
+function redraw(t=0, noHistory=false){
 
-	// Reset the svg string
+	// Reset the svg vars
 	svgString = "";
+	svgMinX = 99999;
+	svgMaxX = -99999;
+	svgMinY = 99999;
+	svgMaxY = -99999;
 
 	// Ensure it's scaled to the window TODO
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -915,168 +921,174 @@ function redraw(noHistory=false){
 		ctx.stroke();
 	}
 
-	// Reset arrays
-	qubitsWithGates = [];
-	lineStartEnds = [];
+	// Onlt recalc recs if needed
+	if (circuitUpdated || recalcRecs){
 
-	// Find qubit line rectangles needed ([minX,maxX,minY,maxY])
-	for (var i=gateOptions; i<gates.length; i++){
+		// Reset things
+		qubitsWithGates = [];
+		lineStartEnds = [];
+		recalcRecs = false;
 
-		// Only look at non-function gates first
-		if (gates[i]["letter"] != "sub" && gates[i]["letter"].substring(0,4) != "text" && gates[i]["letter"] != "go"){
+		// Find qubit line rectangles needed ([minX,maxX,minY,maxY])
+		for (var i=gateOptions; i<gates.length; i++){
 
-			// Gate info caches
-			var gateX = gates[i]["x"];
-			var gateY = gates[i]["y"];
-			var size = gates[i]["size"]-1;
+			// Only look at non-function gates first
+			if (gates[i]["letter"] != "sub" && gates[i]["letter"].substring(0,4) != "text" && gates[i]["letter"] != "go"){
 
-			// If it's a function gate inside any other function 
-			if (gates[i]["letter"] == "fun"){
+				// Gate info caches
+				var gateX = gates[i]["x"];
+				var gateY = gates[i]["y"];
+				var size = gates[i]["size"]-1;
 
-				// Assume it's fine
-				gates[i]["rec"] = false;
+				// If it's a function gate inside any other function 
+				if (gates[i]["letter"] == "fun"){
 
-				// Assume controls are fine too
-				for (var k=0; k<gates[i]["attached"].length; k++){
-					var conInd = fromID(gates[i]["attached"][k]);
-					gates[conInd]["rec"] = false;
-				}
+					// Assume it's fine
+					gates[i]["rec"] = false;
 
-				// Check all known function locations
-				for (var j=0; j<funcStartEnds.length; j++){
-
-					// If recursive, don't expand
-					if (gateY+size >= funcStartEnds[j][2]-2 && gateY <= funcStartEnds[j][3]+2){
-						gates[i]["rec"] = true;
-					}
-
-					// Also check controls 
+					// Assume controls are fine too
 					for (var k=0; k<gates[i]["attached"].length; k++){
 						var conInd = fromID(gates[i]["attached"][k]);
-						if (gates[conInd]["y"] >= funcStartEnds[j][2]-2 && gates[conInd]["y"] <= funcStartEnds[j][3]+2){
+						gates[conInd]["rec"] = false;
+					}
+
+					// Check all known function locations
+					for (var j=0; j<funcStartEnds.length; j++){
+
+						// If recursive, don't expand
+						if (gateY+size >= funcStartEnds[j][2]-2 && gateY <= funcStartEnds[j][3]+2){
 							gates[i]["rec"] = true;
-							gates[conInd]["rec"] = true;
+						}
+
+						// Also check controls 
+						for (var k=0; k<gates[i]["attached"].length; k++){
+							var conInd = fromID(gates[i]["attached"][k]);
+							if (gates[conInd]["y"] >= funcStartEnds[j][2]-2 && gates[conInd]["y"] <= funcStartEnds[j][3]+2){
+								gates[i]["rec"] = true;
+								gates[conInd]["rec"] = true;
+							}
+
 						}
 
 					}
 
 				}
-
-			}
-			
-			// Don't deal with it if it's trying to recurse
-			if (gates[i]["rec"] === true){
-				continue;
-			}
-
-			// Keep track of the number of gates on each qubit
-			for (var j=0; j<size+1; j++){
-				if (qubitsWithGates.indexOf(gateY+j) < 0){
-					qubitsWithGates.push(gateY+j);
-				}
-			}
-
-			// Check if this gate is in an existing rectangle 
-			var inRect = [];
-			for (var j=0; j<lineStartEnds.length; j++){
-
-				// If the gate itself is in the rect
-				if (gateY <= lineStartEnds[j][3]+1 && gateY+size >= lineStartEnds[j][2]-1){
-					inRect.push(j);
-				}
 				
-				// If it's a control, check its main gate
-				if (gates[i]["letter"] == "controlFilled" || gates[i]["letter"] == "controlUnfilled"){
-					ogInd = fromID(gates[i]["og"]);
-					if (gates[ogInd]["y"] <= lineStartEnds[j][3]+1 && gates[ogInd]["y"] >= lineStartEnds[j][2]-1){
-						inRect.push(j);
+				// Don't deal with it if it's trying to recurse
+				if (gates[i]["rec"] === true){
+					continue;
+				}
+
+				// Keep track of the number of gates on each qubit
+				for (var j=0; j<size+1; j++){
+					if (qubitsWithGates.indexOf(gateY+j) < 0){
+						qubitsWithGates.push(gateY+j);
 					}
 				}
 
-				// If any of its controls are 
-				for (var k=0; k<gates[i]["attached"].length; k++){
-					controlInd = fromID(gates[i]["attached"][k]);
-					if ((gates[controlInd]["y"] <= lineStartEnds[j][3]+1 && gates[controlInd]["y"] >= lineStartEnds[j][2]-1) || (gates[controlInd]["y"] >= lineStartEnds[j][3]+1 && gateY <= lineStartEnds[j][2]-1) || (gates[controlInd]["y"] <= lineStartEnds[j][2]-1 && gateY >= lineStartEnds[j][3]+1)){
+				// Check if this gate is in an existing rectangle 
+				var inRect = [];
+				for (var j=0; j<lineStartEnds.length; j++){
+
+					// If the gate itself is in the rect
+					if (gateY <= lineStartEnds[j][3]+1 && gateY+size >= lineStartEnds[j][2]-1){
 						inRect.push(j);
 					}
-				}
-
-			}
-
-			// If connecting multiple rectangles 
-			if (inRect.length >= 1){
-
-				// Start with a slightly expanded rect
-				var mergedRect = [gateX-1, gateX+1, gateY, gateY+size, -1];
-
-				// Combine rects
-				for (var k=0; k<inRect.length; k++){
 					
-					// Update the mins/maxs
-					if (lineStartEnds[inRect[k]][0] < mergedRect[0]){
-						mergedRect[0] = lineStartEnds[inRect[k]][0];
-					} 
-					if (lineStartEnds[inRect[k]][1] > mergedRect[1]){
-						mergedRect[1] = lineStartEnds[inRect[k]][1];
+					// If it's a control, check its main gate
+					if (gates[i]["letter"] == "controlFilled" || gates[i]["letter"] == "controlUnfilled"){
+						ogInd = fromID(gates[i]["og"]);
+						if (gates[ogInd]["y"] <= lineStartEnds[j][3]+1 && gates[ogInd]["y"] >= lineStartEnds[j][2]-1){
+							inRect.push(j);
+						}
 					}
-					if (lineStartEnds[inRect[k]][2] < mergedRect[2]){
-						mergedRect[2] = lineStartEnds[inRect[k]][2];
-					}
-					if (lineStartEnds[inRect[k]][3] > mergedRect[3]){
-						mergedRect[3] = lineStartEnds[inRect[k]][3];
-					}
-					if (lineStartEnds[inRect[k]][4] != -1){
-						mergedRect[4] = lineStartEnds[inRect[k]][4];
+
+					// If any of its controls are 
+					for (var k=0; k<gates[i]["attached"].length; k++){
+						controlInd = fromID(gates[i]["attached"][k]);
+						if ((gates[controlInd]["y"] <= lineStartEnds[j][3]+1 && gates[controlInd]["y"] >= lineStartEnds[j][2]-1) || (gates[controlInd]["y"] >= lineStartEnds[j][3]+1 && gateY <= lineStartEnds[j][2]-1) || (gates[controlInd]["y"] <= lineStartEnds[j][2]-1 && gateY >= lineStartEnds[j][3]+1)){
+							inRect.push(j);
+						}
 					}
 
 				}
 
-				// Remove the old ones 
-				var newList = []
-				for (var k=0; k<lineStartEnds.length; k++){
-					if (inRect.indexOf(k) < 0){
-						newList.push(lineStartEnds[k].slice());
+				// If connecting multiple rectangles 
+				if (inRect.length >= 1){
+
+					// Start with a slightly expanded rect
+					var mergedRect = [gateX-1, gateX+1, gateY, gateY+size, -1];
+
+					// Combine rects
+					for (var k=0; k<inRect.length; k++){
+						
+						// Update the mins/maxs
+						if (lineStartEnds[inRect[k]][0] < mergedRect[0]){
+							mergedRect[0] = lineStartEnds[inRect[k]][0];
+						} 
+						if (lineStartEnds[inRect[k]][1] > mergedRect[1]){
+							mergedRect[1] = lineStartEnds[inRect[k]][1];
+						}
+						if (lineStartEnds[inRect[k]][2] < mergedRect[2]){
+							mergedRect[2] = lineStartEnds[inRect[k]][2];
+						}
+						if (lineStartEnds[inRect[k]][3] > mergedRect[3]){
+							mergedRect[3] = lineStartEnds[inRect[k]][3];
+						}
+						if (lineStartEnds[inRect[k]][4] != -1){
+							mergedRect[4] = lineStartEnds[inRect[k]][4];
+						}
+
 					}
-				}
-				newList.push(mergedRect.slice());
-				lineStartEnds = newList.slice();
 
-			// Otherwise add a new rectangle
-			} else if (gates[i]["letter"] != "sub"){
+					// Remove the old ones 
+					var newList = []
+					for (var k=0; k<lineStartEnds.length; k++){
+						if (inRect.indexOf(k) < 0){
+							newList.push(lineStartEnds[k].slice());
+						}
+					}
+					newList.push(mergedRect.slice());
+					lineStartEnds = newList.slice();
 
-				// Add the new rect
-				lineStartEnds.push([gateX-1, gateX+1, gateY, gateY+size, -1]);
+				// Otherwise add a new rectangle
+				} else if (gates[i]["letter"] != "sub"){
 
-				// This gate is creating a new rect, thus isn't recursing
-				if (gates[i]["letter"] == "fun"){
-					gates[i]["rec"] = false;
+					// Add the new rect
+					lineStartEnds.push([gateX-1, gateX+1, gateY, gateY+size, -1]);
+
+					// This gate is creating a new rect, thus isn't recursing
+					if (gates[i]["letter"] == "fun"){
+						gates[i]["rec"] = false;
+					}
+
 				}
 
 			}
 
 		}
 
-	}
+		// Now check again, but for function gates
+		funcStartEnds = [];
+		for (var i=gateOptions; i<gates.length; i++){
 
-	// Now check again, but for function gates
-	funcStartEnds = [];
-	for (var i=gateOptions; i<gates.length; i++){
+			// If it's a function gate
+			if (gates[i]["letter"] == "sub"){
 
-		// If it's a function gate
-		if (gates[i]["letter"] == "sub"){
+				// For consistency with prev section
+				gateX = gates[i]["x"];
+				gateY = gates[i]["y"];
 
-			// For consistency with prev section
-			gateX = gates[i]["x"];
-			gateY = gates[i]["y"];
+				// Loop over the rects 
+				for (var j=0; j<lineStartEnds.length; j++){
 
-			// Loop over the rects 
-			for (var j=0; j<lineStartEnds.length; j++){
+					// See if this rect should be a function  
+					if (gateY >= lineStartEnds[j][2]-1 && gateY <= lineStartEnds[j][3]+1 && gateX == lineStartEnds[j][0]-1){
+						lineStartEnds[j][4] = gates[i]["funID"];
+						funcStartEnds.push(lineStartEnds[j].slice());
+						break;
+					}
 
-				// See if this rect should be a function  
-				if (gateY >= lineStartEnds[j][2]-1 && gateY <= lineStartEnds[j][3]+1 && gateX == lineStartEnds[j][0]-1){
-					lineStartEnds[j][4] = gates[i]["funID"];
-					funcStartEnds.push(lineStartEnds[j].slice());
-					break;
 				}
 
 			}
@@ -1631,7 +1643,7 @@ function redraw(noHistory=false){
 		ctx.fillText(debugData, 10, 200);
 	}
 
-	// FPS counter TODO
+	// FPS counter 
 	if (showFPS){
 		frames += 1;
 		var newTime = performance.now();
@@ -2106,6 +2118,9 @@ function mouseMove(e){
 			gates[selected]["y"] = newY;
 
 		}
+		
+		// Update the qubit line preview
+		recalcRecs = true;
 
 	// If dragging multiple gates 
 	} else if (selected >= 0 && selectionArray.length > 0){
@@ -2188,6 +2203,9 @@ function mouseMove(e){
 			}
 
 		}
+
+		// Update the qubit line preview
+		recalcRecs = true;
 
 	// If dragging the background
 	} else if (selected == -5){
@@ -2497,8 +2515,8 @@ function keyDown(e){
 			fromQASM(asQasm, true);
 		
 			// Things have changed, update and redraw
-			/*selectionArray = [];*/
-			/*circuitUpdated = true;*/
+			selectionArray = [];
+			circuitUpdated = true;
 			/*redraw(true);*/
 
 		}
@@ -2521,7 +2539,7 @@ function keyDown(e){
 			// Things have changed, update and redraw
 			selectionArray = [];
 			circuitUpdated = true;
-			redraw(true);
+			/*redraw(true);*/
 
 		}
 
@@ -2665,7 +2683,7 @@ function mouseDown(e){
 			// Re-sim and redraw (twice just to ensure consistent functions)
 			/*circuitUpdated = false;*/
 			/*redraw();*/
-			/*circuitUpdated = true;*/
+			circuitUpdated = true;
 			/*redraw();*/
 
 		}
@@ -3252,7 +3270,7 @@ function onFileChange(e){
 		// Re-sim and redraw (twice just to ensure consistent functions)
 		/*circuitUpdated = false;*/
 		/*redraw();*/
-		/*circuitUpdated = true;*/
+		circuitUpdated = true;
 		/*redraw();*/
 
 	};
