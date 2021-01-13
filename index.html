@@ -134,6 +134,7 @@ var prevTouchY = 0;
 var isPinching = false;
 var mobileOffsetY = 0;
 var lastPinchDist = -1;
+var promptOpen = false;
 
 // For the tips window
 var helpOpen = true;
@@ -165,6 +166,9 @@ for (var i=0; i<numRands; i++){
 
 // Called on body ready
 function init(newInstance=false, recalc=false){
+
+	// If this is triggering because of the prompt resize
+	if (promptOpen){return;}
 
 	// Reset things
 	loadOpen = false;
@@ -242,7 +246,7 @@ function init(newInstance=false, recalc=false){
 		onMobile = 2;
 	}
 
-	// Don't show the welcome text on mobile TODO
+	// Don't show the welcome text on mobile
 	if (onMobile > 0){
 		helpOpen = false;
 	}
@@ -285,6 +289,9 @@ function init(newInstance=false, recalc=false){
 		gridX = initialZoom * gridXFixed * change;
 		gateSize = initialZoom * gateSizeFixed * change;
 		fontSize = initialZoom * 35 * change;
+
+		// Show more gates if possible
+		numGatesToShow = 5;
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gateSizeFixed+20;
@@ -536,10 +543,10 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 	// If it's the top part of a swap gate
 	} else if (letter == "swaptop"){
 
-		// Clear the standard qubit line
+		// Clear the standard qubit line 
 		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(x-(gridX*0.820)/2, y-gridY/5, gridX*0.820, gridY/2);
-		svgRect(x-(gridX*0.820)/2, y-gridY/5, gridX*0.820, gridY/2, ctx.fillStyle);
+		ctx.fillRect(x-gridX/2+fontSize/70, y-gridY/8, gridX-fontSize/35, gridY/2);
+		svgRect(x-gridX/2+fontSize/70, y-gridY/8, gridX-fontSize/35, gridY/2, ctx.fillStyle);
 
 		// Draw the curved section
 		if (!isSelected){
@@ -549,21 +556,21 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		}
 		ctx.lineWidth = fontSize/7;
 		ctx.beginPath();
-		ctx.arc(x-gateSize/2, y+gateSize/2, gateSize/2, 1.5*Math.PI, 0);
+		ctx.arc(x-gridX/2, y+gridY/2, gridX/2, 1.5*Math.PI, 0);
 		ctx.stroke();
-		svgArc(x-gateSize/2, y, x, y, x, y+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+		svgArc(x-gridX/2, y, x, y, x, y+gridY/2, ctx.strokeStyle, ctx.lineWidth);
 		ctx.beginPath();
-		ctx.arc(x+gateSize/2, y+gateSize/2, gateSize/2, 1*Math.PI, 1.5*Math.PI);
+		ctx.arc(x+gridX/2, y+gridY/2, gridX/2, 1*Math.PI, 1.5*Math.PI);
 		ctx.stroke();
-		svgArc(x+gateSize/2, y, x, y, x, y+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+		svgArc(x+gridX/2, y, x, y, x, y+gridY/2, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's the bottom part of a swap gate 
 	} else if (letter == "swapbottom"){
 
 		// Clear the standard qubit line
 		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(x-(gridX*0.820)/2, y-gridY/4, gridX*0.820, gridY/2);
-		svgRect(x-(gridX*0.820)/2, y-gridY/4, gridX*0.820, gridY/2, ctx.fillStyle);
+		ctx.fillRect(x-gridX/2+fontSize/70, y-gridY/3, gridX-fontSize/35, gridY/2);
+		svgRect(x-gridX/2+fontSize/70, y-gridY/3, gridX-fontSize/35, gridY/2, ctx.fillStyle);
 
 		// Draw the curved section
 		if (!isSelected){
@@ -573,13 +580,13 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 		}
 		ctx.lineWidth = fontSize/7;
 		ctx.beginPath();
-		ctx.arc(x-gateSize/2, y-gateSize/2, gateSize/2, 0*Math.PI, 0.5*Math.PI);
+		ctx.arc(x-gridX/2, y-gridY/2, gridX/2, 0*Math.PI, 0.5*Math.PI);
 		ctx.stroke();
-		svgArc(x-gateSize/2, y, x, y, x, y-gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+		svgArc(x-gridX/2, y, x, y, x, y-gridY/2, ctx.strokeStyle, ctx.lineWidth);
 		ctx.beginPath();
-		ctx.arc(x+gateSize/2, y-gateSize/2, gateSize/2, 0.5*Math.PI, 1.0*Math.PI);
+		ctx.arc(x+gridX/2, y-gridY/2, gridX/2, 0.5*Math.PI, 1.0*Math.PI);
 		ctx.stroke();
-		svgArc(x+gateSize/2, y, x, y, x, y-gateSize/2, ctx.strokeStyle, ctx.lineWidth);
+		svgArc(x+gridX/2, y, x, y, x, y-gridY/2, ctx.strokeStyle, ctx.lineWidth);
 
 	// If it's the create text icon 
 	} else if (letter == "text"){
@@ -2815,7 +2822,9 @@ function mouseDown(e){
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
 					// Open a prompt to change the text TODO weird on mobile
-					var newText = window.prompt("Enter new text:", gates[hover]["letter"].substr(4));
+					promptOpen = true;
+					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
+					promptOpen = false;
 
 					// If the user didn't cancel
 					if (newText !== null){
