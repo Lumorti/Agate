@@ -62,6 +62,7 @@ var toolbarGates = [
 
 // User-modifiable settings 
 var canEdit = true;
+var showFPS = true;
 var drawGrid = true;
 var numRepeats = 1000;
 var cutoffThresh = 3;
@@ -101,7 +102,7 @@ var lineStartEnds = [];
 var qubitsWithGates = [];
 var funcStartEnds = [];
 
-// General settings
+// General vars
 var mx = 0;
 var my = 0;
 var onMobile = 0;
@@ -117,6 +118,11 @@ var spacing = 0.8;
 var toolbarWidth = -1;
 var toolbarHeight = -1;
 var maxRecDepth = 5;
+
+// For FPS checking
+var frames = 0;
+var fps = 0;
+var lastFPSCheck = 0;
 
 // For dragging the canvas around
 var offsetX = 0;
@@ -898,18 +904,16 @@ function redraw(noHistory=false){
 	if (drawGrid){
 		ctx.lineWidth = fontSize/35;
 		ctx.strokeStyle = "#aaaaaa";
+		ctx.beginPath();
 		for (var x=offsetX%gridX; x<ctx.canvas.width; x+=gridX){
-			ctx.beginPath();
 			ctx.moveTo(x-(gridX/2)+(gateSize/2), 0);
 			ctx.lineTo(x-(gridX/2)+(gateSize/2), ctx.canvas.height);
-			ctx.stroke();
 		}
 		for (var y=offsetY%gridY; y<ctx.canvas.height; y+=gridY){
-			ctx.beginPath();
 			ctx.moveTo(0, y-(gridY/2)+(gateSize/2));
 			ctx.lineTo(ctx.canvas.width, y-(gridY/2)+(gateSize/2));
-			ctx.stroke();
 		}
+		ctx.stroke();
 	}
 
 	// Reset arrays
@@ -1083,38 +1087,39 @@ function redraw(noHistory=false){
 	}
 
 	// Draw each qubit grid
+	ctx.lineWidth = fontSize/7;
+	ctx.strokeStyle = "#aaaaaa";
+	ctx.beginPath();
 	for (var i=0; i<lineStartEnds.length; i++){
 		for (var y=lineStartEnds[i][2]; y<=lineStartEnds[i][3]; y++){
 			if (qubitsWithGates.indexOf(y) >= 0){
-				ctx.lineWidth = fontSize/7;
-				ctx.strokeStyle = "#aaaaaa";
-				ctx.beginPath();
 				ctx.moveTo(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
 				ctx.lineTo(lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-				ctx.stroke();
 				svgLine(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
 		}
+	}
+	ctx.stroke();
 
-		// If it's a function 
+	// Do the same for the special function outlines
+	ctx.lineWidth = fontSize/3.5;
+	ctx.strokeStyle = "#16a300";
+	ctx.beginPath();
+	for (var i=0; i<lineStartEnds.length; i++){
 		if (lineStartEnds[i][4] != -1){
-			ctx.lineWidth = fontSize/3.5;
-			ctx.strokeStyle = "#16a300";
-			ctx.beginPath();
 			ctx.moveTo((lineStartEnds[i][0]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
 			ctx.lineTo((lineStartEnds[i][0]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2);
-			ctx.stroke();
 			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2, (lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2+3, ctx.strokeStyle, ctx.lineWidth);
 			svgLine((lineStartEnds[i][0]-1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2, ctx.strokeStyle, ctx.lineWidth);
 			svgLine((lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][3]+1)*gridY+gateSize/2+3, (lineStartEnds[i][1]+1)*gridX+gateSize/2+offsetX, offsetY+(lineStartEnds[i][2]-1)*gridY+gateSize/2-3, ctx.strokeStyle, ctx.lineWidth);
 		}
-
 	}
+	ctx.stroke();
 
 	// Draw the control lines
 	for (var i=gateOptions; i<gates.length; i++){
@@ -1123,13 +1128,13 @@ function redraw(noHistory=false){
 		if (gates[i]["letter"].substr(0,4) != "swap"){
 			ctx.lineWidth = fontSize/7;
 			ctx.strokeStyle = "#555555";
+			ctx.beginPath();
 			for (var j=0; j<gates[i]["attached"].length; j++){
-				ctx.beginPath();
 				ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2);
 				ctx.lineTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][j])]["y"]*gridY+gateSize/2);
-				ctx.stroke();
 				svgLine(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][j])]["y"]*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
+			ctx.stroke();
 
 		// For swap gates 
 		} else {
@@ -1137,22 +1142,22 @@ function redraw(noHistory=false){
 			// The line between the swaps (only need to draw once)
 			ctx.lineWidth = fontSize/7;
 			ctx.strokeStyle = "#aaaaaa";
+			ctx.beginPath();
 			if (gates[i]["letter"] == "swaptop"){
-				ctx.beginPath();
 				ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2);
 				ctx.lineTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][0])]["y"]*gridY+gateSize/2);
-				ctx.stroke();
 				svgLine(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY+gateSize/2, gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][0])]["y"]*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
+			ctx.stroke();
 
 			// The lines to any actual controls
 			ctx.strokeStyle = "#555555";
+			ctx.beginPath();
 			for (var j=1; j<gates[i]["attached"].length; j++){
-				ctx.beginPath();
 				ctx.moveTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[i]["y"]*gridY);
 				ctx.lineTo(gates[i]["x"]*gridX+gateSize/2+offsetX, offsetY+gates[fromID(gates[i]["attached"][j])]["y"]*gridY+gateSize/2);
-				ctx.stroke();
 			}
+			ctx.stroke();
 
 		}
 
@@ -1382,13 +1387,10 @@ function redraw(noHistory=false){
 
 	}
 
-	// If box selecting
+	// If box selecting, draw the box
 	if (selected == -6){
-
-		// Draw the box
 		ctx.fillStyle = "#aaaaaa55";
 		ctx.fillRect(selectStartX, selectStartY, selectEndX-selectStartX, selectEndY-selectStartY);
-
 	}
 
 	// If help window open 
@@ -1628,6 +1630,20 @@ function redraw(noHistory=false){
 		ctx.fillStyle = "#000000";
 		ctx.font = "10px Arial";
 		ctx.fillText(debugData, 10, 200);
+	}
+
+	// FPS counter TODO
+	if (showFPS){
+		frames += 1;
+		var newTime = performance.now();
+		if (newTime - lastFPSCheck > 1000){
+			lastFPSCheck = newTime;
+			fps = frames;
+			frames = 0;
+		}
+		ctx.fillStyle = "#000000";
+		ctx.font = "20px Arial";
+		ctx.fillText(fps, 30, 30);
 	}
 
 }
