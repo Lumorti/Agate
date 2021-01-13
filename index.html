@@ -134,7 +134,6 @@ var prevTouchY = 0;
 var isPinching = false;
 var mobileOffsetY = 0;
 var lastPinchDist = -1;
-var promptOpen = false;
 
 // For the tips window
 var helpOpen = true;
@@ -166,9 +165,6 @@ for (var i=0; i<numRands; i++){
 
 // Called on body ready
 function init(newInstance=false, recalc=false){
-
-	// If this is triggering because of the prompt resize
-	if (promptOpen){return;}
 
 	// Reset things
 	loadOpen = false;
@@ -1680,7 +1676,6 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// Draw any debug text, if applicable
-	debugData = "p:" + promptOpen;
 	if (debugData.length > 0){
 		ctx.fillStyle = "#000000";
 		ctx.font = "10px Arial";
@@ -2819,9 +2814,7 @@ function mouseDown(e){
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
 					// Open a prompt to change the text TODO weird on mobile
-					promptOpen = true;
 					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
-					promptOpen = false;
 
 					// If the user didn't cancel
 					if (newText !== null){
