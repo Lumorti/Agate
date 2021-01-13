@@ -235,12 +235,8 @@ function init(newInstance=false, recalc=false){
 
 	}
 
-	// Manually update based on the size of the array below 
-	// (needed before they're added to figure out positioning)
-	gateOptions = numGatesToShow + 4;
-
 	// Check if mobile 
-	if (gridXFixed*(gateOptions)+10 > 0.9*window.innerWidth){
+	if (gridXFixed*(numGatesToShow+4)+10 > 0.9*window.innerWidth){
 		onMobile = 1;
 	} else if (window.innerHeight < 400){
 		onMobile = 2;
@@ -295,7 +291,7 @@ function init(newInstance=false, recalc=false){
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gateSizeFixed+20;
-		toolbarWidth = gridXFixed*(gateOptions)+10;
+		toolbarWidth = gridXFixed*(numGatesToShow+4)+10;
 		toolbarOffsetX = window.innerWidth / 2 - toolbarWidth / 2;
 		toolbarRel = (toolbarOffsetX / gridXFixed);
 		gates = [];
@@ -1684,6 +1680,7 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// Draw any debug text, if applicable
+	debugData = promptOpen;
 	if (debugData.length > 0){
 		ctx.fillStyle = "#000000";
 		ctx.font = "10px Arial";
