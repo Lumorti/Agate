@@ -21,8 +21,8 @@ var openHover = false;
 var openDims = [0, 0, 0, 0];
 var presets = [
 	["QASM File",       ""],
-	["Preset: Tutorial", "OPENQASM%203.0%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%20-1%20-25%20Agate%20Tutorial%0A%2F%2F%20-2%20-26%20-----------------------------%0A%2F%2F%20-2%20-23%20-----------------------------%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%20-1%20-24%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2034%20The%20URL%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%2C%20or%20to%20add%20links%0A%2F%2F%20-4%2033%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2035%20Use%20the%20save%20button%20to%20save%20a%20local%20file%20for%20the%20circuit%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-5%2033%20%3E%0A%2F%2F%20-5%2035%20%3E%0A%2F%2F%20-1%2025%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2023%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%0A%2F%2F%20-3%2027%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-3%2028%20%5C%20bra%7B1%7D%0A%2F%2F%201%2028%20%5Cbra%7B1%7D%0A%2F%2F%201%2027%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-3%2029%20%5C%20ket%7B1%7D%0A%2F%2F%201%2029%20%5Cket%7B1%7D%0A%2F%2F%204%2027%20%5C%20sqrt2%0A%2F%2F%204%2028%201%20%5C%20pm%202%0A%2F%2F%208%2027%20%5Csqrt2%0A%2F%2F%208%2028%201%20%5Cpm%202%0A%2F%2F%208%2029%202%5Ctimes2%0A%2F%2F%204%2029%201%5C%20times2%0A%2F%2F%208%2030%201%5Ccdot2%0A%2F%2F%204%2030%201%5C%20cdot2%0A%2F%2F%204%2031%201%20%5C%20to%202%0A%2F%2F%208%2031%201%20%5Cto%202%0A%2F%2F%20-3%2030%20%5C%20langle%0A%2F%2F%201%2030%20%5Clangle%0A%2F%2F%20-3%2031%20%5C%20rangle%0A%2F%2F%201%2031%20%5Crangle%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2036%20Keyboard%20shortcuts%20are%20also%20available%20(delete%2C%20ctrl-c%2C%20ctrl-x%2C%20ctrl-v%2C%20ctrl-z%2C%20ctrl-shift-z)%0A%2F%2F%20-5%2036%20%3E%0Aqreg%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0A%2F%2F%20to%20add%3A%20ox%2Ccx"],
-	["Preset: Gates",    "OPENQASM%203.0%3B%0A%2F%2F%2010%201%20--%20Hadamard%20--%0A%2F%2F%206%202%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2015%206%20input%0A%2F%2F%2018%206%20output%20(unnormalised)%0A%2F%2F%2015%207%20%5Cket%7B0%7D%0A%2F%2F%2018%207%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2015%208%20%5Cket%7B1%7D%0A%2F%2F%2018%208%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%203%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%2C%0A%2F%2F%2011%20-8%20--%20Pauli%20X%20--%0A%2F%2F%206%20-7%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2015%20-5%20input%0A%2F%2F%2018%20-5%20output%0A%2F%2F%2015%20-4%20%5Cket%7B0%7D%0A%2F%2F%2018%20-4%20%5Cket%7B1%7D%0A%2F%2F%2015%20-3%20%5Cket%7B1%7D%0A%2F%2F%2018%20-3%20%5Cket%7B0%7D%0A%2F%2F%208%2012%20--%20Pauli%20Z%20(and%20other%20phase%20gates)%20--%0A%2F%2F%206%2013%20These%20all%20add%20some%20sort%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%209%2014%20assuming%20an%20input%20of%20%5Cket%7B1%7D%0A%2F%2F%2015%2033%20input%0A%2F%2F%2015%2016%20input%0A%2F%2F%2015%2020%20input%0A%2F%2F%2015%2024%20input%0A%2F%2F%2018%2033%20output%0A%2F%2F%2018%2016%20output%0A%2F%2F%2018%2020%20output%0A%2F%2F%2018%2024%20output%20(unnormalised)%0A%2F%2F%2015%2034%20%5Cket%7B0%7D%0A%2F%2F%2015%2035%20%5Cket%7B1%7D%0A%2F%2F%2015%2017%20%5Cket%7B0%7D%0A%2F%2F%2015%2018%20%5Cket%7B1%7D%0A%2F%2F%2015%2021%20%5Cket%7B0%7D%0A%2F%2F%2015%2022%20%5Cket%7B1%7D%0A%2F%2F%2015%2025%20%5Cket%7B0%7D%0A%2F%2F%2015%2026%20%5Cket%7B1%7D%0A%2F%2F%2018%2034%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2035%20-i%20%5Cket%7B0%7D%0A%2F%2F%2018%2017%20%5Cket%7B0%7D%0A%2F%2F%2018%2018%20-%20%5Cket%7B1%7D%0A%2F%2F%2018%2021%20%5Cket%7B0%7D%0A%2F%2F%2018%2022%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2026%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2018%2025%20%5Cket%7B0%7D%0A%2F%2F%2011%2030%20--%20Pauli%20Y%20--%0A%2F%2F%207%2031%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-13%20Agate%20Gates%20List%0A%2F%2F%209%20-14%20----------------------------------%0A%2F%2F%209%20-11%20----------------------------------%0A%2F%2F%2011%20-12%20by%20Lumorti%0A%2F%2F%206%204%20resulting%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0A%2F%2F%2015%2041%20input%0A%2F%2F%2018%2041%20output%0A%2F%2F%2015%2042%20%5Cket%7B00%7D%0A%2F%2F%2018%2042%20%5Cket%7B00%7D%0A%2F%2F%2011%2038%20--%20Swap%20--%0A%2F%2F%209%2039%20Swaps%20the%20two%20qubits%0A%2F%2F%2015%2043%20%5Cket%7B01%7D%0A%2F%2F%2018%2043%20%5Cket%7B10%7D%0A%2F%2F%2015%2044%20%5Cket%7B10%7D%0A%2F%2F%2018%2044%20%5Cket%7B01%7D%0A%2F%2F%2015%2045%20%5Cket%7B11%7D%0A%2F%2F%2018%2045%20%5Cket%7B11%7D%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%207%0Ah%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%20-4%0Ax%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2034%0Ay%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2017%0Az%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2021%0As%20q%5B0%5D%3B%0Aqreg%20q%5B1%5D%3B%20%2F%2F%208%2025%0At%20q%5B0%5D%3B%0Aqreg%20q%5B3%5D%3B%20%2F%2F%208%2042%0Ax%20q%5B0%5D%3B%0Aswap%20q%5B2%5D%2Cq%5B0%5D%3B%0A%2F%2F%20to%20add%3A%20swap"],
+	["Preset: Tutorial", "OPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%200%20-24%20Agate%20Tutorial%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%200%20-23%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2034%20The%20URL%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%2C%20or%20to%20add%20links%0A%2F%2F%20-4%2033%20Use%20the%20load%20button%20to%20load%20presets%20or%20local%20QASM%20files%0A%2F%2F%20-4%2035%20Use%20the%20save%20button%20to%20save%20a%20local%20file%20for%20the%20circuit%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-5%2033%20%3E%0A%2F%2F%20-5%2035%20%3E%0A%2F%2F%20-1%2025%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2023%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%0A%2F%2F%20-3%2027%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-3%2028%20%5C%20bra%7B1%7D%0A%2F%2F%201%2028%20%5Cbra%7B1%7D%0A%2F%2F%201%2027%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-3%2029%20%5C%20ket%7B1%7D%0A%2F%2F%201%2029%20%5Cket%7B1%7D%0A%2F%2F%204%2027%20%5C%20sqrt2%0A%2F%2F%204%2028%201%20%5C%20pm%202%0A%2F%2F%208%2027%20%5Csqrt2%0A%2F%2F%208%2028%201%20%5Cpm%202%0A%2F%2F%208%2029%202%5Ctimes2%0A%2F%2F%204%2029%201%5C%20times2%0A%2F%2F%208%2030%201%5Ccdot2%0A%2F%2F%204%2030%201%5C%20cdot2%0A%2F%2F%204%2031%201%20%5C%20to%202%0A%2F%2F%208%2031%201%20%5Cto%202%0A%2F%2F%20-3%2030%20%5C%20langle%0A%2F%2F%201%2030%20%5Clangle%0A%2F%2F%20-3%2031%20%5C%20rangle%0A%2F%2F%201%2031%20%5Crangle%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2036%20Keyboard%20shortcuts%20are%20also%20available%20(delete%2C%20ctrl-c%2C%20ctrl-x%2C%20ctrl-v%2C%20ctrl-z%2C%20ctrl-shift-z)%0A%2F%2F%20-5%2036%20%3E%0Aqubit%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ai%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Aox%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Acx%20q%5B0%5D%2Cq%5B1%5D%3B%0A%2F%2F%20to%20add%3A%20ox%2Ccx"],
+	["Preset: Gates",    "OPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0A%2F%2F%206%200%20Hadamard%0A%2F%2F%207%201%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2015%205%20input%0A%2F%2F%2018%205%20output%20(unnormalised)%0A%2F%2F%2015%206%20%5Cket%7B0%7D%0A%2F%2F%2018%206%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2015%207%20%5Cket%7B1%7D%0A%2F%2F%2018%207%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%202%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%0A%2F%2F%206%20-7%20Pauli%20X%0A%2F%2F%207%20-6%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2015%20-4%20input%0A%2F%2F%2018%20-4%20output%0A%2F%2F%2015%20-3%20%5Cket%7B0%7D%0A%2F%2F%2018%20-3%20%5Cket%7B1%7D%0A%2F%2F%2015%20-2%20%5Cket%7B1%7D%0A%2F%2F%2018%20-2%20%5Cket%7B0%7D%0A%2F%2F%206%209%20Pauli%20Z%20(and%20other%20phase%20gates)%0A%2F%2F%207%2010%20These%20all%20add%20some%20sort%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%207%2011%20but%20only%20if%20the%20input%20is%20%5Cket%7B1%7D%0A%2F%2F%2015%2029%20input%0A%2F%2F%2015%2014%20input%0A%2F%2F%2015%2018%20input%0A%2F%2F%2015%2022%20input%0A%2F%2F%2018%2029%20output%0A%2F%2F%2018%2014%20output%0A%2F%2F%2018%2018%20output%0A%2F%2F%2018%2022%20output%20(unnormalised)%0A%2F%2F%2015%2030%20%5Cket%7B0%7D%0A%2F%2F%2015%2031%20%5Cket%7B1%7D%0A%2F%2F%2015%2015%20%5Cket%7B0%7D%0A%2F%2F%2015%2016%20%5Cket%7B1%7D%0A%2F%2F%2015%2019%20%5Cket%7B0%7D%0A%2F%2F%2015%2020%20%5Cket%7B1%7D%0A%2F%2F%2015%2023%20%5Cket%7B0%7D%0A%2F%2F%2015%2024%20%5Cket%7B1%7D%0A%2F%2F%2018%2030%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2031%20-i%20%5Cket%7B0%7D%0A%2F%2F%2018%2015%20%5Cket%7B0%7D%0A%2F%2F%2018%2016%20-%20%5Cket%7B1%7D%0A%2F%2F%2018%2019%20%5Cket%7B0%7D%0A%2F%2F%2018%2020%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2024%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2018%2023%20%5Cket%7B0%7D%0A%2F%2F%206%2026%20Pauli%20Y%0A%2F%2F%207%2027%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-10%20Agate%20Gates%20List%0A%2F%2F%2011%20-9%20by%20Lumorti%0A%2F%2F%207%203%20Results%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0A%2F%2F%2015%2036%20input%0A%2F%2F%2018%2036%20output%0A%2F%2F%2015%2037%20%5Cket%7B00%7D%0A%2F%2F%2018%2037%20%5Cket%7B00%7D%0A%2F%2F%206%2033%20Swap%0A%2F%2F%207%2034%20Swaps%20the%20two%20qubits%0A%2F%2F%2015%2038%20%5Cket%7B01%7D%0A%2F%2F%2018%2038%20%5Cket%7B10%7D%0A%2F%2F%2015%2039%20%5Cket%7B10%7D%0A%2F%2F%2018%2039%20%5Cket%7B01%7D%0A%2F%2F%2015%2040%20%5Cket%7B11%7D%0A%2F%2F%2018%2040%20%5Cket%7B11%7D%0A%2F%2F%206%2010%20%3E%0A%2F%2F%206%201%20%3E%0A%2F%2F%206%203%20%3E%0A%2F%2F%206%20-6%20%3E%0A%2F%2F%206%2027%20%3E%0A%2F%2F%206%2034%20%3E%0A%2F%2F%207%2012%20This%20doesn't%20affect%20much%20until%20you%20start%20combining%20them%0A%2F%2F%206%2012%20%3E%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%206%0Ah%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%20-3%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2030%0Ay%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2015%0Az%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2019%0As%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2023%0At%20q%5B0%5D%3B%0Aqubit%20q%5B3%5D%3B%20%2F%2F%209%2037%0Aswap%20q%5B2%5D%2Cq%5B0%5D%3B%0A%2F%2F%20to%20add%3A%20swap"],
 	["Preset: Grover's", "OPENQASM%203.0%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0Az%20q0%3B%0Az%20q1%3B%0Acz%20q0%2Cq1%3B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Acz%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20prepares%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20a%20state%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%206%2016%20this%20function%20amplifies%20the%20coefficient%0A%2F%2F%206%2017%20of%20the%20state%20with%20negative%20phase%0A%2F%2F%20-1%20-11%20--------------------------------------------------------%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-10%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%20-8%20--------------------------------------------------------%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%203%20-9%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqreg%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
 ];
 
@@ -62,7 +62,7 @@ var toolbarGates = [
 
 // User-modifiable settings 
 var canEdit = true;
-var showFPS = true;
+var showFPS = false;
 var drawGrid = true;
 var numRepeats = 1000;
 var cutoffThresh = 3;
@@ -151,7 +151,7 @@ var tips = [
 // For timings
 var lastClickTime = -1;
 var lastSimTime = -1;
-var circuitUpdated = true;
+var circuitUpdates = 1;
 var recalcRecs = true;
 var inputs = [[]];
 var results = [[]];
@@ -164,11 +164,13 @@ for (var i=0; i<numRands; i++){
 }
 
 // Called on body ready
-function init(recalc){
+function init(newInstance=false, recalc=false){
 
-	// Start with everything closed
+	// Reset things
 	loadOpen = false;
 	saveOpen = false;
+	canEdit = true;
+	showFPS = false;
 
 	// Initialise the canvas
 	canvas = document.getElementById("view");
@@ -182,8 +184,10 @@ function init(recalc){
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 
-	// Add listeners for mouse events TODO reset these
-	if (recalc){
+	// If not refeshing/resizing
+	if (newInstance){
+
+		// Add listeners for mouse events 
 		canvas.addEventListener('mousemove', mouseMove);
 		canvas.addEventListener('mousedown', mouseDown);
 		canvas.addEventListener('mouseup',   mouseUp);
@@ -198,8 +202,6 @@ function init(recalc){
 		canvas.addEventListener("touchmove",   touchHandler, true);
 		canvas.addEventListener("touchend",    touchHandler, true);
 		canvas.addEventListener("touchcancel", touchHandler, true);
-
-		
 
 		// Setup the hidden preset load element 
 		inputBox = document.createElement("SELECT");
@@ -301,22 +303,33 @@ function init(recalc){
 	// If URL contains QASM info, use it
 	if (document.location.hash.length > 1){
 
-		// If a keyword present 
-		if (document.location.hash.substr(1,4) == "view"){
+		// Start with the whole hash
+		var toProcess = document.location.hash.substr(1);
+
+		// If the "fps" keyword present 
+		if (toProcess.substr(0,3) == "fps"){
+
+			// Show the FPS counter
+			showFPS = true;
+
+			// Don't treat the keyword as QASM
+			toProcess = toProcess.substr(3);
+
+		}
+
+		// If the "view" keyword present 
+		if (toProcess.substr(0,4) == "view"){
 
 			// Prevent edits, hide toolbar etc. 
 			canEdit = false;
 
-			// Get it and process it
-			asQasm = decodeURIComponent(document.location.hash.substr(5));
+			// Don't treat the keyword as QASM
+			toProcess = toProcess.substr(4);
 
-		// If no keyword
-		} else {
+		} 
 
-			// Get it and process it
-			asQasm = decodeURIComponent(document.location.hash);
-
-		}
+		// Get it and process it
+		asQasm = decodeURIComponent(toProcess);
 
 		// Load the gates from this
 		fromQASM(asQasm);
@@ -326,11 +339,17 @@ function init(recalc){
 
 	}
 
-	// First drawing (twice to ensure consistent functions)
+	// Whether to resim the circuit
 	if (recalc){
-		circuitUpdated = true;
+		circuitUpdates = 2;
+	} else {
+		circuitUpdates = 0;
+	}
+
+	// Only create the drawing instance once
+	if (newInstance){
 		redraw();
-	} 
+	}
 
 }
 
@@ -590,7 +609,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			} else {
 				ctx.fillStyle = "#003740";
 			}
-			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+			ctx.fillText(gateText, floor(x-gridX/2+gridX*0.2), floor(y+gridY/2-fontSize/2));
 			svgText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2, fontSize, ctx.measureText(gateText).width, ctx.fillStyle);
 
 		// If it's normal text
@@ -627,7 +646,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			}
 
 			// Draw the text
-			ctx.fillText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2);
+			ctx.fillText(gateText, floor(x-gridX/2+gridX*0.2), floor(y+gridY/2-fontSize/2));
 			svgText(gateText, x-gridX/2+gridX*0.2, y+gridY/2-fontSize/2, fontSize, ctx.measureText(gateText).width, ctx.fillStyle);
 
 		}
@@ -922,7 +941,7 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// Onlt recalc recs if needed
-	if (circuitUpdated || recalcRecs){
+	if (circuitUpdates > 0 || recalcRecs){
 
 		// Reset things
 		qubitsWithGates = [];
@@ -1104,8 +1123,8 @@ function redraw(t=0, noHistory=false){
 	for (var i=0; i<lineStartEnds.length; i++){
 		for (var y=lineStartEnds[i][2]; y<=lineStartEnds[i][3]; y++){
 			if (qubitsWithGates.indexOf(y) >= 0){
-				ctx.moveTo(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
-				ctx.lineTo(lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2);
+				ctx.moveTo(floor(lineStartEnds[i][0]*gridX+gateSize/2+offsetX), floor(offsetY+y*gridY+gateSize/2));
+				ctx.lineTo(floor(lineStartEnds[i][1]*gridX+gateSize/2+offsetX), floor(offsetY+y*gridY+gateSize/2));
 				svgLine(lineStartEnds[i][0]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, lineStartEnds[i][1]*gridX+gateSize/2+offsetX, offsetY+y*gridY+gateSize/2, ctx.strokeStyle, fontSize/7);
 			}
 		}
@@ -1230,7 +1249,7 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// Only when the circuit has changed
-	if (circuitUpdated){
+	if (circuitUpdates > 0){
 
 		// Reset random index
 		randInd = 0
@@ -1266,6 +1285,11 @@ function redraw(t=0, noHistory=false){
 				encoded = "view" + encoded;
 			}
 
+			// If in fps mode, stay that way
+			if (showFPS){
+				encoded = "fps" + encoded;
+			}
+
 			// Update URL 
 			history.replaceState(null, null, document.location.pathname + '#' + encoded);
 
@@ -1289,7 +1313,7 @@ function redraw(t=0, noHistory=false){
 		}
 
 		// Circuit no longer needs re-simulating
-		circuitUpdated = false;
+		circuitUpdates -= 1;
 
 	}
 
@@ -1513,9 +1537,10 @@ function redraw(t=0, noHistory=false){
 	}
 
 	// If the load window is open 
-	inputBox.style.display = "none";
-	outputBox.style.display = "none";
 	if (loadOpen){
+
+		// Hide the save box
+		outputBox.style.display = "none";
 
 		// If mobile (vertical)
 		if (onMobile == 1){
@@ -1577,6 +1602,9 @@ function redraw(t=0, noHistory=false){
 	// If the save window is open 
 	} else if (saveOpen){
 
+		// Hide the load box
+		inputBox.style.display = "none";
+
 		// If mobile (vertical)
 		if (onMobile == 1){
 
@@ -1633,6 +1661,13 @@ function redraw(t=0, noHistory=false){
 			drawGate("save", saveLeft+305, saveTop+103, saveHeight, 1);
 
 		}
+
+	// If neither open
+	} else {
+
+		// Hide both
+		inputBox.style.display = "none";
+		outputBox.style.display = "none";
 
 	}
 
@@ -2347,9 +2382,6 @@ function mouseMove(e){
 
 	}
 
-	// Update the canvas
-	/*redraw();*/
-
 }
 
 // When mouse button lifted up
@@ -2395,7 +2427,7 @@ function mouseUp(e){
 		}
 
 		// Circuit has changed
-		circuitUpdated = true;
+		circuitUpdates = 1;
 
 	// If many selected 
 	} else if (selected > 0 && selectionArray.length > 0){
@@ -2426,7 +2458,7 @@ function mouseUp(e){
 		}
 
 		// Circuit has changed
-		circuitUpdated = true;
+		circuitUpdates = 1;
 
 	}
 
@@ -2439,9 +2471,6 @@ function mouseUp(e){
 	// Deselect current gate 
 	selected = -1;
 	mouseMove(e);
-
-	// Update the canvas
-	/*redraw();*/
 
 }
 
@@ -2514,10 +2543,9 @@ function keyDown(e){
 			// Load the gates from this
 			fromQASM(asQasm, true);
 		
-			// Things have changed, update and redraw
+			// Things have changed, update 
 			selectionArray = [];
-			circuitUpdated = true;
-			/*redraw(true);*/
+			circuitUpdate = 1;
 
 		}
 
@@ -2536,10 +2564,9 @@ function keyDown(e){
 			// Load the gates from this
 			fromQASM(asQasm, true);
 
-			// Things have changed, update and redraw
+			// Things have changed, update 
 			selectionArray = [];
-			circuitUpdated = true;
-			/*redraw(true);*/
+			circuitUpdates = 1;
 
 		}
 
@@ -2586,10 +2613,9 @@ function keyDown(e){
 			}
 		}
 
-		// Things have changed, update and redraw
+		// Things have changed, update 
 		selectionArray = [];
-		circuitUpdated = true;
-		/*redraw();*/
+		circuitUpdates = 1;
 
 	}
 
@@ -2641,9 +2667,8 @@ function onTextPaste(t){
 			gates[i]["og"] = beforeToAfter[gates[i]["og"].toString()];
 		}
 
-		// Things have changed, update and redraw
-		circuitUpdated = true;
-		/*redraw();*/
+		// Things have changed, update 
+		circuitUpdates = 1;
 
 	}
 	
@@ -2680,11 +2705,8 @@ function mouseDown(e){
 			// Load the gates from this
 			fromQASM(asQasm);
 
-			// Re-sim and redraw (twice just to ensure consistent functions)
-			/*circuitUpdated = false;*/
-			/*redraw();*/
-			circuitUpdated = true;
-			/*redraw();*/
+			// Re-sim 
+			circuitUpdates = 2;
 
 		}
 
@@ -2764,14 +2786,14 @@ function mouseDown(e){
 
 					// Change it to be unfilled
 					gates[hover]["letter"] = "controlUnfilled";
-					circuitUpdated = true;
+					circuitUpdates = 1;
 
 				// If it's a filled control
 				} else if (gates[hover]["letter"] == "controlUnfilled"){
 
 					// Change it to be unfilled
 					gates[hover]["letter"] = "controlFilled";
-					circuitUpdated = true;
+					circuitUpdates = 1;
 
 				// If it's a sub gate
 				} else if (gates[hover]["letter"] == "sub"){
@@ -2797,7 +2819,7 @@ function mouseDown(e){
 						gates[hover]["letter"] = "text" + newText;
 						ctx.font = fontSize + "px Arial";
 						gates[hover]["size"] = Math.max(1, Math.ceil(ctx.measureText(newText).width / gridX))
-						circuitUpdated = true;
+						circuitUpdates = 1;
 
 						// If it's a link 
 						if (newText.substr(0,4) == "http"){
@@ -2944,9 +2966,6 @@ function mouseDown(e){
 
 	// Save this time for future double click checks
 	lastClickTime = currentTime;
-
-	// Update the canvas
-	/*redraw();*/
 
 }
 
@@ -3267,11 +3286,8 @@ function onFileChange(e){
 		// Load the QASM 
 		fromQASM(text);
 
-		// Re-sim and redraw (twice just to ensure consistent functions)
-		/*circuitUpdated = false;*/
-		/*redraw();*/
-		circuitUpdated = true;
-		/*redraw();*/
+		// Re-sim 
+		circuitUpdates = 2;
 
 	};
 
@@ -3754,9 +3770,6 @@ function mouseWheel(e){
 		offsetX = e.clientX - xs * (gridX / gridXFixed);
 		offsetY = e.clientY - ys * (gridY / gridYFixed);
 
-		// Redraw everything now the sizes have changed
-		/*redraw();*/
-
 	}
 
 }
@@ -4017,10 +4030,15 @@ function svgArc(x1, y1, c1, c2, x2, y2, col, w){
 	svgMaxX = Math.max(svgMaxX, x1, x2);
 	svgMaxY = Math.max(svgMaxY, y1, y2);
 }
+
+// Shorthand
+function floor(x){
+	return Math.floor(x);
+}
 		
 </script>
 </head>
-<body onresize="init(false)" onload="init(true)" onhashchange="init(true)">
+<body onresize="init(false,false)" onload="init(true,true)" onhashchange="init(false,true)">
 <canvas id="view"></canvas>
 <input id="fileIn" onchange="onFileChange(event);" type="file" style="top:10em; display:none;" accept=".qasm"/>
 <input id="hiddenText" oninput="onTextPaste(event);" style="top:10em;"></div>
