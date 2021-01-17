@@ -75,10 +75,12 @@ var maxHistory = 10;
 var canvas = null;
 var ctx = null;
 var copyElement = null;
+var linkObject = null;
 
 // For managing the history
 var qasmHistory = [];
 var historyIndex = -1;
+var noHistory = false;
 
 // The list of gates
 var gates = [];
@@ -228,6 +230,9 @@ function init(newInstance=false, recalc=false){
 			outputBox.add(option);
 		}
 		document.getElementsByTagName("BODY")[0].appendChild(outputBox);
+
+		// Get the link object
+		linkObject = document.getElementById("hiddenURL");
 
 	}
 
@@ -916,7 +921,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 }
 
 // Called whenever something is changed
-function redraw(t=0, noHistory=false){
+function redraw(t=0){
 
 	// Reset the svg vars
 	svgString = "";
@@ -1318,6 +1323,11 @@ function redraw(t=0, noHistory=false){
 
 		// Circuit no longer needs re-simulating
 		circuitUpdates -= 1;
+
+		// If all the updates are finished, next update should add to the history
+		if (circuitUpdates == 0){
+			noHistory = false;
+		}
 
 	}
 
@@ -2549,11 +2559,12 @@ function keyDown(e){
 		
 			// Things have changed, update 
 			selectionArray = [];
-			circuitUpdate = 1;
+			noHistory = true;
+			circuitUpdates = 2;
 
 		}
 
-	// Redo ctrl-r 
+	// Redo ctrl-shift-z 
 	} else if (e.ctrlKey && e.shiftKey && e.key == "Z"){
 
 		// If not at the end of the history
@@ -2570,7 +2581,8 @@ function keyDown(e){
 
 			// Things have changed, update 
 			selectionArray = [];
-			circuitUpdates = 1;
+			noHistory = true;
+			circuitUpdates = 2;
 
 		}
 
@@ -2706,6 +2718,10 @@ function mouseDown(e){
 			// Get it and process it
 			asQasm = decodeURIComponent(presets[ind][1]);
 
+			// Reset the history 
+			qasmHistory = [];
+			historyIndex = -1;
+
 			// Load the gates from this
 			fromQASM(asQasm);
 
@@ -2813,7 +2829,7 @@ function mouseDown(e){
 				// If it's a text object 
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
-					// Open a prompt to change the text TODO weird on mobile
+					// Open a prompt to change the text TODO weird on firefox mobile, causes refresh on enter
 					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
 
 					// If the user didn't cancel
@@ -2874,10 +2890,11 @@ function mouseDown(e){
 			// If it's a link's go button
 			if (gates[hover]["letter"] == "go"){
 
-				// Get and open the URL
+				// Get and open the URL 
 				var ogInd = fromID(gates[hover]["og"]);
 				var url = gates[ogInd]["letter"].substr(4);
-				window.open(url);
+				linkObject.href = url;
+				linkObject.click();
 
 			// If it can be dragged, select it
 			} else if (gates[hover]["draggable"]){
@@ -3286,6 +3303,10 @@ function onFileChange(e){
 		// Hide the load window
 		loadOpen = false;
 		openHover = false;
+
+		// Reset the history 
+		qasmHistory = [];
+		historyIndex = -1;
 
 		// Load the QASM 
 		fromQASM(text);
@@ -4046,5 +4067,6 @@ function floor(x){
 <canvas id="view"></canvas>
 <input id="fileIn" onchange="onFileChange(event);" type="file" style="top:10em; display:none;" accept=".qasm"/>
 <input id="hiddenText" oninput="onTextPaste(event);" style="top:10em;"></div>
+<a id="hiddenURL" href="" target="_blank" rel="noopener noreferrer"></a>
 </body>
 </html>
