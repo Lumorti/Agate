@@ -136,6 +136,7 @@ var prevTouchY = 0;
 var isPinching = false;
 var mobileOffsetY = 0;
 var lastPinchDist = -1;
+var browser = "";
 
 // For the tips window
 var helpOpen = true;
@@ -173,6 +174,13 @@ function init(newInstance=false, recalc=false){
 	saveOpen = false;
 	canEdit = true;
 	showFPS = false;
+
+	// Get the browser 
+	if (navigator.userAgent.indexOf("Chrome") > 0){
+		browser = "Chrome";
+	} else if (navigator.userAgent.indexOf("Firefox") > 0){
+		browser = "Firefox";
+	}
 
 	// Initialise the canvas
 	canvas = document.getElementById("view");
@@ -3786,6 +3794,11 @@ function mouseWheel(e){
 
 		// How fast to zoom
 		var zoomSpeed = 0.05 * e.deltaY;
+
+		// Scroll deltaY is not the same across browsers
+		if (browser == "Chrome"){
+			zoomSpeed *= 0.055
+		}
 
 		// Change the dimensions
 		var change = 1.0 - zoomSpeed;
