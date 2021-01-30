@@ -11,6 +11,7 @@
 <style>
 	body {margin: 0; padding: 0; overflow: hidden;}
 	#view {background-color: #ffffff; position: absolute; height: 100vh; width: 100%;}
+	*:focus {outline: none;}
 </style>
 <script>
 
@@ -137,6 +138,7 @@ var isPinching = false;
 var mobileOffsetY = 0;
 var lastPinchDist = -1;
 var browser = "";
+var inPrompt = false;
 
 // For the tips window
 var helpOpen = true;
@@ -168,6 +170,9 @@ for (var i=0; i<numRands; i++){
 
 // Called on body ready
 function init(newInstance=false, recalc=false){
+
+	// If this is triggering from the Firefox mobile prompt resize
+	if (inPrompt){return;}
 
 	// Reset things
 	loadOpen = false;
@@ -931,6 +936,9 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 // Called whenever something is changed
 function redraw(t=0){
 
+	// Screen is able to update, thus probably not in the prompt TODO
+	inPrompt = false;
+
 	// Reset the svg vars
 	svgString = "";
 	svgMinX = 99999;
@@ -1475,17 +1483,17 @@ function redraw(t=0){
 			roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-60, 80, 10, true, false);
 
 			// Draw the title text
-			ctx.font = "35px bold Arial";
+			ctx.font = "38px Arial";
 			ctx.fillStyle = "#555555";
-			ctx.fillText("Welcome to Agate!", helpLeft+80, helpTop+85);
+			ctx.fillText("Welcome to Agate!", helpLeft+85, helpTop+85);
 
 			// Draw the intro text 
 			ctx.fillStyle = "#555555";
-			ctx.font = "20px bold Arial";
+			ctx.font = "23px arial";
 			ctx.fillText("Agate is a quantum circuit designer", helpLeft+60, helpTop+155);
 			ctx.fillText("and simulator by Lumorti", helpLeft+60, helpTop+185);
 			ctx.fillText(tips[tipInd][1], helpLeft+60, helpTop+230);
-			ctx.fillText(tips[tipInd][2], helpLeft+60, helpTop+255);
+			ctx.fillText(tips[tipInd][2], helpLeft+60, helpTop+260);
 			drawGate(tips[tipInd][0], helpLeft+425, helpTop+230, false, 1, true);
 
 		// If on mobile (vertical)
@@ -1510,13 +1518,13 @@ function redraw(t=0){
 			roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-60, 80, 10, true, false);
 
 			// Draw the title text
-			ctx.font = "35px bold Arial";
+			ctx.font = "38px Arial";
 			ctx.fillStyle = "#555555";
 			ctx.fillText("Welcome!", helpLeft+65, helpTop+85);
 
 			// Draw the intro text 
 			ctx.fillStyle = "#555555";
-			ctx.font = "17px bold Arial";
+			ctx.font = "23px Arial";
 			ctx.fillText("Agate is a quantum circuit", helpLeft+40, helpTop+155);
 			ctx.fillText("designer and simulator", helpLeft+40, helpTop+185);
 			ctx.fillText("by Lumorti", helpLeft+40, helpTop+215);
@@ -1544,13 +1552,13 @@ function redraw(t=0){
 			drawGate("logo", helpLeft+520, helpTop+70, false, 2.2, true);
 
 			// Draw the title text
-			ctx.font = "35px bold Arial";
+			ctx.font = "38px Arial";
 			ctx.fillStyle = "#555555";
 			ctx.fillText("Welcome to Agate!", helpLeft+70, helpTop+85);
 
 			// Draw the intro text 
 			ctx.fillStyle = "#555555";
-			ctx.font = "17px bold Arial";
+			ctx.font = "23px Arial";
 			ctx.fillText("Agate is a quantum circuit designer and simulator by Lumorti", helpLeft+40, helpTop+155);
 			ctx.fillText(tips[tipInd][1] + " " + tips[tipInd][2], helpLeft+40, helpTop+190);
 
@@ -2841,6 +2849,7 @@ function mouseDown(e){
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
 					// Open a prompt to change the text TODO weird on firefox mobile, causes refresh on enter
+					inPrompt = true;
 					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
 
 					// If the user didn't cancel
