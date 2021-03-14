@@ -256,11 +256,6 @@ function init(newInstance=false, recalc=false){
 		onMobile = 2;
 	}
 
-	// Don't show the welcome text on mobile
-	if (onMobile > 0){
-		helpOpen = false;
-	}
-
 	// Changes if on mobile (vertical)
 	if (onMobile == 1){
 
@@ -936,7 +931,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 // Called whenever something is changed
 function redraw(t=0){
 
-	// Screen is able to update, thus probably not in the prompt TODO
+	// Screen is able to update, thus probably not in the prompt 
 	inPrompt = false;
 
 	// Reset the svg vars
@@ -1476,7 +1471,7 @@ function redraw(t=0){
 			// Logo section
 			ctx.fillStyle = "#dddddd";
 			roundRect(ctx, helpLeft+180, helpTop-90, 120, 180, 10, true, false);
-			drawGate("logo", helpLeft+240, helpTop-35, false, 2.2, true);
+			drawGate("logo", helpLeft+240, helpTop-35, false, 2.6, true);
 
 			// Draw the title inner rect
 			ctx.fillStyle = "#eeeeee";
@@ -1500,7 +1495,7 @@ function redraw(t=0){
 		} else if (onMobile == 1) {
 
 			var helpWidth = 300;
-			var helpHeight = 360;
+			var helpHeight = 260;
 			var helpLeft = window.innerWidth / 2 - helpWidth / 2;
 			var helpTop = Math.max(toolbarHeight+140, window.innerHeight / 1.6 - helpHeight / 2);
 
@@ -1511,7 +1506,7 @@ function redraw(t=0){
 			// Logo section
 			ctx.fillStyle = "#dddddd";
 			roundRect(ctx, helpLeft+90, helpTop-90, 120, 180, 10, true, false);
-			drawGate("logo", helpLeft+150, helpTop-35, false, 2.2, true);
+			drawGate("logo", helpLeft+150, helpTop-35, false, 3, true);
 
 			// Draw the title inner rect
 			ctx.fillStyle = "#eeeeee";
@@ -1525,18 +1520,15 @@ function redraw(t=0){
 			// Draw the intro text 
 			ctx.fillStyle = "#555555";
 			ctx.font = "23px Arial";
-			ctx.fillText("Agate is a quantum circuit", helpLeft+40, helpTop+155);
-			ctx.fillText("designer and simulator", helpLeft+40, helpTop+185);
-			ctx.fillText("by Lumorti", helpLeft+40, helpTop+215);
-			ctx.fillText("If you're new, load the", helpLeft+40, helpTop+260);
-			ctx.fillText("tutorial using the open", helpLeft+40, helpTop+290);
-			ctx.fillText("icon at the top", helpLeft+40, helpTop+320);
+			ctx.fillText("If you're new, load the", helpLeft+40, helpTop+155);
+			ctx.fillText("tutorial using the open", helpLeft+40, helpTop+185);
+			ctx.fillText("icon at the top", helpLeft+40, helpTop+215);
 
 		// If on mobile (horizontal) 
 		} else if (onMobile == 2) {
 
-			var helpWidth = 600;
-			var helpHeight = 240;
+			var helpWidth = 440;
+			var helpHeight = 220;
 			var helpLeft = window.innerWidth / 2 - helpWidth / 2;
 			var helpTop = window.innerHeight / 1.7 - helpHeight / 2;
 
@@ -1546,21 +1538,18 @@ function redraw(t=0){
 
 			// Draw the title inner rect
 			ctx.fillStyle = "#eeeeee";
-			roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-180, 80, 10, true, false);
+			roundRect(ctx, helpLeft+30, helpTop+30, helpWidth-60, 80, 10, true, false);
 			
-			// Logo section
-			drawGate("logo", helpLeft+520, helpTop+70, false, 2.2, true);
-
 			// Draw the title text
 			ctx.font = "38px Arial";
 			ctx.fillStyle = "#555555";
-			ctx.fillText("Welcome to Agate!", helpLeft+70, helpTop+85);
+			ctx.fillText("Welcome to Agate!", helpLeft+60, helpTop+85);
 
 			// Draw the intro text 
 			ctx.fillStyle = "#555555";
 			ctx.font = "23px Arial";
-			ctx.fillText("Agate is a quantum circuit designer and simulator by Lumorti", helpLeft+40, helpTop+155);
-			ctx.fillText(tips[tipInd][1] + " " + tips[tipInd][2], helpLeft+40, helpTop+190);
+			ctx.fillText("If you're new, load the tutorial", helpLeft+70, helpTop+155);
+			ctx.fillText("using the open icon at the top", helpLeft+70, helpTop+185);
 
 		}
 
@@ -2848,7 +2837,7 @@ function mouseDown(e){
 				// If it's a text object 
 				} else if (gates[hover]["letter"].substring(0,4) == "text"){
 
-					// Open a prompt to change the text TODO weird on firefox mobile, causes refresh on enter
+					// Open a prompt to change the text 
 					inPrompt = true;
 					var newText = prompt("Enter new text:", gates[hover]["letter"].substr(4));
 
