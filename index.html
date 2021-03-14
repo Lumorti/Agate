@@ -3794,8 +3794,8 @@ function mouseWheel(e){
 		var zoomSpeed = 0.05 * e.deltaY;
 
 		// Scroll deltaY is not the same across browsers
-		if (browser == "Chrome"){
-			zoomSpeed *= 0.055
+		if (browser == "Chrome" && onMobile == 0){
+			zoomSpeed *= 0.055;
 		}
 
 		// Change the dimensions
