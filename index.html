@@ -3793,9 +3793,18 @@ function mouseWheel(e){
 		// How fast to zoom
 		var zoomSpeed = 0.05 * e.deltaY;
 
-		// Scroll deltaY is not the same across browsers
+		// Scroll deltaY is not the same across browsers 
 		if (browser == "Chrome" && onMobile == 0){
 			zoomSpeed *= 0.055;
+		} else if (browser == "Firefox" && onMobile == 0){
+			zoomSpeed *= 0.010;
+		}
+
+		// Limit the scroll speed just in case
+		if (zoomSpeed > 0){
+			zoomSpeed = Math.min(zoomSpeed, 0.10);
+		} else {
+			zoomSpeed = Math.max(zoomSpeed, -0.10);
 		}
 
 		// Change the dimensions
