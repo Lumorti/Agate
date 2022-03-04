@@ -65,12 +65,20 @@ var toolbarGates = [
 var canEdit = true;
 var showFPS = false;
 var drawGrid = true;
+var simMethod = "Statevector";
 var numRepeats = 1000;
 var cutoffThresh = 3;
 var doubleClickMilli = 300;
-var initialZoom = 0.6;
+var initialZoom = 1.0;
 var qasmVersion = 3;
 var maxHistory = 10;
+
+// Stuff for the settings menu
+var settingsOpen = false;
+var fpsBox = null;
+var gridBox = null;
+var simBox = null;
+var repeatsBox = null;
 
 // Empty global vars to be initialised later
 var canvas = null;
@@ -218,7 +226,7 @@ function init(newInstance=false, recalc=false){
 		canvas.addEventListener("touchend",    touchHandler, true);
 		canvas.addEventListener("touchcancel", touchHandler, true);
 
-		// Setup the hidden preset load element 
+		// Setup the hidden load element 
 		inputBox = document.createElement("SELECT");
 		inputBox.style.position = "absolute";
 		inputBox.style.font = "20px Arial";
@@ -231,7 +239,7 @@ function init(newInstance=false, recalc=false){
 		}
 		document.getElementsByTagName("BODY")[0].appendChild(inputBox);
 
-		// Setup the hidden preset save element 
+		// Setup the hidden save element 
 		outputBox = document.createElement("SELECT");
 		outputBox.style.position = "absolute";
 		outputBox.style.font = "20px Arial";
@@ -243,6 +251,70 @@ function init(newInstance=false, recalc=false){
 			outputBox.add(option);
 		}
 		document.getElementsByTagName("BODY")[0].appendChild(outputBox);
+
+		// Setup the hidden FPS checkbox
+		fpsBox = document.createElement("INPUT");
+		fpsBox.setAttribute("type", "checkbox");
+		fpsBox.style.position = "absolute";
+		fpsBox.style.font = "20px Arial";
+		fpsBox.style.padding = "10px";
+		fpsBox.style.zIndex = "101";
+		fpsBox.style.height = "25px";
+		fpsBox.style.width = "25px";
+		fpsBox.onchange = function(){
+			showFPS = !showFPS;
+		};
+		document.getElementsByTagName("BODY")[0].appendChild(fpsBox);
+
+		// Setup the hidden grid checkbox
+		gridBox = document.createElement("INPUT");
+		gridBox.setAttribute("type", "checkbox");
+		gridBox.style.position = "absolute";
+		gridBox.style.font = "20px Arial";
+		gridBox.style.padding = "10px";
+		gridBox.style.zIndex = "101";
+		gridBox.style.height = "25px";
+		gridBox.style.width = "25px";
+		gridBox.checked = drawGrid;
+		gridBox.onchange = function(){
+			drawGrid = !drawGrid;
+		};
+		document.getElementsByTagName("BODY")[0].appendChild(gridBox);
+
+		// Setup the hidden sim method box
+		simBox = document.createElement("SELECT");
+		simBox.style.position = "absolute";
+		simBox.style.font = "20px Arial";
+		simBox.style.padding = "10px";
+		simBox.style.zIndex = "101";
+		simBox.style.boxSizing = "border-box";
+		opts = ["Statevector", "Measurements", "Unitary"];
+		for (var i=0; i<opts.length; i++) {
+			var option = document.createElement("option");
+			option.text = opts[i];
+			simBox.add(option);
+		}
+		simBox.onchange = function(){
+			simMethod = simBox.options[simBox.selectedIndex].text;
+			circuitUpdates = 1;
+		};
+		document.getElementsByTagName("BODY")[0].appendChild(simBox);
+
+		// Setup the hidden repeats box
+		repeatsBox = document.createElement("INPUT");
+		repeatsBox.setAttribute("type", "number");
+		repeatsBox.style.position = "absolute";
+		repeatsBox.style.font = "20px Arial";
+		repeatsBox.style.padding = "10px";
+		repeatsBox.style.zIndex = "101";
+		repeatsBox.style.boxSizing = "border-box";
+		repeatsBox.style.display = "none";
+		repeatsBox.value = numRepeats;
+		repeatsBox.onchange = function(){
+			numRepeats = repeatsBox.value;
+			circuitUpdates = 1;
+		};
+		document.getElementsByTagName("BODY")[0].appendChild(repeatsBox);
 
 		// Get the link object
 		linkObject = document.getElementById("hiddenURL");
@@ -300,7 +372,7 @@ function init(newInstance=false, recalc=false){
 
 		// Add the gate summoning buttons 
 		toolbarHeight = gateSizeFixed+20;
-		toolbarWidth = gridXFixed*(numGatesToShow+4)+10;
+		toolbarWidth = gridXFixed*(numGatesToShow+5);
 		toolbarOffsetX = window.innerWidth / 2 - toolbarWidth / 2;
 		toolbarRel = (toolbarOffsetX / gridXFixed);
 		gates = [];
@@ -312,6 +384,7 @@ function init(newInstance=false, recalc=false){
 		gates.push({"letter": "right",  "y": 0.33, "x": numGatesToShow+1.2+toolbarRel, "attached": [], "og": -1, "size": 1, "draggable": false})
 		gates.push({"letter": "open", "attached": [], "og": -1, "y": 0.27, "x": numGatesToShow+1.9+toolbarRel, "size": 1, "draggable": false})
 		gates.push({"letter": "save", "attached": [], "og": -1, "y": 0.43, "x": numGatesToShow+2.9+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "settings", "attached": [], "og": -1, "y": 0.35, "x": numGatesToShow+3.8+toolbarRel, "size": 1, "draggable": false})
 		gatesInit = gates.slice();
 		gateOptions = gates.length;
 
@@ -323,18 +396,6 @@ function init(newInstance=false, recalc=false){
 		// Start with the whole hash
 		var toProcess = document.location.hash.substr(1);
 
-		// If the "fps" keyword present 
-		if (toProcess.substr(0,3) == "fps"){
-
-			// Show the FPS counter
-			showFPS = true;
-
-			// Don't treat the keyword as QASM
-			toProcess = toProcess.substr(3);
-
-		}
-
-		// If the "view" keyword present 
 		if (toProcess.substr(0,4) == "view"){
 
 			// Prevent edits, hide toolbar etc. 
@@ -1286,8 +1347,19 @@ function redraw(t=0){
 					inputs[i][0][2] += "0";
 				}
 
-				// Simulate circuit 
-				results[i] = simulateCircuit(inputs[i][0], gates, lineStartEnds[i], numRepeats, 0);
+				// If doing a measurement-based sim
+				if (simMethod == "Measurements") {
+					results[i] = simulateCircuit(inputs[i][0], gates, lineStartEnds[i], numRepeats, 0);
+
+				// If we want the whole unitary
+				} else if (simMethod == "Unitary") {
+					results[i] = getUnitary(gates, lineStartEnds[i]);
+
+				// If we want the whole unitary
+				} else if (simMethod == "Statevector") {
+					results[i] = getStatevector(gates, lineStartEnds[i]);
+
+				}
 
 			}
 
@@ -1303,11 +1375,6 @@ function redraw(t=0){
 			// If in view mode, stay that way
 			if (!canEdit){
 				encoded = "view" + encoded;
-			}
-
-			// If in fps mode, stay that way
-			if (showFPS){
-				encoded = "fps" + encoded;
 			}
 
 			// Update URL 
@@ -1351,11 +1418,36 @@ function redraw(t=0){
 			// If not a function
 			if (lineStartEnds[i][4] == -1){
 
-				// Render the inputs
-				renderState(ctx, inputs[i], lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, true);
-				
-				// Render the outputs
-				renderState(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+				// If doing a measurement-based sim
+				if (simMethod == "Measurements") {
+
+					// Render the inputs
+					renderState(ctx, inputs[i], lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, true);
+					
+					// Render the outputs
+					renderState(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+
+				// If we're rendering the whole unitary
+				} else if (simMethod == "Unitary") {
+					renderUnitary(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+
+				// If we're just rendering the final statevector
+				} else if (simMethod == "Statevector") {
+
+					var zeroInput = [[], []];
+					for (var k=0; k<results[i][0].length; k++) {
+						zeroInput[0].push(0);
+						zeroInput[1].push(0);
+					}
+					zeroInput[0][0] = 1;
+
+					// Inputs
+					renderStatevector(ctx, zeroInput, lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, false);
+
+					// Outputs
+					renderStatevector(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+
+				}
 
 			}
 
@@ -1558,8 +1650,12 @@ function redraw(t=0){
 	// If the load window is open 
 	if (loadOpen){
 
-		// Hide the save box
+		// Hide everything else
 		outputBox.style.display = "none";
+		fpsBox.style.display = "none";
+		simBox.style.display = "none";
+		repeatsBox.style.display = "none";
+		gridBox.style.display = "none";
 
 		// If mobile (vertical)
 		if (onMobile == 1){
@@ -1621,8 +1717,12 @@ function redraw(t=0){
 	// If the save window is open 
 	} else if (saveOpen){
 
-		// Hide the load box
+		// Hide everything else
 		inputBox.style.display = "none";
+		fpsBox.style.display = "none";
+		simBox.style.display = "none";
+		repeatsBox.style.display = "none";
+		gridBox.style.display = "none";
 
 		// If mobile (vertical)
 		if (onMobile == 1){
@@ -1681,12 +1781,97 @@ function redraw(t=0){
 
 		}
 
-	// If neither open
-	} else {
+	// If the settings window is open
+	} else if (settingsOpen){
 
-		// Hide both
+		// Hide everything else
 		inputBox.style.display = "none";
 		outputBox.style.display = "none";
+
+		// If mobile (vertical)
+		if (onMobile == 1){
+
+			// Settings to be updated here in case of window resize
+			var optionsWidth = 300;
+			var optionsHeight = 210;
+			var optionsLeft = window.innerWidth / 2 - saveWidth / 2;
+			var optionsTop = window.innerHeight / 2 - optionsHeight / 2;
+
+			// Draw the outline
+			ctx.fillStyle = "#dddddd";
+			roundRect(ctx, optionsLeft, optionsTop, optionsWidth, optionsHeight, 20, true, false);
+
+			// Draw the help text
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Select a file type", optionsLeft+70, optionsTop+45);
+
+			// Update the preset selection box 
+			outputBox.style.top = (optionsTop+70) + "px";
+			outputBox.style.left = (optionsLeft+30) + "px";
+			outputBox.style.width = (optionsWidth-60) + "px";
+			outputBox.style.display = "block";
+			
+			// Draw the second options button
+			optionsDims = [optionsLeft+120, optionsLeft+180, optionsTop+140, optionsTop+200];
+			drawGate("options", optionsLeft+150, optionsTop+170, optionsHover, 1);
+
+		} else {
+
+			// Settings to be updated here in case of window resize
+			var optionsWidth = 390;
+			var optionsHeight = 250;
+			var optionsLeft = window.innerWidth / 2 - optionsWidth / 2;
+			var optionsTop = window.innerHeight / 2 - optionsHeight / 2;
+
+			// Draw the outline
+			ctx.fillStyle = "#dddddd";
+			roundRect(ctx, optionsLeft, optionsTop, optionsWidth, optionsHeight, 20, true, false);
+
+			// FPS toggle
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Show FPS?", optionsLeft+47, optionsTop+55);
+			fpsBox.style.top = (optionsTop+35) + "px";
+			fpsBox.style.left = (optionsLeft+170) + "px";
+			fpsBox.style.display = "block";
+
+			// Grid toggle
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Show grid?", optionsLeft+50, optionsTop+105);
+			gridBox.style.top = (optionsTop+85) + "px";
+			gridBox.style.left = (optionsLeft+170) + "px";
+			gridBox.style.display = "block";
+
+			// Sim method dropdown
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Sim method:", optionsLeft+40, optionsTop+160);
+			simBox.style.top = (optionsTop+130) + "px";
+			simBox.style.left = (optionsLeft+170) + "px";
+			simBox.style.width = (optionsWidth-190) + "px";
+			simBox.style.display = "block";
+
+			// Repeats input
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Num repeats:", optionsLeft+37, optionsTop+215);
+			repeatsBox.style.top = (optionsTop+185) + "px";
+			repeatsBox.style.left = (optionsLeft+170) + "px";
+			repeatsBox.style.width = (optionsWidth-190) + "px";
+			repeatsBox.style.display = "block";
+
+		}
+
+	// Otherwise hide everything
+	} else {
+		inputBox.style.display = "none";
+		outputBox.style.display = "none";
+		fpsBox.style.display = "none";
+		simBox.style.display = "none";
+		repeatsBox.style.display = "none";
+		gridBox.style.display = "none";
 
 	}
 
@@ -1713,6 +1898,107 @@ function redraw(t=0){
 
 	// Redraw when available 
 	requestAnimationFrame(redraw);
+
+}
+
+// Render a given unitary
+function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft){
+
+	// Style parameters
+	ctx.lineWidth = fontSize / 7;
+	ctx.strokeStyle = "#555555";
+	ctx.fillStyle = ctx.strokeStyle;
+
+	// For each matrix element
+	var vertOffset = -Math.floor(states[0].length / 4);
+	for (var i=0; i<states[0].length; i++) {
+		for (var j=0; j<states[0][i].length; j++) {
+
+			// Draw that element
+			textX = (x+i)*gridX+offsetX+gridX*0.13;
+			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
+			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
+			if (textX >= -2 && textX <= canvas.width && textYReal >= -2 && textYReal <= canvas.height) {
+				ctx.font = fontSize/2 + "px Arial";
+				ctx.fillText((Math.round((states[0][j][i] + Number.EPSILON) * 100) / 100).toFixed(2), textX, textYReal);
+				ctx.fillText((Math.round((states[1][j][i] + Number.EPSILON) * 100) / 100).toFixed(2) + "i", textX, textYImag);
+			}
+
+		}
+	}
+
+}
+
+// Render a given statevector TODO make negative i aligned
+function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft){
+
+	// Style parameters
+	ctx.lineWidth = fontSize / 7;
+	ctx.strokeStyle = "#555555";
+	ctx.fillStyle = ctx.strokeStyle;
+
+	// Get the number of spaces
+	var squares = Math.log2(states[0].length);
+
+	// For each state
+	var nextPos = 0;
+	for (var i=0; i<states[0].length; i++){
+
+		// If of significant probability
+		if (states[0][i]*states[0][i]+states[1][i]*states[1][i] >= cutoffThresh/100.0){
+
+			// Get the binary representation
+			var binRep = i.toString(2).padStart(squares, "0");
+
+			// For each qubit of the state
+			for (var j=0; j<binRep.length; j++){
+
+				// If there's anything on that qubit
+				if (qubitsWithGates.indexOf(y+j) >= 0){
+
+					// Draw that qubit's state
+					textX = (x+nextPos)*gridX+offsetX+gridX*0.27;
+					textY = (y+j)*gridY+offsetY+gridY*0.6;
+					ctx.font = fontSize + "px Arial";
+					ctx.fillText(binRep[j], textX, textY);
+
+				}
+
+			}
+
+			// To simplify the code
+			leftX = (x+nextPos)*gridX+offsetX+gateSize/2-gridX*0.4;
+			rightX = (x+nextPos)*gridX+offsetX+gateSize/2+gridX*0.4;
+			topY = y*gridY+offsetY-(gridY-gateSize)/2;
+			bottomY = (y+binRep.length)*gridY+offsetY-(gridY-gateSize)/2;
+
+			// Draw the top part of the ket
+			ctx.beginPath();
+			ctx.moveTo(leftX, topY);
+			ctx.lineTo(rightX, topY);
+			ctx.stroke();
+
+			// Probability estimate at the top
+			textX = (x+nextPos)*gridX+offsetX+gridX*0.13;
+			textYReal = (y-1)*gridY+offsetY+gridY*0.35;
+			textYImag = (y-1)*gridY+offsetY+gridY*0.7;
+			ctx.font = (fontSize/2)+"px Arial";
+			ctx.fillText(states[0][i].toFixed(2), textX, textYReal);
+			ctx.fillText(states[1][i].toFixed(2)+"i", textX, textYImag);
+
+			// Draw the bottom part of the ket
+			ctx.beginPath();
+			ctx.moveTo(leftX, bottomY);
+			ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
+			ctx.lineTo(rightX, bottomY);
+			ctx.stroke();
+
+			// Next one should be drawn to the right
+			nextPos += 1;
+
+		}
+
+	}
 
 }
 
@@ -1780,6 +2066,261 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft){
 		}
 
 	}
+
+}
+
+// Calculate the matrix product of two matrices
+function matrixProduct(m1, m2) {
+    var result = [];
+    for (var i=0; i<m1.length; i++) {
+        result[i] = [];
+        for (var j=0; j<m2[0].length; j++) {
+            var sum = 0;
+            for (var k=0; k<m1[0].length; k++) {
+                sum += m1[i][k] * m2[k][j];
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
+}
+
+// Calculate the kronecker/tensor product of two matrices
+function tensorProduct(m1, m2) {
+	var prod = Array(m1.length*m2.length).fill(null).map(() => Array(m1[0].length*m2[0].length).fill(0));
+    for (var i1=0; i1<m1.length; i1++) {
+        for (var j1=0; j1<m1[0].length; j1++) {
+			for (var i2=0; i2<m2.length; i2++) {
+				for (var j2=0; j2<m2[0].length; j2++) {
+					prod[i1*m2.length+i2][j1*m2[0].length+j2] = m1[i1][j1] * m2[i2][j2];
+				}
+			}
+		}
+	}
+	return prod;
+}
+
+// Element-wise matrix subtraction
+function matrixSubtraction(m1, m2) {
+	var mat = Array(m1.length).fill(null).map(() => Array(m1[0].length).fill(0));
+    for (var i1=0; i1<m1.length; i1++) {
+        for (var j1=0; j1<m1[0].length; j1++) {
+			mat[i1][j1] = m1[i1][j1] - m2[i1][j1];
+		}
+	}	
+	return mat;
+}
+
+// Element-wise matrix addition
+function matrixAddition(m1, m2) {
+	var mat = Array(m1.length).fill(null).map(() => Array(m1[0].length).fill(0));
+    for (var i1=0; i1<m1.length; i1++) {
+        for (var j1=0; j1<m1[0].length; j1++) {
+			mat[i1][j1] = m1[i1][j1] + m2[i1][j1];
+		}
+	}	
+	return mat;
+}
+
+// Given a gate object, return the corresponding matrix
+function gateToMat(gate) {
+
+	// Separate real and imag components
+	var matReal = [[]];
+	var matImag = [[]];
+
+	// Pauli X
+	if (gate.letter == "X") {
+		matReal = [[0, 1],
+			       [1, 0]];
+		matImag = [[0, 0],
+			       [0, 0]];
+
+	// Pauli Y
+	} else if (gate.letter == "Y") {
+		matReal = [[0, 0],
+			       [0, 0]];
+		matImag = [[0,-1],
+			       [1, 0]];
+
+	// Pauli Z
+	} else if (gate.letter == "Z") {
+		matReal = [[1, 0],
+			       [0,-1]];
+		matImag = [[0, 0],
+			       [0, 0]];
+
+	// Identity
+	} else if (gate.letter == "I") {
+		matReal = [[1, 0],
+			       [0, 1]];
+		matImag = [[0, 0],
+			       [0, 0]];
+
+	// S
+	} else if (gate.letter == "S") {
+		matReal = [[1, 0],
+			       [0, 0]];
+		matImag = [[0, 0],
+			       [0, 1]];
+
+	// T
+	} else if (gate.letter == "T") {
+		matReal = [[1, 0],
+			       [0, 0.707106781]];
+		matImag = [[0, 0],
+			       [0, 0.707106781]];
+
+	// Swap top (i.e. the whole swap gate)
+	} else if (gate.letter == "swaptop") {
+		matReal = [[1, 0, 0, 0],
+			       [0, 0, 1, 0],
+			       [0, 1, 0, 0], 
+			       [0, 0, 0, 1]];
+		matImag = [[0, 0, 0, 0],
+			       [0, 0, 0, 0],
+			       [0, 0, 0, 0], 
+			       [0, 0, 0, 0]];
+
+	// Swap bottom (i.e. nothing)
+	} else if (gate.letter == "swapbottom") {
+		matReal = [[1]];
+		matImag = [[1]];
+
+	// Hadamard
+	} else if (gate.letter == "H") {
+		matReal = [[0.707106781, 0.707106781],
+			       [0.707106781,-0.707106781]];
+		matImag = [[0, 0],
+			       [0, 0]];
+
+	}
+
+	return [matReal, matImag];
+
+}
+
+// Given gates and a box, return the unitary
+function getUnitary(gates, boundingBox){ 
+
+	// Get valid gates
+	var validGates = []
+	for (var i=gateOptions; i<gates.length; i++){
+		if (gates[i]["rec"] != true && gates[i]["x"] >= boundingBox[0] && gates[i]["x"] <= boundingBox[1] && gates[i]["y"] >= boundingBox[2] && gates[i]["y"] <= boundingBox[3]){
+			validGates.push(gates[i]);
+		}
+	}
+
+	console.log("Valid gates:");
+	console.log(validGates);
+	console.log("Bounding box:");
+	console.log(boundingBox);
+
+	// Get the gates per x value
+	var gatesPerSection = [];
+	var localQubitsWithGates = [];
+	for (var j=0; j<boundingBox[1]-boundingBox[0]-1; j++) {
+		var perSection = [];
+		for (var i=0; i<validGates.length; i++) {
+			if (validGates[i]["x"]-boundingBox[0]-1 == j) {
+				perSection[validGates[i]["y"]-boundingBox[2]] = validGates[i];
+				if (!localQubitsWithGates.includes(validGates[i]["y"])) {
+					localQubitsWithGates.push(validGates[i]["y"]);
+				}
+			}
+		}
+		gatesPerSection.push(perSection);
+	}
+
+	// Start with a big identity
+	var numQubits = localQubitsWithGates.length;
+	var vecSize = Math.pow(2, localQubitsWithGates.length);
+	var unitaryReal = Array(vecSize).fill(null).map(() => Array(vecSize).fill(0));
+	var unitaryImag = Array(vecSize).fill(null).map(() => Array(vecSize).fill(0));
+	for (var i=0; i<vecSize; i++) {
+		unitaryReal[i][i] = 1.0;
+	}
+
+	// Fill the blanks with identities
+	for (var i=0; i<gatesPerSection.length; i++) {
+		for (var j=0; j<numQubits; j++) {
+			if (!gatesPerSection[i][j]) {
+				gatesPerSection[i][j] = {"letter": "I"};
+			}
+		}
+	}
+
+	console.log("Gates per section:");
+	console.log(gatesPerSection);
+
+	// For each section
+	for (var i=0; i<gatesPerSection.length; i++) {
+
+		// Skip if it doesn't have any gates
+		if (gatesPerSection[i].length == 0) {
+			continue;
+		}
+
+		// Tensor product all these gates
+		var mats = gateToMat(gatesPerSection[i][0]); 
+
+		// For each control TODO
+		/*for (var k=0; k<gatesPerSection[i][j].attached.length; k++) {*/
+			
+			/*var fullReal = Array(2*matReal.length).fill(null).map(() => Array(2*matReal[0].length).fill(0));*/
+			/*var fullImag = Array(2*matImag.length).fill(null).map(() => Array(2*matImag[0].length).fill(0));*/
+
+			/*// Find out where the control is*/
+			/*var control = fromIDArray(gate.attached[k], gatesPerSection[i]);*/
+			/*var controlDelta = control["y"] - gatesPerSection[i][j]["y"];*/
+
+		/*}*/
+
+		// TODO functions
+
+		var toApplyReal = mats[0];
+		var toApplyImag = mats[1];
+		for (var j=1; j<gatesPerSection[i].length; j++) {
+			mats = gateToMat(gatesPerSection[i][j]); 
+			oldReal = toApplyReal.slice();
+			toApplyReal = matrixSubtraction(tensorProduct(toApplyReal, mats[0]), tensorProduct(toApplyImag, mats[1]));
+			toApplyImag = matrixSubtraction(tensorProduct(toApplyImag, mats[0]), tensorProduct(oldReal, mats[1]));
+		}
+
+		console.log("To apply:");
+		console.log(toApplyReal);
+		console.log(toApplyImag);
+
+		// Apply it to the state
+		oldReal = unitaryReal.slice();
+		unitaryReal = matrixSubtraction(matrixProduct(toApplyReal, unitaryReal), matrixProduct(toApplyImag, unitaryImag));
+		unitaryImag = matrixAddition(matrixProduct(toApplyReal, unitaryImag), matrixProduct(toApplyImag, oldReal));
+
+		console.log("Unitaries:");
+		console.log(unitaryReal);
+		console.log(unitaryImag);
+
+	}
+
+	return [unitaryReal, unitaryImag];
+
+}
+
+// Given gates and a box, return the statevector
+function getStatevector(gates, boundingBox){
+
+	// First get the unitary
+	units = getUnitary(gates, boundingBox);
+
+	// Extract the first column of both parts
+	var statevecReal = [];
+	var statevecImag = [];
+	for (var i=0; i<units[0].length; i++) {
+		statevecReal.push(units[0][i][0]);
+		statevecImag.push(units[1][i][0]);
+	}
+
+	return [statevecReal, statevecImag];
 
 }
 
@@ -2923,6 +3464,7 @@ function mouseDown(e){
 				// Open the saving choice box
 				saveOpen = !saveOpen;
 				loadOpen = false;
+				settingsOpen = false;
 
 			// If it's the open icon 
 			} else if (gates[hover]["letter"] == "open"){
@@ -2930,6 +3472,15 @@ function mouseDown(e){
 				// Open the loading choice box
 				loadOpen = !loadOpen;
 				saveOpen = false;
+				settingsOpen = false;
+
+			// If it's the settings icon 
+			} else if (gates[hover]["letter"] == "settings"){
+
+				// Open the settings box
+				settingsOpen = !settingsOpen;
+				saveOpen = false;
+				loadOpen = false;
 
 			// If it's a new function
 			} else if (gates[hover]["letter"] == "sub"){
@@ -2960,6 +3511,7 @@ function mouseDown(e){
 				hover = gates.length-1;
 				loadOpen = false;
 				saveOpen = false;
+				settingsOpen = false;
 				mouseMove(e);
 			}
 
@@ -2973,6 +3525,7 @@ function mouseDown(e){
 		selectionArray = [];
 		loadOpen = false;
 		saveOpen = false;
+		settingsOpen = false;
 		
 		// Double click
 		if ((currentTime - lastClickTime) < doubleClickMilli){
