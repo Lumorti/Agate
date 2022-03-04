@@ -57,6 +57,7 @@ var toolbarGates = [
 	"sub",
 	"S",
 	"T",
+	"I",
 	"swap",
 	"text",
 ];
@@ -112,6 +113,7 @@ var selectionArray = [];
 var lineStartEnds = [];
 var qubitsWithGates = [];
 var funcStartEnds = [];
+var funcUnitaries = [];
 
 // General vars
 var mx = 0;
@@ -396,14 +398,24 @@ function init(newInstance=false, recalc=false){
 		// Start with the whole hash
 		var toProcess = document.location.hash.substr(1);
 
+		// Prevent edits, hide toolbar etc. 
 		if (toProcess.substr(0,4) == "view"){
-
-			// Prevent edits, hide toolbar etc. 
 			canEdit = false;
-
-			// Don't treat the keyword as QASM
 			toProcess = toProcess.substr(4);
+		} 
 
+		// Override the sim method
+		if (toProcess.substr(0,7) == "unitary"){
+			simMethod = "Unitary";
+			toProcess = toProcess.substr(7);
+		} 
+		if (toProcess.substr(0,12) == "measurements"){
+			simMethod = "Measurements";
+			toProcess = toProcess.substr(12);
+		} 
+		if (toProcess.substr(0,11) == "statevector"){
+			simMethod = "Statevector";
+			toProcess = toProcess.substr(11);
 		} 
 
 		// Get it and process it
@@ -415,6 +427,14 @@ function init(newInstance=false, recalc=false){
 		// Don't show the help
 		helpOpen = false;
 
+	}
+
+	// Update the sim method drop down
+	for (var i=0; i<simBox.options.length; i++) {
+		if (simBox.options[i].text == simMethod) {
+			simBox.selectedIndex = i;
+			break;
+		}
 	}
 
 	// Whether to resim the circuit
@@ -966,10 +986,17 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 
 			// Draw the letter 
-			ctx.font = (fontSize*0.9) + "px Arial";
-			ctx.fillStyle = "#ffffff";
-			ctx.fillText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2);
-			svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
+			if (letter != "I") {
+				ctx.font = (fontSize*0.9) + "px Arial";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2);
+				svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
+			} else {
+				ctx.font = (fontSize*0.9) + "px Serif";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter, gridX*0.32+x-gateSize/2, gridY*0.60+y-gateSize/2);
+				svgText(letter, gridX*0.32+x-gateSize/2, gridY*0.60+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
+			}
 
 		// If part of the toolbar or something not scalable
 		} else {
@@ -978,9 +1005,15 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false){
 			ctx.fillRect(x-gateSizeFixed/2, y-gateSizeFixed/2, gateSizeFixed, gateSizeFixed+gridY*(size-1));
 
 			// Draw the letter
-			ctx.font = "30px Arial";
-			ctx.fillStyle = "#ffffff";
-			ctx.fillText(letter, 15+x-gateSizeFixed/2, 35+y-gateSizeFixed/2);
+			if (letter != "I") {
+				ctx.font = "30px Arial";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter, 15+x-gateSizeFixed/2, 35+y-gateSizeFixed/2);
+			} else {
+				ctx.font = "30px Serif";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter, 19+x-gateSizeFixed/2, 35+y-gateSizeFixed/2);
+			}
 
 		}
 
@@ -1333,7 +1366,37 @@ function redraw(t=0){
 	if (circuitUpdates > 0){
 
 		// Reset random index
-		randInd = 0
+		randInd = 0;
+
+		// Reset the cached unitaries
+		funcUnitaries = [];
+
+		// For each independent section of circuit
+		for (var i=0; i<lineStartEnds.length; i++){
+
+			// For functions
+			if (lineStartEnds[i][4] != -1){
+
+				// Get the inputs 
+				inputs[i] = [[100, [1, 0], ""]]
+				for (var j=0; j<1+lineStartEnds[i][3]-lineStartEnds[i][2]; j++){
+					inputs[i][0][2] += "0";
+				}
+
+				// If we want the whole unitary
+				if (simMethod == "Unitary") {
+					results[i] = getUnitary(gates, lineStartEnds[i]);
+					funcUnitaries[lineStartEnds[i][4]] = results[i];
+
+				// Even if we're not gonna display it, need to cache
+				} else if (simMethod == "Statevector") {
+					funcUnitaries[lineStartEnds[i][4]] = getUnitary(gates, lineStartEnds[i]);
+
+				}
+
+			}
+
+		}
 
 		// For each independent section of circuit
 		for (var i=0; i<lineStartEnds.length; i++){
@@ -1377,6 +1440,17 @@ function redraw(t=0){
 				encoded = "view" + encoded;
 			}
 
+			// Save the sim method
+			if (simMethod == "Unitary"){
+				encoded = "unitary" + encoded;
+			}
+			if (simMethod == "Measurements"){
+				encoded = "measurements" + encoded;
+			}
+			if (simMethod == "Statevector"){
+				encoded = "statevector" + encoded;
+			}
+
 			// Update URL 
 			history.replaceState(null, null, document.location.pathname + '#' + encoded);
 
@@ -1415,6 +1489,8 @@ function redraw(t=0){
 		// For each independent section of circuit
 		for (var i=0; i<Math.min(inputs.length, lineStartEnds.length); i++){
 
+			// TODO render the output to SVG
+
 			// If not a function
 			if (lineStartEnds[i][4] == -1){
 
@@ -1429,7 +1505,7 @@ function redraw(t=0){
 
 				// If we're rendering the whole unitary
 				} else if (simMethod == "Unitary") {
-					renderUnitary(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+					renderUnitary(ctx, results[i], lineStartEnds[i][1]+1, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
 
 				// If we're just rendering the final statevector
 				} else if (simMethod == "Statevector") {
@@ -1447,6 +1523,14 @@ function redraw(t=0){
 					// Outputs
 					renderStatevector(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
 
+				}
+
+			// For functions
+			} else {
+
+				// If we're rendering the whole unitary
+				if (simMethod == "Unitary") {
+					renderUnitary(ctx, results[i], lineStartEnds[i][1]+2, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
 				}
 
 			}
@@ -1915,13 +1999,13 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft){
 		for (var j=0; j<states[0][i].length; j++) {
 
 			// Draw that element
-			textX = (x+i)*gridX+offsetX+gridX*0.13;
+			textX = (x+i)*gridX+offsetX+gridX*0.05;
 			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
 			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
 			if (textX >= -2 && textX <= canvas.width && textYReal >= -2 && textYReal <= canvas.height) {
 				ctx.font = fontSize/2 + "px Arial";
-				ctx.fillText((Math.round((states[0][j][i] + Number.EPSILON) * 100) / 100).toFixed(2), textX, textYReal);
-				ctx.fillText((Math.round((states[1][j][i] + Number.EPSILON) * 100) / 100).toFixed(2) + "i", textX, textYImag);
+				ctx.fillText((states[0][j][i]<0?"":" ") + states[0][j][i].toFixed(2), textX, textYReal);
+				ctx.fillText((states[1][j][i]<0?"":" ") + states[1][j][i].toFixed(2)+"i", textX, textYImag);
 			}
 
 		}
@@ -1929,7 +2013,7 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft){
 
 }
 
-// Render a given statevector TODO make negative i aligned
+// Render a given statevector
 function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft){
 
 	// Style parameters
@@ -1950,19 +2034,22 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft){
 			// Get the binary representation
 			var binRep = i.toString(2).padStart(squares, "0");
 
+			// Extra squares to add for missing qubits
+			var ext = 0;
+
 			// For each qubit of the state
 			for (var j=0; j<binRep.length; j++){
 
 				// If there's anything on that qubit
-				if (qubitsWithGates.indexOf(y+j) >= 0){
-
-					// Draw that qubit's state
-					textX = (x+nextPos)*gridX+offsetX+gridX*0.27;
-					textY = (y+j)*gridY+offsetY+gridY*0.6;
-					ctx.font = fontSize + "px Arial";
-					ctx.fillText(binRep[j], textX, textY);
-
+				while (!qubitsWithGates.includes(y+j+ext) && ext <= squares+1) {
+					ext += 1;
 				}
+
+				// Draw that qubit's state
+				textX = (x+nextPos)*gridX+offsetX+gridX*0.27;
+				textY = (y+j+ext)*gridY+offsetY+gridY*0.6;
+				ctx.font = fontSize + "px Arial";
+				ctx.fillText(binRep[j], textX, textY);
 
 			}
 
@@ -1970,7 +2057,7 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft){
 			leftX = (x+nextPos)*gridX+offsetX+gateSize/2-gridX*0.4;
 			rightX = (x+nextPos)*gridX+offsetX+gateSize/2+gridX*0.4;
 			topY = y*gridY+offsetY-(gridY-gateSize)/2;
-			bottomY = (y+binRep.length)*gridY+offsetY-(gridY-gateSize)/2;
+			bottomY = (y+binRep.length+ext)*gridY+offsetY-(gridY-gateSize)/2;
 
 			// Draw the top part of the ket
 			ctx.beginPath();
@@ -1979,12 +2066,12 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft){
 			ctx.stroke();
 
 			// Probability estimate at the top
-			textX = (x+nextPos)*gridX+offsetX+gridX*0.13;
+			textX = (x+nextPos)*gridX+offsetX+gridX*0.05;
 			textYReal = (y-1)*gridY+offsetY+gridY*0.35;
 			textYImag = (y-1)*gridY+offsetY+gridY*0.7;
 			ctx.font = (fontSize/2)+"px Arial";
-			ctx.fillText(states[0][i].toFixed(2), textX, textYReal);
-			ctx.fillText(states[1][i].toFixed(2)+"i", textX, textYImag);
+			ctx.fillText((states[0][i]<0?"":" ") + states[0][i].toFixed(2), textX, textYReal);
+			ctx.fillText((states[1][i]<0?"":" ") + states[1][i].toFixed(2)+"i", textX, textYImag);
 
 			// Draw the bottom part of the ket
 			ctx.beginPath();
@@ -2123,7 +2210,7 @@ function matrixAddition(m1, m2) {
 }
 
 // Given a gate object, return the corresponding matrix
-function gateToMat(gate) {
+function gateToMat(gate, gateList, qubitsWithGates) {
 
 	// Separate real and imag components
 	var matReal = [[]];
@@ -2171,22 +2258,6 @@ function gateToMat(gate) {
 		matImag = [[0, 0],
 			       [0, 0.707106781]];
 
-	// Swap top (i.e. the whole swap gate)
-	} else if (gate.letter == "swaptop") {
-		matReal = [[1, 0, 0, 0],
-			       [0, 0, 1, 0],
-			       [0, 1, 0, 0], 
-			       [0, 0, 0, 1]];
-		matImag = [[0, 0, 0, 0],
-			       [0, 0, 0, 0],
-			       [0, 0, 0, 0], 
-			       [0, 0, 0, 0]];
-
-	// Swap bottom (i.e. nothing)
-	} else if (gate.letter == "swapbottom") {
-		matReal = [[1]];
-		matImag = [[1]];
-
 	// Hadamard
 	} else if (gate.letter == "H") {
 		matReal = [[0.707106781, 0.707106781],
@@ -2194,6 +2265,164 @@ function gateToMat(gate) {
 		matImag = [[0, 0],
 			       [0, 0]];
 
+	// Otherwise change nothing
+	} else {
+		matReal = [[1]];
+		matImag = [[0]];
+
+	}
+
+	// If it's a function, get the pre-calced matrices
+	if (gate.letter == "fun") {
+		if (funcUnitaries[gate.funID]) {
+			matReal = funcUnitaries[gate.funID][0];
+			matImag = funcUnitaries[gate.funID][1];
+		} else {
+			matReal = [[1, 0],[0, 1]];
+			matImag = [[0, 0],[0, 0]];
+		}
+	}
+
+	// If it's a swap gate
+	if (gate.letter == "swaptop") {
+
+		// Create two CNOTs, i.e. cX and Xc
+		var fakeGate1 = {"letter": "X", "id": 0, "og": -1, "attached": [1], "y": gate["y"]};
+		var fakeGate2 = {"letter": "X", "id": 0, "og": -1, "attached": [1], "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
+		var fakeControl1 = {"letter": "controlFilled", "id": 1, "og": 0, "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
+		var fakeControl2 = {"letter": "controlFilled", "id": 1, "og": 0, "y": gate["y"]};
+		var CNOT1 = gateToMat(fakeGate1, [fakeControl1], qubitsWithGates);
+		var CNOT2 = gateToMat(fakeGate2, [fakeControl2], qubitsWithGates);
+
+		// Start with one
+		matReal = CNOT1[0];
+		matImag = CNOT1[1];
+
+		// Apply the second
+		oldReal = matReal.slice();
+		matReal = matrixSubtraction(matrixProduct(CNOT2[0], matReal), matrixProduct(CNOT2[1], matImag));
+		matImag = matrixAddition(matrixProduct(CNOT2[1], oldReal), matrixProduct(CNOT2[0], oldReal));
+
+		// Apply the first again
+		oldReal = matReal.slice();
+		matReal = matrixSubtraction(matrixProduct(CNOT1[0], matReal), matrixProduct(CNOT1[1], matImag));
+		matImag = matrixAddition(matrixProduct(CNOT1[1], oldReal), matrixProduct(CNOT1[0], oldReal));
+
+	// If it has controls
+	} else if (gate.attached && gate.letter != "swapbottom") {
+
+		// Loop over the controls
+		for (var k=0; k<gate.attached.length; k++) {
+
+			// Find out where the control is
+			var control = gateList[fromIDArray(gate.attached[k], gateList)];
+
+			// See how many used qubits difference there is
+			var controlDelta = 0;
+			if (control["y"] < gate["y"]) {
+				for (var i=control["y"]; i<gate["y"]; i++) {
+					if (qubitsWithGates.includes(i)) {
+						controlDelta -= 1;
+					}
+				}
+			} else {
+				for (var i=gate["y"]; i<control["y"]; i++) {
+					if (qubitsWithGates.includes(i)) {
+						controlDelta += 1;
+					}
+				}
+			}
+			var matFactor = Math.pow(2, Math.abs(controlDelta));
+
+			// The matrix should be bigger
+			var fullReal = Array(matFactor*matReal.length).fill(null).map(() => Array(matFactor*matReal[0].length).fill(0));
+			var fullImag = Array(matFactor*matImag.length).fill(null).map(() => Array(matFactor*matImag[0].length).fill(0));
+
+			// If negative delta 
+			if (controlDelta < 0) {
+
+				// First half are ones
+				for (var i=0; i<fullReal.length/2; i++) {
+					fullReal[i][i] = 1.0;
+				}
+
+				// Then repeat the unitary
+				for (var i=0; i<matFactor/2; i++) {
+					for (var j1=0; j1<matReal.length; j1++) {
+						for (var j2=0; j2<matReal[0].length; j2++) {
+							fullReal[fullReal.length/2+j1+i*matReal.length][fullReal[0].length/2+j2+i*matReal[0].length] = matReal[j1][j2];
+						}
+					}
+				}
+
+			// If positive delta
+			} else {
+
+				// Even indices are ones
+				for (var i=0; i<fullReal.length; i+=2) {
+					fullReal[i][i] = 1.0;
+				}
+
+				// For the odd indices, repeat the unitary with spacing
+				for (var i=1; i<fullReal.length/2; i+=2) {
+					for (var j1=0; j1<matReal.length; j1++) {
+						for (var j2=0; j2<matReal[0].length; j2++) {
+							fullReal[i+j1*matFactor][i+j2*matFactor] = matReal[j1][j2];
+						}
+					}
+				}
+
+			}
+
+			// If it's an inverted control
+			if (control["letter"] == "controlUnfilled") {
+
+				// Create the gate notting the control
+				var notGateReal = [[1]];
+				var notGateImag = [[0]];
+
+				// Combination of identities and X gates
+				var idReal = [[1, 0],[0, 1]];
+				var idImag = [[0, 0],[0, 0]];
+				var xReal = [[0, 1],[1, 0]];
+				var xImag = [[0, 0],[0, 0]];
+
+				// For each qubit
+				for (var i=Math.min(control["y"],gate["y"]); i<=Math.max(control["y"],gate["y"]); i++) {
+					if (qubitsWithGates.includes(i)) {
+
+						// If it's the control
+						if (i == control["y"]) {
+							notGateReal = matrixSubtraction(tensorProduct(idReal, notGateReal), tensorProduct(idImag, notGateImag));
+							notGateImag = matrixAddition(tensorProduct(idReal, notGateImag), tensorProduct(idImag, notGateReal));
+
+						// If it's not
+						} else {
+							notGateReal = matrixSubtraction(tensorProduct(xReal, notGateReal), tensorProduct(xImag, notGateImag));
+							notGateImag = matrixAddition(tensorProduct(xReal, notGateImag), tensorProduct(xImag, notGateReal));
+
+						}
+
+					}
+				}
+
+				// Apply it before
+				oldReal = fullReal.slice();
+				fullReal = matrixSubtraction(matrixProduct(notGateReal,fullReal), matrixProduct(notGateImag,fullImag));
+				fullImag = matrixAddition(matrixProduct(notGateImag,oldReal), matrixProduct(notGateReal,fullImag));
+
+				// And after
+				oldReal = fullReal.slice();
+				fullReal = matrixSubtraction(matrixProduct(fullReal,notGateReal), matrixProduct(fullImag,notGateImag));
+				fullImag = matrixAddition(matrixProduct(oldReal,notGateImag), matrixProduct(fullImag,notGateReal));
+
+			}
+
+			// This is now the new matrix
+			matReal = fullReal;
+			matImag = fullImag;
+
+		}
 	}
 
 	return [matReal, matImag];
@@ -2211,25 +2440,56 @@ function getUnitary(gates, boundingBox){
 		}
 	}
 
-	console.log("Valid gates:");
-	console.log(validGates);
-	console.log("Bounding box:");
-	console.log(boundingBox);
-
 	// Get the gates per x value
 	var gatesPerSection = [];
 	var localQubitsWithGates = [];
+	var controlStartEnd = [];
 	for (var j=0; j<boundingBox[1]-boundingBox[0]-1; j++) {
 		var perSection = [];
 		for (var i=0; i<validGates.length; i++) {
+
+			// Found a gate with the right x
 			if (validGates[i]["x"]-boundingBox[0]-1 == j) {
-				perSection[validGates[i]["y"]-boundingBox[2]] = validGates[i];
-				if (!localQubitsWithGates.includes(validGates[i]["y"])) {
-					localQubitsWithGates.push(validGates[i]["y"]);
+
+				// Anything with a control should be by itself
+				if (validGates[i].attached && validGates[i].attached.length > 0 && validGates[i].letter != "swapbottom"){ 
+					var newSection = [];
+					var newStartEnd = [validGates[i]["y"]-boundingBox[2], validGates[i]["y"]-boundingBox[2]];
+					newSection[validGates[i]["y"]-boundingBox[2]] = validGates[i];
+					for (var k=0; k<validGates[i].attached.length; k++) {
+						var cont = validGates[fromIDArray(validGates[i].attached[k], validGates)];
+						newSection[cont["y"]-boundingBox[2]] = cont;
+						if (cont["y"]-boundingBox[2] > newStartEnd[1]) {
+							newStartEnd[1] = cont["y"]-boundingBox[2];
+						}
+						if (cont["y"]-boundingBox[2] < newStartEnd[0]) {
+							newStartEnd[0] = cont["y"]-boundingBox[2];
+						}
+					}
+					gatesPerSection.push(newSection);
+					controlStartEnd.push(newStartEnd);
+
+				// Otherwise (if it's not attached) add it to this section
+				} else if (validGates[i].letter == "fun" || (validGates[i].og == -1 && validGates[i].letter != "swapbottom")) {
+					perSection[validGates[i]["y"]-boundingBox[2]] = validGates[i];
 				}
+
+				// This qubit has something
+				if (!localQubitsWithGates.includes(validGates[i]["y"])) {
+					for (var k=0; k<validGates[i]["size"]; k++) {
+						localQubitsWithGates.push(validGates[i]["y"]+k);
+					}
+				}
+
 			}
 		}
-		gatesPerSection.push(perSection);
+
+		// Only add if there are gates present
+		if (perSection.length > 0) {
+			gatesPerSection.push(perSection);
+			controlStartEnd.push([1, -1]);
+		}
+
 	}
 
 	// Start with a big identity
@@ -2243,15 +2503,33 @@ function getUnitary(gates, boundingBox){
 
 	// Fill the blanks with identities
 	for (var i=0; i<gatesPerSection.length; i++) {
-		for (var j=0; j<numQubits; j++) {
+		for (var j=0; j<boundingBox[3]-boundingBox[2]+1; j++) {
 			if (!gatesPerSection[i][j]) {
-				gatesPerSection[i][j] = {"letter": "I"};
+
+				// If this qubit is used, add an identity
+				if (localQubitsWithGates.includes(j+boundingBox[2])
+					&& !(j>controlStartEnd[i][0] && j<controlStartEnd[i][1])) {
+					gatesPerSection[i][j] = {"letter": "I"};
+
+				// Otherwise add something that won't increase the size
+				} else {
+					gatesPerSection[i][j] = {"letter": "nullGate"};
+				}
+
 			}
 		}
 	}
 
-	console.log("Gates per section:");
-	console.log(gatesPerSection);
+	// Make sure everything after functions is null and not identity
+	for (var i=0; i<gatesPerSection.length; i++) {
+		for (var j=0; j<gatesPerSection[i].length; j++) {
+			if (gatesPerSection[i][j].letter == "fun") {
+				for (var k=1; k<gatesPerSection[i][j].size; k++) {
+					gatesPerSection[i][j+k].letter = "nullGate";
+				}
+			}
+		}
+	}
 
 	// For each section
 	for (var i=0; i<gatesPerSection.length; i++) {
@@ -2262,43 +2540,20 @@ function getUnitary(gates, boundingBox){
 		}
 
 		// Tensor product all these gates
-		var mats = gateToMat(gatesPerSection[i][0]); 
-
-		// For each control TODO
-		/*for (var k=0; k<gatesPerSection[i][j].attached.length; k++) {*/
-			
-			/*var fullReal = Array(2*matReal.length).fill(null).map(() => Array(2*matReal[0].length).fill(0));*/
-			/*var fullImag = Array(2*matImag.length).fill(null).map(() => Array(2*matImag[0].length).fill(0));*/
-
-			/*// Find out where the control is*/
-			/*var control = fromIDArray(gate.attached[k], gatesPerSection[i]);*/
-			/*var controlDelta = control["y"] - gatesPerSection[i][j]["y"];*/
-
-		/*}*/
-
-		// TODO functions
-
-		var toApplyReal = mats[0];
-		var toApplyImag = mats[1];
+		var mats = gateToMat(gatesPerSection[i][0], gatesPerSection[i], localQubitsWithGates); 
+		toApplyReal = mats[0];
+		toApplyImag = mats[1];
 		for (var j=1; j<gatesPerSection[i].length; j++) {
-			mats = gateToMat(gatesPerSection[i][j]); 
+			mats = gateToMat(gatesPerSection[i][j], gatesPerSection[i], localQubitsWithGates); 
 			oldReal = toApplyReal.slice();
 			toApplyReal = matrixSubtraction(tensorProduct(toApplyReal, mats[0]), tensorProduct(toApplyImag, mats[1]));
 			toApplyImag = matrixSubtraction(tensorProduct(toApplyImag, mats[0]), tensorProduct(oldReal, mats[1]));
 		}
 
-		console.log("To apply:");
-		console.log(toApplyReal);
-		console.log(toApplyImag);
-
 		// Apply it to the state
 		oldReal = unitaryReal.slice();
 		unitaryReal = matrixSubtraction(matrixProduct(toApplyReal, unitaryReal), matrixProduct(toApplyImag, unitaryImag));
 		unitaryImag = matrixAddition(matrixProduct(toApplyReal, unitaryImag), matrixProduct(toApplyImag, oldReal));
-
-		console.log("Unitaries:");
-		console.log(unitaryReal);
-		console.log(unitaryImag);
 
 	}
 
@@ -3653,6 +3908,7 @@ function toQASM(version=3){
 			var letter = copy[i]["letter"].toLowerCase();
 			var controls = copy[i]["attached"];
 			var numControls = controls.length;
+			var forced = false;
 
 			// If it's a top part, also consider controls on the bottom
 			if (letter == "swaptop"){
@@ -3666,6 +3922,12 @@ function toQASM(version=3){
 			// Function calls need their id too
 			if (letter == "fun"){
 				letter = "f" + copy[i]["funID"];
+			}
+
+			// Match the notation
+			if (letter == "i"){
+				letter = "id";
+				forced = true;
 			}
 
 			// Don't add controls directly
@@ -3684,7 +3946,7 @@ function toQASM(version=3){
 
 					// Add identities if there's free space 
 					for (var j=0; j<numIdenNeeded; j++){
-						qasmSubstring += "i q[" + qubit + "];\n";
+						qasmSubstring += "id q[" + qubit + "];\n";
 					}
 
 					// Add the targets
@@ -3699,9 +3961,17 @@ function toQASM(version=3){
 							qasmSubstring += "q[" + j + "]";
 						}
 					}
-					
-					// Finish this section
-					qasmSubstring += ";\n";
+
+					// The main operation is done
+					qasmSubstring += ";";
+
+					// If it should be force added
+					if (forced) {
+						qasmSubstring += " // forced";
+					}
+
+					// Add the newline
+					qasmSubstring += "\n";
 
 					// Update the offset between the min and max
 					minGateQubit = qubit;
@@ -3746,9 +4016,9 @@ function toQASM(version=3){
 					// Add identities if there's free space 
 					for (var j=0; j<numIdenNeeded; j++){
 						if (isFunc){
-							qasmSubstring += "i q" + closestIndex + ";\n";
+							qasmSubstring += "id q" + closestIndex + ";\n";
 						} else {
-							qasmSubstring += "i q[" + closestIndex + "];\n";
+							qasmSubstring += "id q[" + closestIndex + "];\n";
 						}
 					}
 
@@ -3802,8 +4072,16 @@ function toQASM(version=3){
 						}
 					}
 
-					// Finish this section
-					qasmSubstring += ";\n";
+					// The main operation is done
+					qasmSubstring += ";";
+
+					// If it should be force added
+					if (forced) {
+						qasmSubstring += " // forced";
+					}
+
+					// Add the newline
+					qasmSubstring += "\n";
 
 					// Update the offset between the min and max
 					for (var j=minGateQubit; j<maxGateQubit+1; j++){
@@ -3839,7 +4117,7 @@ function toQASM(version=3){
 		qasmString = "OPENQASM 3.0;\ninclude \"stdgates.inc\";\n" + qasmString;
 	}
 
-	// Add any functions needed 
+	// Add any functions needed TODO use QASM to add these
 	if (gatesNeeded.length > 0){
 		qasmString += "// to add: " + gatesNeeded.join(",");
 	}
@@ -4004,16 +4282,26 @@ function fromQASM(qasmString, noCameraUpdate=false){
 					var explicitPosition = false;
 					var explicitX = 0;
 					var explicitY = 0;
+					var forced = false;
 					var startOfComment = words.indexOf("//");
 					if (startOfComment >= 0){
 
-						// Extract the explicitly given positions
-						explicitX = parseInt(words[startOfComment+1]);
-						explicitY = parseInt(words[startOfComment+2]);
+						// If forcing an identity
+						if (words[startOfComment+1] == "forced") {
+							forced = true;
 
-						// If valid
-						if (!isNaN(explicitX) && !isNaN(explicitY)){
-							explicitPosition = true;
+						// Otherwise it's probs pos info
+						} else {
+
+							// Extract the explicitly given positions
+							explicitX = parseInt(words[startOfComment+1]);
+							explicitY = parseInt(words[startOfComment+2]);
+
+							// If valid
+							if (!isNaN(explicitX) && !isNaN(explicitY)){
+								explicitPosition = true;
+							}
+
 						}
 
 						// Remove this to make other processing easier
@@ -4133,7 +4421,7 @@ function fromQASM(qasmString, noCameraUpdate=false){
 						currentFunc = -1;
 
 					// If an identity
-					} else if (words[0] == "i"){
+					} else if (words[0] == "id" && !forced){
 
 						// Just increase the spacing there
 						target = regToQubit[words[words.length-1]];
@@ -4163,6 +4451,11 @@ function fromQASM(qasmString, noCameraUpdate=false){
 							if (letter == "swap"){
 								letter = "swaptop";
 								target = regToQubit[words[2+numControls]];
+							}
+
+							// If it's an identity, change the letter
+							if (letter == "id"){
+								letter = "I";
 							}
 
 							// Determine control info
