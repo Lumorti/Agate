@@ -1489,8 +1489,6 @@ function redraw(t=0){
 		// For each independent section of circuit
 		for (var i=0; i<Math.min(inputs.length, lineStartEnds.length); i++){
 
-			// TODO render the output to SVG
-
 			// If not a function
 			if (lineStartEnds[i][4] == -1){
 
@@ -1872,7 +1870,7 @@ function redraw(t=0){
 		inputBox.style.display = "none";
 		outputBox.style.display = "none";
 
-		// If mobile (vertical)
+		// If mobile (vertical) TODO
 		if (onMobile == 1){
 
 			// Settings to be updated here in case of window resize
@@ -2308,35 +2306,52 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 		matReal = matrixSubtraction(matrixProduct(CNOT1[0], matReal), matrixProduct(CNOT1[1], matImag));
 		matImag = matrixAddition(matrixProduct(CNOT1[1], oldReal), matrixProduct(CNOT1[0], oldReal));
 
+	}
+
+	console.log("mat before ------------");
+	console.log(matReal);
+	console.log(matImag);
+
 	// If it has controls
-	} else if (gate.attached && gate.letter != "swapbottom") {
+	if (gate.attached && gate.letter != "swapbottom") {
+
+		// Get a list of the controls
+		var controlYs = [];
+		for (var k=0; k<gate.attached.length; k++) {
+			var control = gateList[fromIDArray(gate.attached[k], gateList)];
+			controlYs.push(control["y"]);
+		}
 
 		// Loop over the controls
-		for (var k=0; k<gate.attached.length; k++) {
-
-			// Find out where the control is
-			var control = gateList[fromIDArray(gate.attached[k], gateList)];
+		for (var k=0; k<controlYs.length; k++) {
 
 			// See how many used qubits difference there is
 			var controlDelta = 0;
-			if (control["y"] < gate["y"]) {
-				for (var i=control["y"]; i<gate["y"]; i++) {
-					if (qubitsWithGates.includes(i)) {
+			if (controlYs[k] < gate["y"]) {
+				for (var i=controlYs[k]; i<gate["y"]; i++) {
+					if (qubitsWithGates.includes(i) && (i == controlYs[k] || !controlYs.includes(i))) {
 						controlDelta -= 1;
 					}
 				}
 			} else {
-				for (var i=gate["y"]; i<control["y"]; i++) {
-					if (qubitsWithGates.includes(i)) {
+				for (var i=gate["y"]; i<controlYs[k]; i++) {
+					if (qubitsWithGates.includes(i) && (i == controlYs[k] || !controlYs.includes(i))) {
 						controlDelta += 1;
 					}
 				}
 			}
 			var matFactor = Math.pow(2, Math.abs(controlDelta));
 
+			console.log("controlDelta = ", controlDelta);
+			console.log("matFactor = ", matFactor);
+
 			// The matrix should be bigger
 			var fullReal = Array(matFactor*matReal.length).fill(null).map(() => Array(matFactor*matReal[0].length).fill(0));
 			var fullImag = Array(matFactor*matImag.length).fill(null).map(() => Array(matFactor*matImag[0].length).fill(0));
+
+			console.log("mat is currently");
+			console.log(matReal);
+			console.log(matImag);
 
 			// If negative delta 
 			if (controlDelta < 0) {
@@ -2363,12 +2378,10 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 					fullReal[i][i] = 1.0;
 				}
 
-				// For the odd indices, repeat the unitary with spacing
-				for (var i=1; i<fullReal.length/2; i+=2) {
-					for (var j1=0; j1<matReal.length; j1++) {
-						for (var j2=0; j2<matReal[0].length; j2++) {
-							fullReal[i+j1*matFactor][i+j2*matFactor] = matReal[j1][j2];
-						}
+				// For the odd indices, repeat the unitary with spacing TODO double positive after controls
+				for (var j1=0; j1<matReal.length; j1++) {
+					for (var j2=0; j2<matReal[0].length; j2++) {
+						fullReal[1+j1*matFactor][1+j2*matFactor] = matReal[j1][j2];
 					}
 				}
 
@@ -2388,11 +2401,11 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 				var xImag = [[0, 0],[0, 0]];
 
 				// For each qubit
-				for (var i=Math.min(control["y"],gate["y"]); i<=Math.max(control["y"],gate["y"]); i++) {
+				for (var i=Math.min(controlYs[k], gate["y"]); i<=Math.max(controlYs[k], gate["y"]); i++) {
 					if (qubitsWithGates.includes(i)) {
 
 						// If it's the control
-						if (i == control["y"]) {
+						if (i == controlYs[k]) {
 							notGateReal = matrixSubtraction(tensorProduct(idReal, notGateReal), tensorProduct(idImag, notGateImag));
 							notGateImag = matrixAddition(tensorProduct(idReal, notGateImag), tensorProduct(idImag, notGateReal));
 
@@ -2419,8 +2432,12 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			}
 
 			// This is now the new matrix
-			matReal = fullReal;
-			matImag = fullImag;
+			matReal = fullReal.slice();
+			matImag = fullImag.slice();
+
+			console.log("mat is now");
+			console.log(matReal);
+			console.log(matImag);
 
 		}
 	}
@@ -3211,12 +3228,19 @@ function mouseUp(e){
 		// If it's a control
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled"){
 
-			// If dropped onto the parent 
+			// If dropped onto the parent
 			og = fromID(gates[selected]["og"]);
 			if (gates[selected]["x"] == gates[og]["x"] && gates[selected]["y"] >= gates[og]["y"] && gates[selected]["y"] <= gates[og]["y"]+gates[og]["size"]-1){
 
-				// Remove from the attached list of its parent
+				// Remove from the attached list of its parent TODO
+				console.log("before = ");
+				console.log(gates[og]["attached"].slice());
+				console.log(gates[og]["attached"].indexOf(fromID(selected)));
+				console.log(selected);
+				console.log(fromID(selected));
 				gates[og]["attached"].splice(gates[og]["attached"].indexOf(fromID(selected)), 1);
+				console.log("after = ");
+				console.log(gates[og]["attached"].slice());
 
 				// Remove this gate
 				gates.splice(selected, 1);
