@@ -15,7 +15,9 @@
 </style>
 <script>
 
-// List of the loadable presets 
+// TODO custom phase gate
+
+// List of the loadable presets TODO fix presets
 var loadOpen = false;
 var inputBox = null;
 var openHover = false;
@@ -355,8 +357,9 @@ function init(newInstance=false, recalc=false){
 			gates.push({"letter": toolbarGates[i], "attached": [], "og": -1, "y": 0.33, "x": (i%numGatesToShow)+1.15+toolbarRel, "size": 1, "draggable": false})
 		}
 		gates.push({"letter": "right",  "y": 0.33, "x": numGatesToShow+1.2+toolbarRel, "attached": [], "og": -1, "size": 1, "draggable": false})
-		gates.push({"letter": "open", "attached": [], "og": -1, "y": 1.27, "x": 1.75+toolbarRel, "size": 1, "draggable": false})
-		gates.push({"letter": "save", "attached": [], "og": -1, "y": 1.43, "x": 2.75+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "open", "attached": [], "og": -1, "y": 1.27, "x": 1.25+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "save", "attached": [], "og": -1, "y": 1.43, "x": 2.25+toolbarRel, "size": 1, "draggable": false})
+		gates.push({"letter": "settings", "attached": [], "og": -1, "y": 1.33, "x": 3.15+toolbarRel, "size": 1, "draggable": false})
 		gatesInit = gates.slice();
 		gateOptions = gates.length;
 
@@ -1870,33 +1873,52 @@ function redraw(t=0){
 		inputBox.style.display = "none";
 		outputBox.style.display = "none";
 
-		// If mobile (vertical) TODO
+		// If mobile (vertical)
 		if (onMobile == 1){
 
 			// Settings to be updated here in case of window resize
-			var optionsWidth = 300;
-			var optionsHeight = 210;
-			var optionsLeft = window.innerWidth / 2 - saveWidth / 2;
+			var optionsWidth = 390;
+			var optionsHeight = 250;
+			var optionsLeft = window.innerWidth / 2 - optionsWidth / 2;
 			var optionsTop = window.innerHeight / 2 - optionsHeight / 2;
 
 			// Draw the outline
 			ctx.fillStyle = "#dddddd";
 			roundRect(ctx, optionsLeft, optionsTop, optionsWidth, optionsHeight, 20, true, false);
 
-			// Draw the help text
+			// FPS toggle
 			ctx.fillStyle = "#000000";
 			ctx.font = "20px Arial";
-			ctx.fillText("Select a file type", optionsLeft+70, optionsTop+45);
+			ctx.fillText("Show FPS?", optionsLeft+47, optionsTop+55);
+			fpsBox.style.top = (optionsTop+35) + "px";
+			fpsBox.style.left = (optionsLeft+170) + "px";
+			fpsBox.style.display = "block";
 
-			// Update the preset selection box 
-			outputBox.style.top = (optionsTop+70) + "px";
-			outputBox.style.left = (optionsLeft+30) + "px";
-			outputBox.style.width = (optionsWidth-60) + "px";
-			outputBox.style.display = "block";
-			
-			// Draw the second options button
-			optionsDims = [optionsLeft+120, optionsLeft+180, optionsTop+140, optionsTop+200];
-			drawGate("options", optionsLeft+150, optionsTop+170, optionsHover, 1);
+			// Grid toggle
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Show grid?", optionsLeft+50, optionsTop+105);
+			gridBox.style.top = (optionsTop+85) + "px";
+			gridBox.style.left = (optionsLeft+170) + "px";
+			gridBox.style.display = "block";
+
+			// Sim method dropdown
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Sim method:", optionsLeft+40, optionsTop+160);
+			simBox.style.top = (optionsTop+130) + "px";
+			simBox.style.left = (optionsLeft+170) + "px";
+			simBox.style.width = (optionsWidth-190) + "px";
+			simBox.style.display = "block";
+
+			// Repeats input
+			ctx.fillStyle = "#000000";
+			ctx.font = "20px Arial";
+			ctx.fillText("Num repeats:", optionsLeft+37, optionsTop+215);
+			repeatsBox.style.top = (optionsTop+185) + "px";
+			repeatsBox.style.left = (optionsLeft+170) + "px";
+			repeatsBox.style.width = (optionsWidth-190) + "px";
+			repeatsBox.style.display = "block";
 
 		} else {
 
@@ -2285,10 +2307,10 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 	if (gate.letter == "swaptop") {
 
 		// Create two CNOTs, i.e. cX and Xc
-		var fakeGate1 = {"letter": "X", "id": 0, "og": -1, "attached": [1], "y": gate["y"]};
-		var fakeGate2 = {"letter": "X", "id": 0, "og": -1, "attached": [1], "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
-		var fakeControl1 = {"letter": "controlFilled", "id": 1, "og": 0, "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
-		var fakeControl2 = {"letter": "controlFilled", "id": 1, "og": 0, "y": gate["y"]};
+		var fakeGate1 = {"letter": "X", "size": 1, "id": 0, "og": -1, "attached": [1], "y": gate["y"]};
+		var fakeGate2 = {"letter": "X", "size": 1, "id": 0, "og": -1, "attached": [1], "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
+		var fakeControl1 = {"letter": "controlFilled", "size": 1, "id": 1, "og": 0, "y": gateList[fromIDArray(gate.attached[0],gateList)]["y"]};
+		var fakeControl2 = {"letter": "controlFilled", "size": 1, "id": 1, "og": 0, "y": gate["y"]};
 		var CNOT1 = gateToMat(fakeGate1, [fakeControl1], qubitsWithGates);
 		var CNOT2 = gateToMat(fakeGate2, [fakeControl2], qubitsWithGates);
 
@@ -2308,18 +2330,16 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 
 	}
 
-	console.log("mat before ------------");
-	console.log(matReal);
-	console.log(matImag);
-
 	// If it has controls
-	if (gate.attached && gate.letter != "swapbottom") {
+	if (gate.attached && gate.letter != "swapbottom" && gate.letter != "swaptop") {
 
 		// Get a list of the controls
 		var controlYs = [];
 		for (var k=0; k<gate.attached.length; k++) {
 			var control = gateList[fromIDArray(gate.attached[k], gateList)];
-			controlYs.push(control["y"]);
+			if (control.letter != "swapbottom") {
+				controlYs.push(control["y"]);
+			}
 		}
 
 		// Loop over the controls
@@ -2334,7 +2354,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 					}
 				}
 			} else {
-				for (var i=gate["y"]; i<controlYs[k]; i++) {
+				for (var i=gate["y"]+gate["size"]-1; i<controlYs[k]; i++) {
 					if (qubitsWithGates.includes(i) && (i == controlYs[k] || !controlYs.includes(i))) {
 						controlDelta += 1;
 					}
@@ -2342,16 +2362,9 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			}
 			var matFactor = Math.pow(2, Math.abs(controlDelta));
 
-			console.log("controlDelta = ", controlDelta);
-			console.log("matFactor = ", matFactor);
-
 			// The matrix should be bigger
 			var fullReal = Array(matFactor*matReal.length).fill(null).map(() => Array(matFactor*matReal[0].length).fill(0));
 			var fullImag = Array(matFactor*matImag.length).fill(null).map(() => Array(matFactor*matImag[0].length).fill(0));
-
-			console.log("mat is currently");
-			console.log(matReal);
-			console.log(matImag);
 
 			// If negative delta 
 			if (controlDelta < 0) {
@@ -2378,7 +2391,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 					fullReal[i][i] = 1.0;
 				}
 
-				// For the odd indices, repeat the unitary with spacing TODO double positive after controls
+				// For the odd indices, repeat the unitary with spacing
 				for (var j1=0; j1<matReal.length; j1++) {
 					for (var j2=0; j2<matReal[0].length; j2++) {
 						fullReal[1+j1*matFactor][1+j2*matFactor] = matReal[j1][j2];
@@ -2387,8 +2400,11 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 
 			}
 
-			// If it's an inverted control
+			// If it's an inverted control TODO o-X (x) I
 			if (control["letter"] == "controlUnfilled") {
+
+				console.log("before = ");
+				console.log(fullReal);
 
 				// Create the gate notting the control
 				var notGateReal = [[1]];
@@ -2401,7 +2417,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 				var xImag = [[0, 0],[0, 0]];
 
 				// For each qubit
-				for (var i=Math.min(controlYs[k], gate["y"]); i<=Math.max(controlYs[k], gate["y"]); i++) {
+				for (var i=Math.min(controlYs[k], gate["y"]); i<=Math.max(controlYs[k], gate["y"]+gate["size"]); i++) {
 					if (qubitsWithGates.includes(i)) {
 
 						// If it's the control
@@ -2419,6 +2435,9 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 					}
 				}
 
+				console.log("not = ");
+				console.log(notGateReal);
+
 				// Apply it before
 				oldReal = fullReal.slice();
 				fullReal = matrixSubtraction(matrixProduct(notGateReal,fullReal), matrixProduct(notGateImag,fullImag));
@@ -2434,10 +2453,6 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			// This is now the new matrix
 			matReal = fullReal.slice();
 			matImag = fullImag.slice();
-
-			console.log("mat is now");
-			console.log(matReal);
-			console.log(matImag);
 
 		}
 	}
@@ -2520,7 +2535,7 @@ function getUnitary(gates, boundingBox){
 
 	// Fill the blanks with identities
 	for (var i=0; i<gatesPerSection.length; i++) {
-		for (var j=0; j<boundingBox[3]-boundingBox[2]+1; j++) {
+		for (var j=0; j<qubitsWithGates.length; j++) {
 			if (!gatesPerSection[i][j]) {
 
 				// If this qubit is used, add an identity
@@ -2542,7 +2557,7 @@ function getUnitary(gates, boundingBox){
 		for (var j=0; j<gatesPerSection[i].length; j++) {
 			if (gatesPerSection[i][j].letter == "fun") {
 				for (var k=1; k<gatesPerSection[i][j].size; k++) {
-					gatesPerSection[i][j+k].letter = "nullGate";
+					gatesPerSection[i][j+k] = {"letter": "nullGate"};
 				}
 			}
 		}
@@ -3232,15 +3247,8 @@ function mouseUp(e){
 			og = fromID(gates[selected]["og"]);
 			if (gates[selected]["x"] == gates[og]["x"] && gates[selected]["y"] >= gates[og]["y"] && gates[selected]["y"] <= gates[og]["y"]+gates[og]["size"]-1){
 
-				// Remove from the attached list of its parent TODO
-				console.log("before = ");
-				console.log(gates[og]["attached"].slice());
-				console.log(gates[og]["attached"].indexOf(fromID(selected)));
-				console.log(selected);
-				console.log(fromID(selected));
-				gates[og]["attached"].splice(gates[og]["attached"].indexOf(fromID(selected)), 1);
-				console.log("after = ");
-				console.log(gates[og]["attached"].slice());
+				// Remove from the attached list of its parent
+				gates[og]["attached"].splice(gates[og]["attached"].indexOf(gates[selected]["id"]), 1);
 
 				// Remove this gate
 				gates.splice(selected, 1);
