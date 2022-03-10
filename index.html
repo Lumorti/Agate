@@ -2382,25 +2382,39 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 
 		}
 
+		// Sort these, so we do the nearest controls first
+		controlYs.sort(function(a, b){return Math.abs(a-gate.y) - Math.abs(b-gate.y)});
+
+		// Keep track of how wide the gate is getting as we add controls
+		var qubitStart = gate.y;
+		var qubitEnd = gate.y + gate.size - 1;
+
 		// Loop over the controls
 		for (var k=0; k<controlYs.length; k++) {
 
 			// See how many used qubits difference there is
 			var controlDelta = 0;
-			if (controlYs[k] < gate["y"]) {
-				for (var i=controlYs[k]; i<gate["y"]; i++) {
-					if (qubitsWithGates.includes(i) && (i == controlYs[k] || !controlYs.includes(i))) {
+			if (controlYs[k] < qubitStart) {
+				for (var i=controlYs[k]; i<qubitStart; i++) {
+					if (qubitsWithGates.includes(i)) {
 						controlDelta -= 1;
 					}
 				}
 			} else {
-				for (var i=gate["y"]+gate["size"]-1; i<controlYs[k]; i++) {
-					if (qubitsWithGates.includes(i) && (i == controlYs[k] || !controlYs.includes(i))) {
+				for (var i=qubitEnd; i<controlYs[k]; i++) {
+					if (qubitsWithGates.includes(i)) {
 						controlDelta += 1;
 					}
 				}
 			}
 			var matFactor = Math.pow(2, Math.abs(controlDelta));
+
+			// Update the sizes
+			if (controlDelta < 0) {
+				qubitStart += controlDelta;
+			} else {
+				qubitEnd += controlDelta;
+			}
 
 			// The matrix should be bigger
 			var fullReal = Array(matFactor*matReal.length).fill(null).map(() => Array(matFactor*matReal[0].length).fill(0));
