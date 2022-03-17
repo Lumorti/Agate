@@ -2460,10 +2460,12 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 				}
 
 				// For the odd indices, repeat the unitary with spacing
-				for (var j1=0; j1<matReal.length; j1++) {
-					for (var j2=0; j2<matReal[0].length; j2++) {
-						fullReal[1+j1*matFactor][1+j2*matFactor] = matReal[j1][j2];
-						fullImag[1+j1*matFactor][1+j2*matFactor] = matImag[j1][j2];
+				for (var i=0; i<matFactor/2; i++) {
+					for (var j1=0; j1<matReal.length; j1++) {
+						for (var j2=0; j2<matReal[0].length; j2++) {
+							fullReal[1+j1*matFactor+2*i][1+j2*matFactor+2*i] = matReal[j1][j2];
+							fullImag[1+j1*matFactor+2*i][1+j2*matFactor+2*i] = matImag[j1][j2];
+						}
 					}
 				}
 
