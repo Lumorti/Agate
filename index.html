@@ -3349,6 +3349,21 @@ function mouseUp(e) {
 					gates.splice(fromID(controlList[i]), 1);
 				}
 				
+			// If a swap is dropped onto the other half
+			} else if (gates[selected]["letter"] == "swaptop" || gates[selected]["letter"] == "swapbottom") {
+
+				// Check that the ys are the same
+				if (gates[selected]["y"] == gates[fromID(gates[selected]["attached"][0])]["y"]) {
+
+					// Remove this
+					var otherID = gates[selected]["attached"][0];
+					gates.splice(selected, 1);
+
+					// Remove the other
+					gates.splice(fromID(otherID), 1);
+
+				}
+
 			// If dropped onto a control
 			} else if (gates[selected]["attached"] && gates[selected]["attached"].length > 0) {
 
