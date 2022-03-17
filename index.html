@@ -70,7 +70,7 @@ var showFPS = false;
 var drawGrid = true;
 var simMethod = "Statevector";
 var numRepeats = 1000;
-var cutoffThresh = 3;
+var cutoffThresh = 0;
 var doubleClickMilli = 300;
 var initialZoom = 1.0;
 var qasmVersion = 3;
@@ -1925,7 +1925,12 @@ function redraw(t=0) {
 			// Repeats input
 			ctx.fillStyle = "#000000";
 			ctx.font = "20px Arial";
-			ctx.fillText("Num repeats:", optionsLeft+37, optionsTop+215);
+			ctx.fillText("Num shots:", optionsLeft+50, optionsTop+215);
+			if (simMethod == "Measurements") {
+				repeatsBox.disabled = false;
+			} else {
+				repeatsBox.disabled = true;
+			}
 			repeatsBox.style.top = (optionsTop+185) + "px";
 			repeatsBox.style.left = (optionsLeft+170) + "px";
 			repeatsBox.style.width = (optionsWidth-190) + "px";
@@ -1971,7 +1976,12 @@ function redraw(t=0) {
 			// Repeats input
 			ctx.fillStyle = "#000000";
 			ctx.font = "20px Arial";
-			ctx.fillText("Num repeats:", optionsLeft+37, optionsTop+215);
+			ctx.fillText("Num shots:", optionsLeft+50, optionsTop+215);
+			if (simMethod == "Measurements") {
+				repeatsBox.disabled = false;
+			} else {
+				repeatsBox.disabled = true;
+			}
 			repeatsBox.style.top = (optionsTop+185) + "px";
 			repeatsBox.style.left = (optionsLeft+170) + "px";
 			repeatsBox.style.width = (optionsWidth-190) + "px";
@@ -2023,18 +2033,21 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 	ctx.lineWidth = fontSize / 7;
 	ctx.strokeStyle = "#555555";
 	ctx.fillStyle = ctx.strokeStyle;
+	ctx.font = fontSize/2 + "px Arial";
 
 	// For each matrix element
+	var textX = 0;
+	var textYReal = 0;
+	var textYImag = 0;
 	var vertOffset = 1-Math.floor(states[0].length / 2);
 	for (var i=0; i<states[0].length; i++) {
+		textX = (x+i)*gridX+offsetX+gridX*0.05;
 		for (var j=0; j<states[0][i].length; j++) {
 
 			// Draw that element
-			textX = (x+i)*gridX+offsetX+gridX*0.05;
 			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
 			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
-			if (textX >= -2 && textX <= canvas.width && textYReal >= -2 && textYReal <= canvas.height) {
-				ctx.font = fontSize/2 + "px Arial";
+			if (textX >= -2*fontSize && textX <= canvas.width && textYReal >= -2*fontSize && textYReal <= canvas.height) {
 				ctx.fillText((states[0][j][i]<0?"":" ") + states[0][j][i].toFixed(2), textX, textYReal);
 				ctx.fillText((states[1][j][i]<0?"":" ") + states[1][j][i].toFixed(2)+"i", textX, textYImag);
 			}
