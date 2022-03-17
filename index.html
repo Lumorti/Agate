@@ -2446,12 +2446,13 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 					for (var j1=0; j1<matReal.length; j1++) {
 						for (var j2=0; j2<matReal[0].length; j2++) {
 							fullReal[fullReal.length/2+j1+i*matReal.length][fullReal[0].length/2+j2+i*matReal[0].length] = matReal[j1][j2];
+							fullImag[fullReal.length/2+j1+i*matReal.length][fullReal[0].length/2+j2+i*matReal[0].length] = matImag[j1][j2];
 						}
 					}
 				}
 
-			// If positive delta
-			} else {
+			// If positive delta (but not zero)
+			} else if (controlDelta > 0) {
 
 				// Even indices are ones
 				for (var i=0; i<fullReal.length; i+=2) {
@@ -2462,6 +2463,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 				for (var j1=0; j1<matReal.length; j1++) {
 					for (var j2=0; j2<matReal[0].length; j2++) {
 						fullReal[1+j1*matFactor][1+j2*matFactor] = matReal[j1][j2];
+						fullImag[1+j1*matFactor][1+j2*matFactor] = matImag[j1][j2];
 					}
 				}
 
@@ -3302,9 +3304,25 @@ function mouseUp(e) {
 		// If it's a control
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled") {
 
+			// Get the parent
+			var og = fromID(gates[selected]["og"]);
+			var shouldDelete = false;
+
+			// If dropped onto another control of the parent
+			var controlList = gates[og]["attached"].slice();
+			for (var i=0; i<controlList.length; i++) {
+				if (controlList[i] != gates[selected]["id"] && gates[selected]["y"] == gates[fromID(controlList[i])]["y"]) {
+					shouldDelete = true;
+				}
+			}
+
 			// If dropped onto the parent
-			og = fromID(gates[selected]["og"]);
 			if (gates[selected]["x"] == gates[og]["x"] && gates[selected]["y"] >= gates[og]["y"] && gates[selected]["y"] <= gates[og]["y"]+gates[og]["size"]-1) {
+				shouldDelete = true;
+			}
+
+			// If either of these conditions is true
+			if (shouldDelete) {
 
 				// Remove from the attached list of its parent
 				gates[og]["attached"].splice(gates[og]["attached"].indexOf(gates[selected]["id"]), 1);
@@ -3331,6 +3349,26 @@ function mouseUp(e) {
 					gates.splice(fromID(controlList[i]), 1);
 				}
 				
+			// If dropped onto a control
+			} else if (gates[selected]["attached"] && gates[selected]["attached"].length > 0) {
+
+				// Cache the list of controls to remove
+				var controlList = gates[selected]["attached"].slice();
+
+				// Check all of the controls
+				for (var i=0; i<controlList.length; i++) {
+					if (gates[selected]["y"] == gates[fromID(controlList[i])]["y"]) {
+
+						// Remove from the gate list
+						gates.splice(fromID(controlList[i]), 1);
+
+						// Remove from the parent
+						gates[selected]["attached"].splice(i, 1);
+
+					}
+					
+				}
+
 			}
 
 		}
