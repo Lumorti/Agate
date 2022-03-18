@@ -46,6 +46,7 @@ var saveTypes = [
 	"QASM 3.0",
 	"QASM 2.0",
 	"SVG",
+	"Unitary CSV",
 ];
 
 // The gates to put on the toolbar
@@ -3539,7 +3540,7 @@ function keyDown(e) {
 	}
 
 	// Copying with ctrl-c or ctrl-x
-	if (e.ctrlKey && (e.key == "c" || e.key == "x")) {
+	if (copyArray.length > 0 && e.ctrlKey && (e.key == "c" || e.key == "x")) {
 
 		// Copy to invis object and then copy that
 		copyElement.value = JSON.stringify(copyArray);
@@ -3611,18 +3612,17 @@ function onTextPaste(t) {
 			} 
 		}
 
-		// Add all these to the main array, with updated indices 
+		// Add all these to the main array, with updated indices
 		selectionArray = [];
 		beforeToAfter = {"-1": -1};
 		for (var i=0; i<asArray.length; i++) {
 			var newGate = asArray[i];
 			beforeToAfter[newGate["id"].toString()] = nextID;
 			newGate["id"] = nextID;
-			newGate["x"] += Math.round(((mx-offsetX) / gridX) - minX);
-			newGate["y"] += Math.round(((my-offsetY) / gridY) - minY);
+			newGate["x"] += Math.floor(((mx-offsetX) / gridX) - minX);
+			newGate["y"] += Math.floor(((my-offsetY) / gridY) - minY);
 			nextID += 1;
 			gates.push(newGate);
-			selectionArray.push(gates.length-1);
 		}
 
 		// Ensure og/attached are consistent
@@ -3706,6 +3706,21 @@ function mouseDown(e) {
 			svgWrap()
 			fileText = svgString;
 			extension = ".svg";
+
+		// If to unitary CSV
+		} else if (type == "Unitary CSV") {
+
+			// Get the first unitary
+			inputs[i] = [[100, [1, 0], ""]]
+			for (var j=0; j<1+lineStartEnds[0][3]-lineStartEnds[0][2]; j++) {
+				inputs[i][0][2] += "0";
+			}
+			unit = getUnitary(gates, lineStartEnds[0]);
+
+			// Convert this to CSV
+			fileText = unitToCSV(unit);
+			extension = ".csv";
+
 		}
 
 		// Prompt the user to download the file
@@ -3950,6 +3965,36 @@ function mouseDown(e) {
 
 	// Save this time for future double click checks
 	lastClickTime = currentTime;
+
+}
+
+// Convert a unitary to CSV file text
+function unitToCSV(unit) {
+
+	// Split into the real and imag components
+	unitReal = unit[0];
+	unitImag = unit[1];
+
+	// For each row
+	var csvText = "";
+	var rowText = "";
+	for (var i=0; i<unitReal.length; i++) {
+		rowText = "";
+
+		// The element of the row, bar the last
+		for (var j=0; j<unitReal[i].length-1; j++) {
+			rowText += unitReal[i][j] + "," + unitImag[i][j] + ",";
+		}
+
+		// The last (without comma at the end)
+		rowText += unitReal[i][unitReal[i].length-1] + "," + unitImag[i][unitReal[i].length-1];
+
+		// This row is done
+		csvText += rowText + "\n";
+
+	}
+
+	return csvText;
 
 }
 
