@@ -4632,6 +4632,14 @@ function fromQASM(qasmString, noCameraUpdate=false) {
 								}
 							}
 
+							// Get the size (when loading function calls)
+							var gateSize = 0;
+							for (var j=numControls; j<words.length; j++) {
+								if (words[j][0] == "q") {
+									gateSize += 1;
+								}
+							}
+
 							// Determine gate info
 							if (currentFunc == -1) {
 								var target = regToQubit[words[2*numControls+numControls+1]];
@@ -4704,7 +4712,7 @@ function fromQASM(qasmString, noCameraUpdate=false) {
 							var targetID = nextID;
 							if (letter[0] == "f") {
 								funcInd = parseInt(letter.substr(1));
-								gates.push({"id": targetID, "size": 1, "letter": "fun", "x": latestPos, "y": target, "draggable": true, "og": -1, "funID": funcInd, "attached": controlIDs.slice()})
+								gates.push({"id": targetID, "size": gateSize, "letter": "fun", "x": latestPos, "y": target, "draggable": true, "og": -1, "funID": funcInd, "attached": controlIDs.slice()})
 							} else {
 								gates.push({"id": targetID, "size": 1, "letter": letter, "x": latestPos, "y": target, "draggable": true, "og": -1, "attached": controlIDs.slice()})
 							}
