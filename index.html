@@ -3710,12 +3710,22 @@ function mouseDown(e) {
 		// If to unitary CSV
 		} else if (type == "Unitary CSV") {
 
-			// Get the first unitary
+			// Find the highest lineStartEnds
+			var bestInd = 0;
+			var bestY = 10000000000;
+			for (var j=0; j<lineStartEnds.length; j++) {
+				if (lineStartEnds[j][2] < bestY) {
+					bestInd = j;
+					bestY = lineStartEnds[j][2];
+				}
+			}
+
+			// Get the unitary
 			inputs[i] = [[100, [1, 0], ""]]
-			for (var j=0; j<1+lineStartEnds[0][3]-lineStartEnds[0][2]; j++) {
+			for (var j=0; j<1+lineStartEnds[bestInd][3]-lineStartEnds[bestInd][2]; j++) {
 				inputs[i][0][2] += "0";
 			}
-			unit = getUnitary(gates, lineStartEnds[0]);
+			unit = getUnitary(gates, lineStartEnds[bestInd]);
 
 			// Convert this to CSV
 			fileText = unitToCSV(unit);
