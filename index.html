@@ -2045,6 +2045,13 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 		textX = (x+i)*gridX+offsetX+gridX*0.05;
 		for (var j=0; j<states[0][i].length; j++) {
 
+			// Colour prop to magnitude
+			if (Math.pow(states[0][j][i], 2) + Math.pow(states[1][j][i], 2) < 1e-5) {
+				ctx.fillStyle = "#aaaaaa";
+			} else {
+				ctx.fillStyle = "#555555";
+			}
+
 			// Draw that element
 			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
 			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
