@@ -13,7 +13,7 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 * choice of simulation methods: statevector, unitary or measurement-based
 * contains a number of circuit presets (two tutorials, a Grover's implementation, more to come)
 * can read/write QASM files, both 2.0 and 3.0
-* can export as SVG
+* can also export as an SVG or a CSV file of the unitary
 * page URL is updated with the QASM for easy sharing
 * built for both mobile and desktop
 
