@@ -15,8 +15,6 @@
 </style>
 <script>
 
-// TODO custom theta gates
-
 // List of the loadable presets
 var loadOpen = false;
 var inputBox = null;
@@ -63,6 +61,9 @@ var toolbarGates = [
 	"I",
 	"swap",
 	"text",
+	"Rx(0)",
+	"Ry(0)",
+	"Rz(0)",
 ];
 
 // User-modifiable settings 
@@ -73,6 +74,7 @@ var simMethod = "Statevector";
 var numRepeats = 1000;
 var cutoffThresh = 0.1;
 var doubleClickMilli = 300;
+var tripleClickMilli = 300;
 var initialZoom = 1.0;
 var qasmVersion = 3;
 var maxHistory = 10;
@@ -168,18 +170,12 @@ var tips = [
 
 // For timings
 var lastClickTime = -1;
+var lastDoubleClickTime = -1;
 var lastSimTime = -1;
 var circuitUpdates = 1;
 var recalcRecs = true;
 var inputs = [[]];
 var results = [[]];
-
-// Generate random numbers
-var numRands = numRepeats * 4;
-var randNums = [];
-for (var i=0; i<numRands; i++) {
-	randNums.push(Math.random());
-}
 
 // Pretty print a matrix
 function printMatrix(arr) {
@@ -1001,10 +997,18 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
 			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 
 			// Draw the letter 
-			if (letter != "I") {
+			if (letter != "I" && letter[0] != "R") {
 				ctx.font = (fontSize*0.9) + "px Arial";
 				ctx.fillStyle = "#ffffff";
 				ctx.fillText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2);
+				svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
+			} else if (letter[0] == "R") {
+				ctx.font = (fontSize*0.6) + "px Arial";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter.substring(0,2), gridX*0.20+x-gateSize/2, gridY*0.38+y-gateSize/2);
+				var angle = letter.substring(3,letter.length-1);
+				ctx.font = (fontSize*0.8/Math.sqrt(1+angle.length)) + "px Arial";
+				ctx.fillText(angle, gridX*(0.36-angle.length/30)+x-gateSize/2, gridY*(0.72-angle.length/100.0)+y-gateSize/2);
 				svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
 			} else {
 				ctx.font = (fontSize*0.9) + "px Serif";
@@ -1020,10 +1024,15 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
 			ctx.fillRect(x-gateSizeFixed/2, y-gateSizeFixed/2, gateSizeFixed, gateSizeFixed+gridY*(size-1));
 
 			// Draw the letter
-			if (letter != "I") {
+			if (letter != "I" && letter[0] != "R") {
 				ctx.font = "30px Arial";
 				ctx.fillStyle = "#ffffff";
 				ctx.fillText(letter, 15+x-gateSizeFixed/2, 35+y-gateSizeFixed/2);
+			} else if (letter[0] == "R") {
+				ctx.font = "20px Arial";
+				ctx.fillStyle = "#ffffff";
+				ctx.fillText(letter.substring(0, 2), 12+x-gateSizeFixed/2, 22+y-gateSizeFixed/2);
+				ctx.fillText(letter.substring(3, letter.length-1), 20+x-gateSizeFixed/2, 43+y-gateSizeFixed/2);
 			} else {
 				ctx.font = "30px Serif";
 				ctx.fillStyle = "#ffffff";
@@ -2316,6 +2325,30 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			       [0.707106781,-0.707106781]];
 		matImag = [[0, 0],
 			       [0, 0]];
+	
+	// X rotation
+	} else if (gate.letter.substring(0,2) == "Rx") {
+		var thetaOverTwo = parseFloat(gate.letter.substring(3,gate.letter.length-1)) / 2.0;
+		matReal = [[Math.cos(thetaOverTwo), 0],
+			       [0, Math.cos(thetaOverTwo)]];
+		matImag = [[0, -Math.sin(thetaOverTwo)],
+			       [-Math.sin(thetaOverTwo), 0]];
+
+	// Y rotation
+	} else if (gate.letter.substring(0,2) == "Rx") {
+		var thetaOverTwo = parseFloat(gate.letter.substring(3,gate.letter.length-1)) / 2.0;
+		matReal = [[Math.cos(thetaOverTwo), -Math.sin(thetaOverTwo)],
+			       [Math.sin(thetaOverTwo), Math.cos(thetaOverTwo)]];
+		matImag = [[0, 0],
+			       [0, 0]];
+
+	// Z rotation
+	} else if (gate.letter.substring(0,2) == "Rx") {
+		var thetaOverTwo = parseFloat(gate.letter.substring(3,gate.letter.length-1)) / 2.0;
+		matReal = [[Math.cos(thetaOverTwo), 0],
+			       [0, Math.cos(thetaOverTwo)]];
+		matImag = [[-Math.sin(thetaOverTwo), 0],
+			       [0, Math.sin(thetaOverTwo)]];
 
 	// Otherwise change nothing
 	} else {
@@ -2747,24 +2780,17 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 				// If it's a Hadamard
 				if (letter == "H") {
 
-					// 50-50 chance
+					// 50-50 chance of a bit flip
 					var qubitBefore = state[target];
-					if (randNums[randInd] < 0.5) {
+					if (Math.random() < 0.5) {
 						state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
 					}
 
-					// H|1> = |0>-|1>
+					// If it went from 1 to 1, add a negative phase
 					if (qubitBefore == "1" && state[target] == "1") {
-					
-						// Update coefficient
 						coeff[0] = -coeff[0];
 						coeff[1] = -coeff[1];
-
 					}
-
-					// Next random number
-					randInd += 1;
-					if (randInd > numRands) {randInd = 0};
 
 				// If it's an X
 				} else if (letter == "X") {
@@ -2812,6 +2838,42 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 					var b = coeff[1];
 					coeff[0] = (a-b) / Math.sqrt(2);
 					coeff[1] = (a+b) / Math.sqrt(2);
+
+				// If it's an X rotation TODO
+				// cos(t/2) -isin(t/2)
+				// -isin(t/2) cos(t/2)
+				} else if (letter.substring(0,2) == "Rx") {
+					if (state[target] == "0") {
+
+						// |0> -> |0>
+						if (Math.random() < Math.pow(Math.cos(thetaOverTwo),2)) {
+							coeff[0] = Math.cos(thetaOverTwo) * coeff[0];
+							coeff[1] = Math.cos(thetaOverTwo) * coeff[1];
+
+						// |0> -> |1>
+						} else {
+							state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
+							var a = coeff[0];
+							coeff[0] = Math.sin(thetaOverTwo) * coeff[1];
+							coeff[1] = -Math.sin(thetaOverTwo) * a;
+
+						}
+
+					} else {
+
+					}
+
+				// If it's an Y rotation TODO
+				} else if (letter.substring(0,2) == "Ry") {
+
+					// cos(t/2) -sin(t/2)
+					// sin(t/2) cos(t/2)
+
+				// If it's an Z rotation TODO
+				} else if (letter.substring(0,2) == "Rz") {
+
+					// cos(t/2)-sin(t/2) 0
+					// 0                 cos(t/2)+sin(t/2)
 
 				// If it's a swap
 				} else if (letter == "swaptop") {
@@ -3777,8 +3839,32 @@ function mouseDown(e) {
 				toolbarIndex = 0;
 			}
 
+		// Triple click
+		} else if ((currentTime - lastDoubleClickTime) < tripleClickMilli) {
+
+			// If it's draggable and has a parameter
+			if (gates[hover]["draggable"] && gates[hover]["letter"][0] == "R") {
+
+				// Open a prompt to change the text 
+				inPrompt = true;
+				var newVal = prompt("Enter new parameter:", gates[hover]["letter"].substring(3,gates[hover]["letter"].length-1));
+
+				// If the user didn't cancel
+				if (newVal !== null) {
+
+					// Update the gate's text and size
+					gates[hover]["letter"] = gates[hover]["letter"].substring(0,2) + "(" + newVal + ")";
+					circuitUpdates = 1;
+
+				}
+
+			}
+
 		// Double click 
 		} else if ((currentTime - lastClickTime) < doubleClickMilli) {
+
+			// Save this time for future triple click checks
+			lastDoubleClickTime = currentTime;
 
 			// If it can be dragged (i.e. not in the toolbar)
 			if (gates[hover]["draggable"] && gates[hover]["letter"] != "go") {
@@ -4658,6 +4744,11 @@ function fromQASM(qasmString, noCameraUpdate=false) {
 							// Standard gate names should be uppercase for display
 							if (["x", "y", "z", "s", "t", "h"].indexOf(letter) >= 0) {
 								letter = letter.toUpperCase();
+							}
+
+							// If it's a custom rotation
+							if (letter[0] == "r") {
+								letter = "R" + letter.substring(1);
 							}
 
 							// If it's a swap, start with the top bit
