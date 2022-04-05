@@ -8,7 +8,7 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 ![Agate Example](example.png)
 
 ### Features
-* support for H, X, Y, Z, S, T and swap gates, plus custom gates and any number of controls
+* support for H, X, Y, Z, S, T, swaps, arbitrary rotations, plus custom gates and any number of controls
 * support for custom text objects for labelling circuits (allowing links and some LaTeX)
 * choice of simulation methods: statevector, unitary or measurement-based
 * contains a number of circuit presets (two tutorials, a Grover's implementation, more to come)

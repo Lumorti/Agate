@@ -22,9 +22,10 @@ var openHover = false;
 var openDims = [0, 0, 0, 0];
 var presets = [
 	["QASM File",       ""],
-	["Preset: Tutorial", "OPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%2013%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%200%20-24%20Agate%20Tutorial%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%20(or%20with%20the%20delete%20key)%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%208%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%209%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%208%20%3E%0A%2F%2F%20-5%209%20%3E%0A%2F%2F%200%20-23%20by%20Lumorti%0A%2F%2F%20-4%2010%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%2010%20%3E%0A%2F%2F%20-5%2022%20%3E%0A%2F%2F%20-4%2035%20The%20URL%20can%20also%20be%20shared%2Fbookmarked%20and%20will%20result%20in%20the%20same%20circuit%0A%2F%2F%20-4%2022%20Text%20objects%20like%20these%20can%20be%20added%20to%20help%20label%20circuits%0A%2F%2F%20-4%2034%20Use%20the%20save%2Fload%20button%20to%20save%2Fload%20local%20QASM%20files%0A%2F%2F%20-4%2036%20The%20settings%20button%20allows%20the%20use%20of%20different%20simulation%20methods%20and%20various%20other%20tweaks%0A%2F%2F%20-5%2035%20%3E%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-5%2036%20%3E%0A%2F%2F%20-1%2026%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2024%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%0A%2F%2F%20-3%2028%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-3%2029%20%5C%20bra%7B1%7D%0A%2F%2F%201%2029%20%5Cbra%7B1%7D%0A%2F%2F%201%2028%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-3%2030%20%5C%20ket%7B1%7D%0A%2F%2F%201%2030%20%5Cket%7B1%7D%0A%2F%2F%204%2028%20%5C%20sqrt2%0A%2F%2F%204%2029%201%20%5C%20pm%202%0A%2F%2F%208%2028%20%5Csqrt2%0A%2F%2F%208%2029%201%20%5Cpm%202%0A%2F%2F%208%2030%202%5Ctimes2%0A%2F%2F%204%2030%201%5C%20times2%0A%2F%2F%208%2031%201%5Ccdot2%0A%2F%2F%204%2031%201%5C%20cdot2%0A%2F%2F%204%2032%201%20%5C%20to%202%0A%2F%2F%208%2032%201%20%5Cto%202%0A%2F%2F%20-3%2031%20%5C%20langle%0A%2F%2F%201%2031%20%5Clangle%0A%2F%2F%20-3%2032%20%5C%20rangle%0A%2F%2F%201%2032%20%5Crangle%0A%2F%2F%20-5%2024%20%3E%0A%2F%2F%20-4%2038%20Keyboard%20shortcuts%20are%20also%20available%0A%2F%2F%20-5%2038%20%3E%0A%2F%2F%20-3%2043%20ctrl-z%0A%2F%2F%20-3%2040%20ctrl-c%0A%2F%2F%20-3%2041%20ctrl-x%0A%2F%2F%20-3%2042%20ctrl-v%0A%2F%2F%20-3%2039%20delete%0A%2F%2F%20-3%2044%20ctrl-shift-z%0A%2F%2F%201%2039%20delete%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2040%20copy%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2041%20cut%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2042%20paste%20the%20stored%20gates%0A%2F%2F%201%2043%20undo%20the%20last%20change%0A%2F%2F%201%2044%20redo%20the%20last%20undo%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2023%20Double%20click%20on%20one%20to%20edit%2C%20links%20are%20auto%20detected%0Aqubit%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%202%2018%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%201%200%0Ah%20q%5B0%5D%3B%0Actrl%20%40%20x%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%201%204%0Ah%20q%5B0%5D%3B%0Anegctrl%20%40%20x%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
-	["Preset: Gates",    "OPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0A%2F%2F%206%200%20Hadamard%0A%2F%2F%207%201%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2015%205%20input%0A%2F%2F%2018%205%20output%20(unnormalised)%0A%2F%2F%2015%206%20%5Cket%7B0%7D%0A%2F%2F%2018%206%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2015%207%20%5Cket%7B1%7D%0A%2F%2F%2018%207%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%202%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%0A%2F%2F%206%20-7%20Pauli%20X%0A%2F%2F%207%20-6%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2015%20-4%20input%0A%2F%2F%2018%20-4%20output%0A%2F%2F%2015%20-3%20%5Cket%7B0%7D%0A%2F%2F%2018%20-3%20%5Cket%7B1%7D%0A%2F%2F%2015%20-2%20%5Cket%7B1%7D%0A%2F%2F%2018%20-2%20%5Cket%7B0%7D%0A%2F%2F%206%209%20Pauli%20Z%20(and%20other%20phase%20gates)%0A%2F%2F%207%2010%20These%20all%20add%20some%20kind%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%207%2011%20but%20only%20if%20the%20input%20is%20%5Cket%7B1%7D%0A%2F%2F%2015%2028%20input%0A%2F%2F%2015%2013%20input%0A%2F%2F%2015%2017%20input%0A%2F%2F%2015%2021%20input%0A%2F%2F%2018%2028%20output%0A%2F%2F%2018%2013%20output%0A%2F%2F%2018%2017%20output%0A%2F%2F%2018%2021%20output%20(unnormalised)%0A%2F%2F%2015%2029%20%5Cket%7B0%7D%0A%2F%2F%2015%2030%20%5Cket%7B1%7D%0A%2F%2F%2015%2014%20%5Cket%7B0%7D%0A%2F%2F%2015%2015%20%5Cket%7B1%7D%0A%2F%2F%2015%2018%20%5Cket%7B0%7D%0A%2F%2F%2015%2019%20%5Cket%7B1%7D%0A%2F%2F%2015%2022%20%5Cket%7B0%7D%0A%2F%2F%2015%2023%20%5Cket%7B1%7D%0A%2F%2F%2018%2029%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2030%20-i%20%5Cket%7B0%7D%0A%2F%2F%2018%2014%20%5Cket%7B0%7D%0A%2F%2F%2018%2015%20-%20%5Cket%7B1%7D%0A%2F%2F%2018%2018%20%5Cket%7B0%7D%0A%2F%2F%2018%2019%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2023%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2018%2022%20%5Cket%7B0%7D%0A%2F%2F%206%2025%20Pauli%20Y%0A%2F%2F%207%2026%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-10%20Agate%20Gates%20List%0A%2F%2F%2011%20-9%20by%20Lumorti%0A%2F%2F%207%203%20Results%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0A%2F%2F%2015%2035%20input%0A%2F%2F%2018%2035%20output%0A%2F%2F%2015%2036%20%5Cket%7B00%7D%0A%2F%2F%2018%2036%20%5Cket%7B00%7D%0A%2F%2F%206%2032%20Swap%0A%2F%2F%207%2033%20Swaps%20the%20two%20qubits%0A%2F%2F%2015%2037%20%5Cket%7B01%7D%0A%2F%2F%2018%2037%20%5Cket%7B10%7D%0A%2F%2F%2015%2038%20%5Cket%7B10%7D%0A%2F%2F%2018%2038%20%5Cket%7B01%7D%0A%2F%2F%2015%2039%20%5Cket%7B11%7D%0A%2F%2F%2018%2039%20%5Cket%7B11%7D%0A%2F%2F%206%2010%20%3E%0A%2F%2F%206%201%20%3E%0A%2F%2F%206%203%20%3E%0A%2F%2F%206%20-6%20%3E%0A%2F%2F%206%2026%20%3E%0A%2F%2F%206%2033%20%3E%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%206%0Ah%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%20-3%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2029%0Ay%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2014%0Az%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2018%0As%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2022%0At%20q%5B0%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%209%2036%0Aswap%20q%5B1%5D%2Cq%5B0%5D%3B%0A"],
-	["Preset: Grover's", "OPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Az%20q0%3B%0Az%20q1%3B%0Actrl%20%40%20z%20q0%2Cq1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Actrl%20%40%20z%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20create%20or%20destroys%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20the%20state%20we%20want%20to%20find%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%204%2016%20this%20function%20rotates%20anything%20that's%20not%20%5Cket%7B00%7D%20to%20have%20negative%20phase%0A%2F%2F%204%2017%20(i.e.%20anything%20that%20didn't%20become%20zero%20when%20we%20destroy%20the%20search%20space)%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-9%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%200%20-8%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqubit%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
+	["Preset: Tutorial", "statevectorOPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0Agate%20f0%20q0%2Cq1%20%2F%2F%200%208%0A%7B%0Ax%20q0%3B%0Ax%20q1%3B%0A%7D%0A%2F%2F%20-4%20-14%20Add%20gates%20by%20dragging%20them%20from%20the%20toolbar%20at%20the%20top%0A%2F%2F%20-4%20-12%20Double-click%20and%20drag%20on%20the%20background%20to%20select%20multiple%20gates%0A%2F%2F%20-5%20-14%20%3E%0A%2F%2F%200%20-24%20Agate%20Tutorial%0A%2F%2F%20-5%20-12%20%3E%0A%2F%2F%20-5%20-21%20%3E%0A%2F%2F%20-4%20-5%20Controls%20can%20be%20added%20to%20any%20gate%20by%20double-clicking%20and%20dragging%0A%2F%2F%20-4%20-4%20Toggle%20controls%20by%20double-clicking%20on%20them%0A%2F%2F%20-5%20-5%20%3E%0A%2F%2F%20-5%20-4%20%3E%0A%2F%2F%20-4%20-3%20Remove%20controls%20by%20dragging%20them%20back%20to%20their%20parent%20gate%0A%2F%2F%20-5%20-3%20%3E%0A%2F%2F%20-4%20-13%20Remove%20gates%20by%20dragging%20them%20back%20to%20the%20toolbar%20(or%20with%20the%20delete%20key)%0A%2F%2F%20-5%20-13%20%3E%0A%2F%2F%20-4%20-20%20Zoom%20with%20the%20mouse%20wheel%20(or%20pinching%20on%20mobile)%0A%2F%2F%20-4%20-21%20Move%20the%20camera%20by%20dragging%20the%20background%0A%2F%2F%20-5%20-20%20%3E%0A%2F%2F%20-4%204%20Function%20definition%20gates%20will%20snap%20to%20existing%20circuits%0A%2F%2F%20-4%205%20They%20can%20then%20be%20double-clicked%20and%20dragged%20to%20create%20a%20function%20call%20gate%0A%2F%2F%20-5%204%20%3E%0A%2F%2F%20-5%205%20%3E%0A%2F%2F%200%20-23%20by%20Lumorti%0A%2F%2F%20-4%206%20For%20now%20you%20can't%20place%20a%20function%20call%20inside%20a%20function%20definition%20(to%20prevent%20recursion)%0A%2F%2F%20-5%206%20%3E%0A%2F%2F%20-1%2026%20https%3A%2F%2Fgithub.com%2FLumorti%2FAgate%0A%2F%2F%20-4%2024%20Some%20LaTeX%20commands%20are%20also%20accepted%2C%20following%20a%20backslash%0A%2F%2F%20-6%2028%20%5C%20braket%7B1%7C4%7D%0A%2F%2F%20-6%2029%20%5C%20bra%7B1%7D%0A%2F%2F%20-2%2029%20%5Cbra%7B1%7D%0A%2F%2F%20-2%2028%20%5Cbraket%7B1%7C4%7D%0A%2F%2F%20-6%2030%20%5C%20ket%7B1%7D%0A%2F%2F%20-2%2030%20%5Cket%7B1%7D%0A%2F%2F%201%2028%20%5C%20sqrt2%0A%2F%2F%201%2029%201%20%5C%20pm%202%0A%2F%2F%205%2028%20%5Csqrt2%0A%2F%2F%205%2029%201%20%5Cpm%202%0A%2F%2F%205%2030%202%5Ctimes2%0A%2F%2F%201%2030%201%5C%20times2%0A%2F%2F%205%2031%201%5Ccdot2%0A%2F%2F%201%2031%201%5C%20cdot2%0A%2F%2F%201%2032%201%20%5C%20to%202%0A%2F%2F%205%2032%201%20%5Cto%202%0A%2F%2F%20-6%2031%20%5C%20langle%0A%2F%2F%20-2%2031%20%5Clangle%0A%2F%2F%20-6%2032%20%5C%20rangle%0A%2F%2F%20-2%2032%20%5Crangle%0A%2F%2F%20-5%2024%20%3E%0A%2F%2F%20-4%2034%20Keyboard%20shortcuts%20are%20also%20available%0A%2F%2F%20-5%2034%20%3E%0A%2F%2F%20-3%2039%20ctrl-z%0A%2F%2F%20-3%2036%20ctrl-c%0A%2F%2F%20-3%2037%20ctrl-x%0A%2F%2F%20-3%2038%20ctrl-v%0A%2F%2F%20-3%2035%20delete%0A%2F%2F%20-3%2040%20ctrl-shift-z%0A%2F%2F%201%2035%20delete%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2036%20copy%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2037%20cut%20the%20selected%20gate%2Fgates%0A%2F%2F%201%2038%20paste%20the%20stored%20gates%0A%2F%2F%201%2039%20undo%20the%20last%20change%0A%2F%2F%201%2040%20redo%20the%20last%20undo%0A%2F%2F%20-5%2023%20%3E%0A%2F%2F%20-4%2023%20Double%20click%20on%20a%20text%20object%20to%20edit%2C%20links%20are%20auto%20detected%0A%2F%2F%20-4%2017%20Gates%20with%20parameters%20can%20be%20editted%20by%20triple%20clicking%0A%2F%2F%20-5%2017%20%3E%0A%2F%2F%209%2028%20%5C%20pi%0A%2F%2F%2012%2028%20%5Cpi%0A%2F%2F%209%2029%20%5C%20theta%0A%2F%2F%2012%2029%20%5Ctheta%0A%2F%2F%209%2030%20%5C%20psi%0A%2F%2F%2012%2030%20%5Cpsi%0A%2F%2F%209%2031%20%5C%20phi%0A%2F%2F%2012%2031%20%5Cphi%0Aqubit%20q%5B2%5D%3B%20%2F%2F%20-1%20-9%0Ah%20q%5B0%5D%3B%0Ax%20q%5B0%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Aid%20q%5B1%5D%3B%0Ax%20q%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%202%2013%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%200%200%0Ah%20q%5B0%5D%3B%0Actrl%20%40%20x%20q%5B0%5D%2Cq%5B1%5D%3B%0Anegctrl%20%40%20x%20q%5B0%5D%2Cq%5B1%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%201%20-17%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%201%2020%0Arx(2)%20q%5B0%5D%3B%0Ary(3.14)%20q%5B0%5D%3B%0Arz(-1)%20q%5B0%5D%3B%0A"],
+	["Preset: Gates",    "statevectorOPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0A%2F%2F%206%200%20Hadamard%0A%2F%2F%207%201%20This%20allows%20the%20creation%20of%20superposition%2C%20where%0A%2F%2F%2015%205%20input%0A%2F%2F%2018%205%20output%20(unnormalised)%0A%2F%2F%2015%206%20%5Cket%7B0%7D%0A%2F%2F%2018%206%20%5Cket%7B0%7D%20%2B%20%5Cket%7B1%7D%0A%2F%2F%2015%207%20%5Cket%7B1%7D%0A%2F%2F%2018%207%20%5Cket%7B0%7D%20-%20%5Cket%7B1%7D%0A%2F%2F%207%202%20the%20circuit%20exists%20in%20multiple%20states%20at%20once%0A%2F%2F%206%20-7%20Pauli%20X%0A%2F%2F%207%20-6%20This%20is%20the%20equivalent%20of%20the%20classical%20NOT%20gate%0A%2F%2F%2015%20-4%20input%0A%2F%2F%2018%20-4%20output%0A%2F%2F%2015%20-3%20%5Cket%7B0%7D%0A%2F%2F%2018%20-3%20%5Cket%7B1%7D%0A%2F%2F%2015%20-2%20%5Cket%7B1%7D%0A%2F%2F%2018%20-2%20%5Cket%7B0%7D%0A%2F%2F%206%209%20Pauli%20Z%20(and%20other%20phase%20gates)%0A%2F%2F%207%2010%20These%20all%20add%20some%20kind%20of%20global%20phase%20to%20the%20state%2C%0A%2F%2F%207%2011%20but%20only%20if%20the%20input%20is%20%5Cket%7B1%7D%0A%2F%2F%2015%2028%20input%0A%2F%2F%2015%2013%20input%0A%2F%2F%2015%2017%20input%0A%2F%2F%2015%2021%20input%0A%2F%2F%2018%2028%20output%0A%2F%2F%2018%2013%20output%0A%2F%2F%2018%2017%20output%0A%2F%2F%2018%2021%20output%20(unnormalised)%0A%2F%2F%2015%2029%20%5Cket%7B0%7D%0A%2F%2F%2015%2030%20%5Cket%7B1%7D%0A%2F%2F%2015%2014%20%5Cket%7B0%7D%0A%2F%2F%2015%2015%20%5Cket%7B1%7D%0A%2F%2F%2015%2018%20%5Cket%7B0%7D%0A%2F%2F%2015%2019%20%5Cket%7B1%7D%0A%2F%2F%2015%2022%20%5Cket%7B0%7D%0A%2F%2F%2015%2023%20%5Cket%7B1%7D%0A%2F%2F%2018%2029%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2030%20-i%20%5Cket%7B0%7D%0A%2F%2F%2018%2014%20%5Cket%7B0%7D%0A%2F%2F%2018%2015%20-%20%5Cket%7B1%7D%0A%2F%2F%2018%2018%20%5Cket%7B0%7D%0A%2F%2F%2018%2019%20i%20%5Cket%7B1%7D%0A%2F%2F%2018%2023%20(1%2Bi)%20%5Cket%7B1%7D%0A%2F%2F%2018%2022%20%5Cket%7B0%7D%0A%2F%2F%206%2025%20Pauli%20Y%0A%2F%2F%207%2026%20Performs%20a%20NOT%20as%20well%20as%20adding%20a%20phase%0A%2F%2F%2010%20-10%20Agate%20Gates%20List%0A%2F%2F%2011%20-9%20by%20Lumorti%0A%2F%2F%207%203%20Results%20in%20a%2050%2F50%20chance%20of%20measuring%20either%0A%2F%2F%2015%2035%20input%0A%2F%2F%2018%2035%20output%0A%2F%2F%2015%2036%20%5Cket%7B00%7D%0A%2F%2F%2018%2036%20%5Cket%7B00%7D%0A%2F%2F%206%2032%20Swap%0A%2F%2F%207%2033%20Swaps%20the%20two%20qubits%0A%2F%2F%2015%2037%20%5Cket%7B01%7D%0A%2F%2F%2018%2037%20%5Cket%7B10%7D%0A%2F%2F%2015%2038%20%5Cket%7B10%7D%0A%2F%2F%2018%2038%20%5Cket%7B01%7D%0A%2F%2F%2015%2039%20%5Cket%7B11%7D%0A%2F%2F%2018%2039%20%5Cket%7B11%7D%0A%2F%2F%206%2010%20%3E%0A%2F%2F%206%201%20%3E%0A%2F%2F%206%203%20%3E%0A%2F%2F%206%20-6%20%3E%0A%2F%2F%206%2026%20%3E%0A%2F%2F%206%2033%20%3E%0A%2F%2F%206%2041%20Rotation%20Gates%0A%2F%2F%206%2042%20%3E%0A%2F%2F%207%2042%20These%20perform%20a%20rotation%20in%20a%20certain%20direction%20with%20a%20certain%20angle%0A%2F%2F%207%2043%20Combining%20all%20three%20of%20these%2C%20any%20single%20qubit%20gate%20can%20be%20created%0A%2F%2F%206%2043%20%3E%0A%2F%2F%2015%2045%20input%0A%2F%2F%2018%2045%20output%0A%2F%2F%2015%2046%20%5Cket%7B0%7D%0A%2F%2F%2015%2047%20%5Cket%7B1%7D%0A%2F%2F%2018%2046%20cos(%5Ctheta%2F2)%20%5Cket%7B0%7D%20-%20i%20sin(%5Ctheta%2F2)%20%5Cket%7B1%7D%0A%2F%2F%2018%2047%20cos(%5Ctheta%2F2)%20%5Cket%7B1%7D%20-%20i%20sin(%5Ctheta%2F2)%20%5Cket%7B0%7D%0A%2F%2F%2015%2049%20input%0A%2F%2F%2018%2049%20output%0A%2F%2F%2015%2050%20%5Cket%7B0%7D%0A%2F%2F%2015%2051%20%5Cket%7B1%7D%0A%2F%2F%2018%2050%20cos(%5Ctheta%2F2)%20%5Cket%7B0%7D%20%2B%20sin(%5Ctheta%2F2)%20%5Cket%7B1%7D%0A%2F%2F%2018%2051%20cos(%5Ctheta%2F2)%20%5Cket%7B1%7D%20-%20sin(%5Ctheta%2F2)%20%5Cket%7B0%7D%0A%2F%2F%2015%2053%20input%0A%2F%2F%2018%2053%20output%0A%2F%2F%2015%2054%20%5Cket%7B0%7D%0A%2F%2F%2015%2055%20%5Cket%7B1%7D%0A%2F%2F%2018%2054%20(cos(%5Ctheta%2F2)%20-%20i%20sin(%5Ctheta%2F2))%20%5Cket%7B0%7D%0A%2F%2F%2018%2055%20(cos(%5Ctheta%2F2)%20%2B%20i%20sin(%5Ctheta%2F2))%20%5Cket%7B1%7D%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%206%0Ah%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%20-3%0Ax%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2029%0Ay%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2014%0Az%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2018%0As%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2022%0At%20q%5B0%5D%3B%0Aqubit%20q%5B2%5D%3B%20%2F%2F%209%2036%0Aswap%20q%5B1%5D%2Cq%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2046%0Arx(1)%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2050%0Ary(1)%20q%5B0%5D%3B%0Aqubit%20q%5B1%5D%3B%20%2F%2F%209%2054%0Arz(1)%20q%5B0%5D%3B%0A"],
+	["Preset: Grover's", "statevectorOPENQASM%203.0%3B%0Ainclude%20%22stdgates.inc%22%3B%0Agate%20f2%20q0%2Cq1%20%2F%2F%20-2%2015%0A%7B%0Az%20q0%3B%0Az%20q1%3B%0Actrl%20%40%20z%20q0%2Cq1%3B%0A%7D%0Agate%20f1%20q0%2Cq1%20%2F%2F%20-2%2010%0A%7B%0Actrl%20%40%20z%20q0%2Cq1%3B%0A%7D%0Agate%20f0%20q0%2Cq1%20%2F%2F%20-2%205%0A%7B%0Ah%20q0%3B%0Ah%20q1%3B%0A%7D%0A%2F%2F%203%206%20this%20function%20create%20or%20destroys%20the%20search%20space%0A%2F%2F%203%2011%20this%20function%20adds%20a%20negative%20phase%20to%20the%20state%20we%20want%20to%20find%0A%2F%2F%203%2012%20(in%20this%20case%3A%20%5Cket%7B11%7D%20%5Cto%20-%5Cket%7B11%7D)%0A%2F%2F%204%2016%20this%20function%20rotates%20anything%20that's%20not%20%5Cket%7B00%7D%20to%20have%20negative%20phase%0A%2F%2F%204%2017%20(i.e.%20anything%20that%20didn't%20become%20zero%20when%20we%20destroy%20the%20search%20space)%0A%2F%2F%20-3%20-6%20This%20famous%20quantum%20algorithm%20amplifies%20the%20chance%20of%20measuring%20%0A%2F%2F%20-3%20-5%20a%20certain%20state%20from%20a%20big%20list%20of%20possible%20states%2C%20effectively%20%22finding%22%20a%20state%0A%2F%2F%203%207%20(in%20this%20case%3A%20a%20full%20superposition)%0A%2F%2F%200%20-9%20Grover's%20Algorithm%20Implementation%0A%2F%2F%20-1%2020%20Sources%3A%0A%2F%2F%200%2021%20https%3A%2F%2Fqiskit.org%2Ftextbook%2Fch-algorithms%2Fgrover.html%0A%2F%2F%200%2022%20https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FGrover%2527s_algorithm%0A%2F%2F%200%20-8%20by%20Lumorti%0A%2F%2F%20-3%20-3%20Whilst%20classically%20searching%20a%20list%20of%20N%20items%20takes%20at%20most%20N%20checks%2C%0A%2F%2F%20-3%20-2%20this%20algorithm%20only%20requires%20at%20most%20%5CsqrtN%20checks%0Aqubit%20q%5B2%5D%3B%20%2F%2F%202%201%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af1%20q%5B0%5D%2Cq%5B1%5D%3B%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0Af2%20q%5B0%5D%2Cq%5B1%5D%3B%0Af0%20q%5B0%5D%2Cq%5B1%5D%3B%0A"],
+	["Preset: Blank", ""],
 ];
 
 // Stuff for svgs
@@ -72,7 +73,8 @@ var showFPS = false;
 var drawGrid = true;
 var simMethod = "Statevector";
 var numRepeats = 1000;
-var cutoffThresh = 0.1;
+var cutoffThreshMeasure = 1;
+var cutoffThresh = 0.01;
 var doubleClickMilli = 300;
 var tripleClickMilli = 300;
 var initialZoom = 1.0;
@@ -738,6 +740,12 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
 			gateText = gateText.replace(/\\cdot/g, "\u22C5");
 			gateText = gateText.replace(/\\times/g, "\u00D7");
 			gateText = gateText.replace(/\\check/g, "\u2713");
+
+			// Greek letters
+			gateText = gateText.replace(/\\theta/g, "θ");
+			gateText = gateText.replace(/\\pi/g, "π");
+			gateText = gateText.replace(/\\psi/g, "ψ");
+			gateText = gateText.replace(/\\phi/g, "ϕ");
 
 			// Fill a box behind
 			ctx.font = fontSize + "px Arial";
@@ -2162,7 +2170,7 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft) {
 	for (var i=0; i<states.length; i++) {
 
 		// If of significant probability
-		if ((i < 10) && (i < 3 || states[i][0] >= cutoffThresh)) {
+		if (states[i][0] >= cutoffThreshMeasure) {
 		
 			// For each qubit of the state
 			for (var j=0; j<states[i][2].length; j++) {
@@ -2335,7 +2343,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			       [-Math.sin(thetaOverTwo), 0]];
 
 	// Y rotation
-	} else if (gate.letter.substring(0,2) == "Rx") {
+	} else if (gate.letter.substring(0,2) == "Ry") {
 		var thetaOverTwo = parseFloat(gate.letter.substring(3,gate.letter.length-1)) / 2.0;
 		matReal = [[Math.cos(thetaOverTwo), -Math.sin(thetaOverTwo)],
 			       [Math.sin(thetaOverTwo), Math.cos(thetaOverTwo)]];
@@ -2343,7 +2351,7 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 			       [0, 0]];
 
 	// Z rotation
-	} else if (gate.letter.substring(0,2) == "Rx") {
+	} else if (gate.letter.substring(0,2) == "Rz") {
 		var thetaOverTwo = parseFloat(gate.letter.substring(3,gate.letter.length-1)) / 2.0;
 		matReal = [[Math.cos(thetaOverTwo), 0],
 			       [0, Math.cos(thetaOverTwo)]];
@@ -2839,10 +2847,11 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 					coeff[0] = (a-b) / Math.sqrt(2);
 					coeff[1] = (a+b) / Math.sqrt(2);
 
-				// If it's an X rotation TODO
+				// If it's an X rotation
 				// cos(t/2) -isin(t/2)
 				// -isin(t/2) cos(t/2)
 				} else if (letter.substring(0,2) == "Rx") {
+					var thetaOverTwo = parseFloat(letter.substring(3,letter.length-1)) / 2.0;
 					if (state[target] == "0") {
 
 						// |0> -> |0>
@@ -2861,19 +2870,75 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 
 					} else {
 
+						// |1> -> |0>
+						if (Math.random() < Math.pow(Math.sin(thetaOverTwo),2)) {
+							state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
+							var a = coeff[0];
+							coeff[0] = Math.sin(thetaOverTwo) * coeff[1];
+							coeff[1] = -Math.sin(thetaOverTwo) * a;
+
+						// |1> -> |1>
+						} else {
+							coeff[0] = Math.cos(thetaOverTwo) * coeff[0];
+							coeff[1] = Math.cos(thetaOverTwo) * coeff[1];
+
+						}
+
 					}
 
-				// If it's an Y rotation TODO
+				// If it's an Y rotation
+				// cos(t/2) -sin(t/2)
+				// sin(t/2) cos(t/2)
 				} else if (letter.substring(0,2) == "Ry") {
+					var thetaOverTwo = parseFloat(letter.substring(3,letter.length-1)) / 2.0;
+					if (state[target] == "0") {
 
-					// cos(t/2) -sin(t/2)
-					// sin(t/2) cos(t/2)
+						// |0> -> |0>
+						if (Math.random() < Math.pow(Math.cos(thetaOverTwo),2)) {
+							coeff[0] = Math.cos(thetaOverTwo) * coeff[0];
+							coeff[1] = Math.cos(thetaOverTwo) * coeff[1];
 
-				// If it's an Z rotation TODO
+						// |0> -> |1>
+						} else {
+							state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
+							coeff[0] = Math.sin(thetaOverTwo) * coeff[0];
+							coeff[1] = Math.sin(thetaOverTwo) * coeff[1];
+
+						}
+
+					} else {
+
+						// |1> -> |0>
+						if (Math.random() < Math.pow(Math.sin(thetaOverTwo),2)) {
+							state = state.substring(0, target) + (state[target] == "1" ? "0" : "1") + state.substring(target+1, state.length);
+							coeff[0] = -Math.sin(thetaOverTwo) * coeff[0];
+							coeff[1] = -Math.sin(thetaOverTwo) * coeff[1];
+
+						// |1> -> |1>
+						} else {
+							coeff[0] = Math.cos(thetaOverTwo) * coeff[0];
+							coeff[1] = Math.cos(thetaOverTwo) * coeff[1];
+
+						}
+
+					}
+
+				// If it's an Z rotation
+				// cos(t/2)-i*sin(t/2) 0
+				// 0                   cos(t/2)+i*sin(t/2)
 				} else if (letter.substring(0,2) == "Rz") {
-
-					// cos(t/2)-sin(t/2) 0
-					// 0                 cos(t/2)+sin(t/2)
+					var thetaOverTwo = parseFloat(letter.substring(3,letter.length-1)) / 2.0;
+					if (state[target] == "0") {
+						var a = coeff[0];
+						var b = coeff[1];
+						coeff[0] = a*Math.cos(thetaOverTwo) + b*Math.sin(thetaOverTwo);
+						coeff[1] = b*Math.cos(thetaOverTwo) - a*Math.sin(thetaOverTwo);
+					} else {
+						var a = coeff[0];
+						var b = coeff[1];
+						coeff[0] = a*Math.cos(thetaOverTwo) - b*Math.sin(thetaOverTwo);
+						coeff[1] = b*Math.cos(thetaOverTwo) + a*Math.sin(thetaOverTwo);
+					}
 
 				// If it's a swap
 				} else if (letter == "swaptop") {
@@ -2943,15 +3008,15 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 		// Get mag of total vector and normalise each coefficient
 		var totalMag = 0;
 		for (var i=0; i<resultsLocal.length; i++) {
-			resultsLocal[i][0] = Math.sqrt(resultsLocal[i][1][0]**2+resultsLocal[i][1][1]**2);
 			resultsLocal[i][1][0] /= resultsLocal[i][0];
 			resultsLocal[i][1][1] /= resultsLocal[i][0];
+			resultsLocal[i][0] = Math.pow(resultsLocal[i][1][0],2)+Math.pow(resultsLocal[i][1][1],2);
 			totalMag += resultsLocal[i][0];
 		}
 
 		// Turn counts into probabilities
 		for (var i=0; i<resultsLocal.length; i++) {
-			resultsLocal[i][0] = Math.round(100 * (resultsLocal[i][0] / totalMag));
+			resultsLocal[i][0] = Math.round((100.0 * resultsLocal[i][0]) / totalMag);
 		}
 
 	}
