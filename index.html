@@ -2093,12 +2093,19 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft) {
 	// Get the number of spaces
 	var squares = Math.log2(states[0].length);
 
+	// Sort them by probability
+	var sorted = [];
+	for (var i=0; i<states[0].length; i++) {
+		sorted.push([states[0][i], states[1][i], states[0][i]*states[0][i]+states[1][i]*states[1][i]]);
+	}
+	sorted.sort(function(a, b){return b[2] - a[2]});
+
 	// For each state
 	var nextPos = 0;
-	for (var i=0; i<states[0].length; i++) {
+	for (var i=0; i<sorted.length; i++) {
 
 		// If of significant probability
-		if (states[0][i]*states[0][i]+states[1][i]*states[1][i] >= cutoffThresh/100.0) {
+		if (sorted[i][2] >= cutoffThresh/100.0) {
 
 			// Get the binary representation
 			var binRep = i.toString(2).padStart(squares, "0");
@@ -2139,8 +2146,8 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft) {
 			textYReal = (y-1)*gridY+offsetY+gridY*0.35;
 			textYImag = (y-1)*gridY+offsetY+gridY*0.7;
 			ctx.font = (fontSize/2)+"px Arial";
-			ctx.fillText((states[0][i]<0?"":" ") + states[0][i].toFixed(2), textX, textYReal);
-			ctx.fillText((states[1][i]<0?"":" ") + states[1][i].toFixed(2)+"i", textX, textYImag);
+			ctx.fillText((sorted[i][0]<0?"":" ") + sorted[i][0].toFixed(2), textX, textYReal);
+			ctx.fillText((sorted[i][1]<0?"":" ") + sorted[i][1].toFixed(2)+"i", textX, textYImag);
 
 			// Draw the bottom part of the ket
 			ctx.beginPath();
