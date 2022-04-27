@@ -993,7 +993,7 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
 			ctx.fillRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1));
 			svgRect(x-gateSize/2, y-gateSize/2, gateSize, gateSize+gridY*(size-1), ctx.fillStyle);
 
-			// Draw the letter 
+			// Draw the letter
 			if (letter != "I" && letter[0] != "R") {
 				ctx.font = (fontSize*0.9) + "px Arial";
 				ctx.fillStyle = "#ffffff";
@@ -1003,10 +1003,11 @@ function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
 				ctx.font = (fontSize*0.6) + "px Arial";
 				ctx.fillStyle = "#ffffff";
 				ctx.fillText(letter.substring(0,2), gridX*0.20+x-gateSize/2, gridY*0.38+y-gateSize/2);
+				svgText(letter.substring(0,2), gridX*0.20+x-gateSize/2, gridY*0.38+y-gateSize/2, (fontSize*0.6), ctx.measureText(letter.substring(0,2)).width, ctx.fillStyle);
 				var angle = letter.substring(3,letter.length-1);
 				ctx.font = (fontSize*0.8/Math.sqrt(1+angle.length)) + "px Arial";
 				ctx.fillText(angle, gridX*(0.36-angle.length/30)+x-gateSize/2, gridY*(0.72-angle.length/100.0)+y-gateSize/2);
-				svgText(letter, gridX*0.25+x-gateSize/2, gridY*0.58+y-gateSize/2, (fontSize*0.9), ctx.measureText(letter).width, ctx.fillStyle);
+				svgText(angle, gridX*(0.36-angle.length/30)+x-gateSize/2, gridY*(0.72-angle.length/100.0)+y-gateSize/2, fontSize*0.8/Math.sqrt(1+angle.length), ctx.measureText(angle).width, ctx.fillStyle);
 			} else {
 				ctx.font = (fontSize*0.9) + "px Serif";
 				ctx.fillStyle = "#ffffff";
