@@ -2397,12 +2397,12 @@ function gateToMat(gate, gateList, qubitsWithGates) {
 		// Apply the second
 		oldReal = matReal.slice();
 		matReal = matrixSubtraction(matrixProduct(CNOT2[0], matReal), matrixProduct(CNOT2[1], matImag));
-		matImag = matrixAddition(matrixProduct(CNOT2[1], oldReal), matrixProduct(CNOT2[0], oldReal));
+		matImag = matrixAddition(matrixProduct(CNOT2[1], oldReal), matrixProduct(CNOT2[0], matImag));
 
 		// Apply the first again
 		oldReal = matReal.slice();
 		matReal = matrixSubtraction(matrixProduct(CNOT1[0], matReal), matrixProduct(CNOT1[1], matImag));
-		matImag = matrixAddition(matrixProduct(CNOT1[1], oldReal), matrixProduct(CNOT1[0], oldReal));
+		matImag = matrixAddition(matrixProduct(CNOT1[1], oldReal), matrixProduct(CNOT1[0], matImag));
 
 	}
 
