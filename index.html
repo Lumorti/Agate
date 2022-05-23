@@ -2688,7 +2688,7 @@ function getUnitary(gates, boundingBox) {
 			mats = gateToMat(gatesPerSection[i][j], gatesPerSection[i], localQubitsWithGates); 
 			oldReal = toApplyReal.slice();
 			toApplyReal = matrixSubtraction(tensorProduct(toApplyReal, mats[0]), tensorProduct(toApplyImag, mats[1]));
-			toApplyImag = matrixSubtraction(tensorProduct(toApplyImag, mats[0]), tensorProduct(oldReal, mats[1]));
+			toApplyImag = matrixAddition(tensorProduct(toApplyImag, mats[0]), tensorProduct(oldReal, mats[1]));
 		}
 
 		// Apply it to the state
