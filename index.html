@@ -73,8 +73,8 @@ var showFPS = false;
 var drawGrid = true;
 var simMethod = "Statevector";
 var numRepeats = 1000;
-var cutoffThreshMeasure = 1;
-var cutoffThresh = 0.01;
+var cutoffThreshMeasure = 0.00000001;
+var cutoffThresh = 0.00000001;
 var doubleClickMilli = 300;
 var tripleClickMilli = 300;
 var initialZoom = 1.0;
@@ -174,6 +174,9 @@ var tips = [
 var lastClickTime = -1;
 var lastDoubleClickTime = -1;
 var lastSimTime = -1;
+var lastRedrawTime = -1;
+var minRedrawWait = 5;
+var currentlyRedrawing = false;
 var circuitUpdates = 1;
 var recalcRecs = true;
 var inputs = [[]];
@@ -266,6 +269,8 @@ function init(newInstance=false, recalc=false) {
 		fpsBox.style.width = "25px";
 		fpsBox.onchange = function() {
 			showFPS = !showFPS;
+			lastRedrawTime = new Date().getTime();
+			redraw();
 		};
 		document.getElementsByTagName("BODY")[0].appendChild(fpsBox);
 
@@ -281,6 +286,8 @@ function init(newInstance=false, recalc=false) {
 		gridBox.checked = drawGrid;
 		gridBox.onchange = function() {
 			drawGrid = !drawGrid;
+			lastRedrawTime = new Date().getTime();
+			redraw();
 		};
 		document.getElementsByTagName("BODY")[0].appendChild(gridBox);
 
@@ -300,6 +307,8 @@ function init(newInstance=false, recalc=false) {
 		simBox.onchange = function() {
 			simMethod = simBox.options[simBox.selectedIndex].text;
 			circuitUpdates = 1;
+			lastRedrawTime = new Date().getTime();
+			redraw();
 		};
 		document.getElementsByTagName("BODY")[0].appendChild(simBox);
 
@@ -316,6 +325,8 @@ function init(newInstance=false, recalc=false) {
 		repeatsBox.onchange = function() {
 			numRepeats = repeatsBox.value;
 			circuitUpdates = 1;
+			lastRedrawTime = new Date().getTime();
+			redraw();
 		};
 		document.getElementsByTagName("BODY")[0].appendChild(repeatsBox);
 
@@ -446,15 +457,26 @@ function init(newInstance=false, recalc=false) {
 		circuitUpdates = 0;
 	}
 
-	// Only create the drawing instance once
-	if (newInstance) {
-		redraw();
-	}
+	// The first redraw
+	lastRedrawTime = new Date().getTime();
+	redraw();
 
 }
 
 // Given a letter and a position, draw a gate
 function drawGate(letter, x, y, isSelected, size, fixedSize=false) {
+
+	// Only draw gates which are current within the canvas dimensions
+	var extraEdge = gateSize/2 + 10;
+	if (letter.substr(0,4) == "text") {
+		if (x > canvas.width+extraEdge || y+gateSize*size < -extraEdge || y > canvas.height+extraEdge) {
+			return;
+		}
+	} else {
+		if (x < -extraEdge || x > canvas.width+extraEdge || y+gateSize*size < -extraEdge || y > canvas.height+extraEdge) {
+			return;
+		}
+	}
 
 	// If it's a filled control
 	if (letter == "controlFilled") {
@@ -1050,6 +1072,9 @@ function redraw(t=0) {
 	// Screen is able to update, thus probably not in the prompt 
 	inPrompt = false;
 
+	// Let various functions know that we're mid-redraw
+	currentlyRedrawing = true;
+
 	// Reset the svg vars
 	svgString = "";
 	svgMinX = 99999;
@@ -1518,16 +1543,16 @@ function redraw(t=0) {
 				if (simMethod == "Measurements") {
 
 					// Render the inputs
-					renderState(ctx, inputs[i], lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, true);
+					drawState(ctx, inputs[i], lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, true);
 					
 					// Render the outputs
-					renderState(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+					drawState(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
 
-				// If we're rendering the whole unitary
+				// If we're drawing the whole unitary
 				} else if (simMethod == "Unitary") {
-					renderUnitary(ctx, results[i], lineStartEnds[i][1]+1, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
+					drawUnitary(ctx, results[i], lineStartEnds[i][1]+1, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
 
-				// If we're just rendering the final statevector
+				// If we're just drawing the final statevector
 				} else if (simMethod == "Statevector") {
 
 					var zeroInput = [[], []];
@@ -1538,19 +1563,19 @@ function redraw(t=0) {
 					zeroInput[0][0] = 1;
 
 					// Inputs
-					renderStatevector(ctx, zeroInput, lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, false);
+					drawStatevector(ctx, zeroInput, lineStartEnds[i][0]-1, lineStartEnds[i][2], qubitsWithGates, false);
 
 					// Outputs
-					renderStatevector(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
+					drawStatevector(ctx, results[i], lineStartEnds[i][1]+1, lineStartEnds[i][2], qubitsWithGates, false);
 
 				}
 
 			// For functions
 			} else {
 
-				// If we're rendering the whole unitary
+				// If we're drawing the whole unitary
 				if (simMethod == "Unitary") {
-					renderUnitary(ctx, results[i], lineStartEnds[i][1]+2, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
+					drawUnitary(ctx, results[i], lineStartEnds[i][1]+2, Math.floor((lineStartEnds[i][2]+lineStartEnds[i][3])/2), qubitsWithGates, false);
 				}
 
 			}
@@ -2029,13 +2054,13 @@ function redraw(t=0) {
 		ctx.fillText(fps, 30, 30);
 	}
 
-	// Redraw when available 
-	requestAnimationFrame(redraw);
+	// Let various functions know that we're finished
+	currentlyRedrawing = false;
 
 }
 
 // Render a given unitary
-function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
+function drawUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 
 	// Style parameters
 	ctx.lineWidth = fontSize / 7;
@@ -2049,10 +2074,30 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 	var textYImag = 0;
 	var vertOffset = 1-Math.floor(states[0].length / 2);
 	for (var i=0; i<states[0].length; i++) {
+
+		// Check if the x pos is visible
 		textX = (x+i)*gridX+offsetX+gridX*0.05;
+		if (textX < -10-gateSize/2) {
+			continue;
+		}
+		if (textX > canvas.width+gateSize/2+10) {
+			break;
+		}
+
+		// For the vertical
 		for (var j=0; j<states[0][i].length; j++) {
 
-			// Colour prop to magnitude
+			// Check if the y pos is visible
+			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
+			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
+			if (textYImag < -10-gateSize/2) {
+				continue;
+			}
+			if (textYReal > canvas.width+gateSize/2+10) {
+				break;
+			}
+
+			// Colour based on the magnitude
 			if (Math.pow(states[0][j][i], 2) + Math.pow(states[1][j][i], 2) < 1e-5) {
 				ctx.fillStyle = "#aaaaaa";
 			} else {
@@ -2060,12 +2105,8 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 			}
 
 			// Draw that element
-			textYReal = (y+j+vertOffset)*gridY+offsetY+gridY*0.35;
-			textYImag = (y+j+vertOffset)*gridY+offsetY+gridY*0.7;
-			if (textX >= -2*fontSize && textX <= canvas.width && textYReal >= -2*fontSize && textYReal <= canvas.height) {
-				ctx.fillText((states[0][j][i]<0?"":" ") + states[0][j][i].toFixed(2), textX, textYReal);
-				ctx.fillText((states[1][j][i]<0?"":" ") + states[1][j][i].toFixed(2)+"i", textX, textYImag);
-			}
+			ctx.fillText((states[0][j][i]<0?"":" ") + states[0][j][i].toFixed(2), textX, textYReal);
+			ctx.fillText((states[1][j][i]<0?"":" ") + states[1][j][i].toFixed(2)+"i", textX, textYImag);
 
 		}
 	}
@@ -2073,7 +2114,7 @@ function renderUnitary(ctx, states, x, y, qubitsWithGates, goLeft) {
 }
 
 // Render a given statevector
-function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft) {
+function drawStatevector(ctx, states, x, y, qubitsWithGates, goLeft) {
 
 	// Style parameters
 	ctx.lineWidth = fontSize / 7;
@@ -2091,72 +2132,76 @@ function renderStatevector(ctx, states, x, y, qubitsWithGates, goLeft) {
 	sorted.sort(function(a, b){return b[3] - a[3]});
 
 	// For each state
-	var nextPos = 0;
 	for (var i=0; i<sorted.length; i++) {
 
-		// If of significant probability
-		if (sorted[i][3] >= cutoffThresh/100.0) {
+		// Once we hit small probabilities, stop
+		if (sorted[i][3] < cutoffThresh) {
+			break;
+		}
 
-			// Get the binary representation
-			var binRep = sorted[i][0].toString(2).padStart(squares, "0");
+		// Check if it would even be on screen
+		var textX = (x+i)*gridX+offsetX+gridX*0.27;
+		if (textX < -10-gateSize/2) {
+			continue;
+		}
+		if (textX > canvas.width+gateSize/2+10) {
+			break;
+		}
 
-			// Extra squares to add for missing qubits
-			var ext = 0;
+		// Get the binary representation
+		var binRep = sorted[i][0].toString(2).padStart(squares, "0");
 
-			// For each qubit of the state
-			for (var j=0; j<binRep.length; j++) {
+		// Extra squares to add for missing qubits
+		var ext = 0;
 
-				// If there's anything on that qubit
-				while (!qubitsWithGates.includes(y+j+ext) && ext <= squares+1) {
-					ext += 1;
-				}
+		// For each qubit of the state
+		for (var j=0; j<binRep.length; j++) {
 
-				// Draw that qubit's state
-				textX = (x+nextPos)*gridX+offsetX+gridX*0.27;
-				textY = (y+j+ext)*gridY+offsetY+gridY*0.6;
-				ctx.font = fontSize + "px Arial";
-				ctx.fillText(binRep[j], textX, textY);
-
+			// If there's anything on that qubit
+			while (!qubitsWithGates.includes(y+j+ext) && ext <= squares+1) {
+				ext += 1;
 			}
 
-			// To simplify the code
-			leftX = (x+nextPos)*gridX+offsetX+gateSize/2-gridX*0.4;
-			rightX = (x+nextPos)*gridX+offsetX+gateSize/2+gridX*0.4;
-			topY = y*gridY+offsetY-(gridY-gateSize)/2;
-			bottomY = (y+binRep.length+ext)*gridY+offsetY-(gridY-gateSize)/2;
-
-			// Draw the top part of the ket
-			ctx.beginPath();
-			ctx.moveTo(leftX, topY);
-			ctx.lineTo(rightX, topY);
-			ctx.stroke();
-
-			// Probability estimate at the top
-			textX = (x+nextPos)*gridX+offsetX+gridX*0.05;
-			textYReal = (y-1)*gridY+offsetY+gridY*0.35;
-			textYImag = (y-1)*gridY+offsetY+gridY*0.7;
-			ctx.font = (fontSize/2)+"px Arial";
-			ctx.fillText((sorted[i][1]<0?"":" ") + sorted[i][1].toFixed(2), textX, textYReal);
-			ctx.fillText((sorted[i][2]<0?"":" ") + sorted[i][2].toFixed(2)+"i", textX, textYImag);
-
-			// Draw the bottom part of the ket
-			ctx.beginPath();
-			ctx.moveTo(leftX, bottomY);
-			ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
-			ctx.lineTo(rightX, bottomY);
-			ctx.stroke();
-
-			// Next one should be drawn to the right
-			nextPos += 1;
+			// Draw that qubit's state
+			var textY = (y+j+ext)*gridY+offsetY+gridY*0.6;
+			ctx.font = fontSize + "px Arial";
+			ctx.fillText(binRep[j], textX, textY);
 
 		}
+
+		// To simplify the code
+		var leftX = (x+i)*gridX+offsetX+gateSize/2-gridX*0.4;
+		var rightX = (x+i)*gridX+offsetX+gateSize/2+gridX*0.4;
+		var topY = y*gridY+offsetY-(gridY-gateSize)/2;
+		var bottomY = (y+binRep.length+ext)*gridY+offsetY-(gridY-gateSize)/2;
+
+		// Draw the top part of the ket
+		ctx.beginPath();
+		ctx.moveTo(leftX, topY);
+		ctx.lineTo(rightX, topY);
+		ctx.stroke();
+
+		// Probability estimate at the top
+		var textX = (x+i)*gridX+offsetX+gridX*0.05;
+		var textYReal = (y-1)*gridY+offsetY+gridY*0.35;
+		var textYImag = (y-1)*gridY+offsetY+gridY*0.7;
+		ctx.font = (fontSize/2)+"px Arial";
+		ctx.fillText((sorted[i][1]<0?"":" ") + sorted[i][1].toFixed(2), textX, textYReal);
+		ctx.fillText((sorted[i][2]<0?"":" ") + sorted[i][2].toFixed(2)+"i", textX, textYImag);
+
+		// Draw the bottom part of the ket
+		ctx.beginPath();
+		ctx.moveTo(leftX, bottomY);
+		ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
+		ctx.lineTo(rightX, bottomY);
+		ctx.stroke();
 
 	}
 
 }
 
 // Render the given states at the specified position 
-function renderState(ctx, states, x, y, qubitsWithGates, goLeft) {
+function drawState(ctx, states, x, y, qubitsWithGates, goLeft) {
 
 	// Style parameters
 	ctx.lineWidth = fontSize / 7;
@@ -2167,56 +2212,68 @@ function renderState(ctx, states, x, y, qubitsWithGates, goLeft) {
 	for (var i=0; i<states.length; i++) {
 
 		// If of significant probability
-		if (states[i][0] >= cutoffThreshMeasure) {
-		
-			// For each qubit of the state
-			for (var j=0; j<states[i][2].length; j++) {
+		if (states[i][0] < cutoffThreshMeasure) {
+			break;
+		}
 
-				// If there's anything on that qubit
-				if (qubitsWithGates.indexOf(y+j) >= 0) {
+		// Check if it would even be on screen
+		var textX = (x+i)*gridX+offsetX+gridX*0.27;
+		if (textX < -10-gateSize/2) {
+			continue;
+		}
+		if (textX > canvas.width+gateSize/2+10) {
+			break;
+		}
 
-					// Draw that qubit's state
-					textX = (x+i)*gridX+offsetX+gridX*0.27;
-					textY = (y+j)*gridY+offsetY+gridY*0.6;
-					ctx.font = fontSize + "px Arial";
-					ctx.fillText(states[i][2][j], textX, textY);
+		// For each qubit of the state
+		for (var j=0; j<states[i][2].length; j++) {
 
-				}
+			// If there's anything on that qubit
+			if (qubitsWithGates.indexOf(y+j) >= 0) {
+
+				// Draw that qubit's state
+				var textY = (y+j)*gridY+offsetY+gridY*0.6;
+				ctx.font = fontSize + "px Arial";
+				ctx.fillText(states[i][2][j], textX, textY);
 
 			}
-
-			// To simplify the code
-			leftX = (x+i)*gridX+offsetX+gateSize/2-gridX*0.4;
-			rightX = (x+i)*gridX+offsetX+gateSize/2+gridX*0.4;
-			topY = y*gridY+offsetY-(gridY-gateSize)/2;
-			bottomY = (y+states[i][2].length)*gridY+offsetY-(gridY-gateSize)/2;
-
-			// Draw the top part of the ket
-			ctx.beginPath();
-			ctx.moveTo(leftX, topY);
-			ctx.lineTo(rightX, topY);
-			ctx.stroke();
-
-			// Probability estimate at the top
-			if (states[i][0] >= 100) {
-				textX = (x+i)*gridX+offsetX+gridX*0.05;
-			} else if (states[i][0] >= 10) {
-				textX = (x+i)*gridX+offsetX+gridX*0.15;
-			} else {
-				textX = (x+i)*gridX+offsetX+gridX*0.2;
-			}
-			textY = (y-1)*gridY+offsetY+gridY/1.4;
-			ctx.font = (fontSize/2)+"px Arial";
-			ctx.fillText(states[i][0] + "%", textX, textY);
-
-			// Draw the bottom part of the ket
-			ctx.beginPath();
-			ctx.moveTo(leftX, bottomY);
-			ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
-			ctx.lineTo(rightX, bottomY);
-			ctx.stroke();
 
 		}
+
+		// To simplify the code
+		var leftX = (x+i)*gridX+offsetX+gateSize/2-gridX*0.4;
+		var rightX = (x+i)*gridX+offsetX+gateSize/2+gridX*0.4;
+		var topY = y*gridY+offsetY-(gridY-gateSize)/2;
+		var bottomY = (y+states[i][2].length)*gridY+offsetY-(gridY-gateSize)/2;
+
+		// Draw the top part of the ket
+		ctx.beginPath();
+		ctx.moveTo(leftX, topY);
+		ctx.lineTo(rightX, topY);
+		ctx.stroke();
+
+		// Probability estimate at the top
+		if (states[i][0] >= 100) {
+			var textX = (x+i)*gridX+offsetX+gridX*0.05;
+		} else if (states[i][0] >= 10) {
+			var textX = (x+i)*gridX+offsetX+gridX*0.15;
+		} else {
+			var textX = (x+i)*gridX+offsetX+gridX*0.2;
+		}
+		var textY = (y-1)*gridY+offsetY+gridY/1.4;
+		ctx.font = (fontSize/2)+"px Arial";
+		if (states[i][0] >= 1) {
+			ctx.fillText(Math.round(states[i][0]) + "%", textX, textY);
+		} else {
+			ctx.fillText("<1%", textX, textY);
+		}
+
+		// Draw the bottom part of the ket
+		ctx.beginPath();
+		ctx.moveTo(leftX, bottomY);
+		ctx.lineTo((leftX+rightX)/2, bottomY+gridY*0.2);
+		ctx.lineTo(rightX, bottomY);
+		ctx.stroke();
 
 	}
 
@@ -3013,7 +3070,7 @@ function simulateCircuit(inputLocal, gates, boundingBox, repeats, recDepth) {
 
 		// Turn counts into probabilities
 		for (var i=0; i<resultsLocal.length; i++) {
-			resultsLocal[i][0] = Math.round((100.0 * resultsLocal[i][0]) / totalMag);
+			resultsLocal[i][0] = (100.0 * resultsLocal[i][0]) / totalMag;
 		}
 
 	}
@@ -3106,8 +3163,12 @@ function mouseMove(e) {
 	// By default, hide the delete bar
 	showDelete = false;
 
+	// Check if we actually need to redraw everything
+	var redrawNeeded = false;
+
 	// Move whatever is selected to the mouse
 	if (selected >= 0 && selectionArray.length == 0) {
+		redrawNeeded = true;
 
 		// If it's a control, lock it to the x
 		if (gates[selected]["letter"] == "controlFilled" || gates[selected]["letter"] == "controlUnfilled") {
@@ -3201,6 +3262,7 @@ function mouseMove(e) {
 
 	// If dragging multiple gates 
 	} else if (selected >= 0 && selectionArray.length > 0) {
+		redrawNeeded = true;
 
 		// Determine the deltas from the selected gate
 		if (gates[selected]["letter"].substring(0,4) == "text") {
@@ -3286,6 +3348,7 @@ function mouseMove(e) {
 
 	// If dragging the background
 	} else if (selected == -5) {
+		redrawNeeded = true;
 
 		// Move the offsets
 		offsetX += e.movementX;
@@ -3293,6 +3356,7 @@ function mouseMove(e) {
 
 	// If selecting
 	} else if (selected == -6) {
+		redrawNeeded = true;
 
 		// Change the pointer
 		canvas.style.cursor = "pointer";
@@ -3337,6 +3401,7 @@ function mouseMove(e) {
 
 		// Reset things
 		canvas.style.cursor = "initial";
+		var prevHover = hover;
 		hover = -1;
 
 		// Check over every draggable gate 
@@ -3410,6 +3475,8 @@ function mouseMove(e) {
 		}
 
 		// Check for other button hover  
+		var prevOpenHover = openHover;
+		var prevSaveHover = saveHover;
 		openHover = false;
 		saveHover = false;
 		if (loadOpen && e.clientX > openDims[0] && e.clientX < openDims[1] && e.clientY > openDims[2] && e.clientY < openDims[3]) {
@@ -3422,6 +3489,20 @@ function mouseMove(e) {
 			canvas.style.cursor = "initial";
 		}
 
+		// If we changed the hover
+		if (prevHover != hover || prevOpenHover != openHover || prevSaveHover != saveHover) {
+			redrawNeeded = true;
+		}
+
+	}
+
+	// Redraw everything if needed
+	if (redrawNeeded) {
+		var currentTime = new Date().getTime();
+		if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+			lastRedrawTime = currentTime;
+			redraw();
+		}
 	}
 
 }
@@ -3499,7 +3580,7 @@ function mouseUp(e) {
 				}
 
 			// If dropped onto a control
-			} else if (gates[selected]["attached"] && gates[selected]["attached"].length > 0) {
+			} else if (gates[selected]["letter"].substr(0,4) != "text" && gates[selected]["attached"] && gates[selected]["attached"].length > 0) {
 
 				// Cache the list of controls to remove
 				var controlList = gates[selected]["attached"].slice();
@@ -3566,7 +3647,13 @@ function mouseUp(e) {
 	
 	// Deselect current gate 
 	selected = -1;
-	mouseMove(e);
+
+	// Redraw if needed
+	var currentTime = new Date().getTime();
+	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+		lastRedrawTime = currentTime;
+		redraw();
+	}
 
 }
 
@@ -3715,6 +3802,13 @@ function keyDown(e) {
 		selectionArray = [];
 		circuitUpdates = 1;
 
+	}
+
+	// Redraw if needed
+	var currentTime = new Date().getTime();
+	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+		lastRedrawTime = currentTime;
+		redraw();
 	}
 
 }
@@ -4130,6 +4224,13 @@ function mouseDown(e) {
 
 	// Save this time for future double click checks
 	lastClickTime = currentTime;
+
+	// Redraw if needed
+	var currentTime = new Date().getTime();
+	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+		lastRedrawTime = currentTime;
+		redraw();
+	}
 
 }
 
@@ -5029,6 +5130,13 @@ function mouseWheel(e) {
 		// Update now the scale has changed
 		offsetX = e.clientX - xs * (gridX / gridXFixed);
 		offsetY = e.clientY - ys * (gridY / gridYFixed);
+
+		// Redraw everything if needed
+		var currentTime = new Date().getTime();
+		if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+			lastRedrawTime = currentTime;
+			redraw();
+		}
 
 	}
 
