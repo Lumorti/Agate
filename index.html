@@ -5256,16 +5256,12 @@ function touchHandler(event) {
 		// Trigger the event
 		first.target.dispatchEvent(simulatedEvent);
 
+		// Force a refresh after touch events, for some reason needed TODO
+		redraw();
+
 		// Stop pinching if pinching
 		isPinching = false;
 
-	}
-
-	// Force a refresh after touch events, for some reason needed
-	var currentTime = new Date().getTime();
-	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
-		lastRedrawTime = currentTime;
-		redraw();
 	}
 
 	// Don't do whatever the default is
