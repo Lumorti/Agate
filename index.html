@@ -5261,9 +5261,12 @@ function touchHandler(event) {
 
 	}
 
-	// TODO
-	debugData = "" + event.type;
-	redraw();
+	// Force a refresh after touch events, for some reason needed
+	var currentTime = new Date().getTime();
+	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
+		lastRedrawTime = currentTime;
+		redraw();
+	}
 
 	// Don't do whatever the default is
 	event.preventDefault();
