@@ -20,3 +20,5 @@ Agate exists as a single portable HTML file with no dependencies, as such it can
 ### Embedding
 By adding "view" before "OPENQASM" in the sharable URL (so it becomes "#viewOPENQASM..."), the resulting page will be put into no-edit mode. This is designed to allow such links to be better embedded in pages as iframes. I'd put one here to show you, but GitHub markdown doesn't allow them 🤷‍♂️.
 
+### Acknowledgements
+Originally inspired by https://algassert.com/quirk, also thanks to https://github.com/Strilanc for the comments.
