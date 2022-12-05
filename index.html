@@ -1670,7 +1670,7 @@ function redraw(t=0) {
 
 	// If box selecting, draw the box
 	if (selected == -6) {
-		ctx.fillStyle = "#aaaaaa55";
+		ctx.fillStyle = "#70168055";
 		ctx.fillRect(selectStartX, selectStartY, selectEndX-selectStartX, selectEndY-selectStartY);
 	}
 
@@ -3649,11 +3649,7 @@ function mouseUp(e) {
 	selected = -1;
 
 	// Redraw if needed
-	var currentTime = new Date().getTime();
-	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
-		lastRedrawTime = currentTime;
-		redraw();
-	}
+	redraw();
 
 }
 
@@ -3805,11 +3801,7 @@ function keyDown(e) {
 	}
 
 	// Redraw if needed
-	var currentTime = new Date().getTime();
-	if (currentTime - lastRedrawTime > minRedrawWait && !currentlyRedrawing) {
-		lastRedrawTime = currentTime;
-		redraw();
-	}
+	redraw();
 
 }
 
@@ -3870,6 +3862,9 @@ function mouseDown(e) {
 
 	// Get the current time in milliseconds
 	var currentTime = new Date().getTime();
+
+	// Check to make sure we're hovering over a valid gate and not an ephemeral control
+	mouseMove(e);
 
 	// If it's the second open icon 
 	if (openHover) {
@@ -3973,8 +3968,29 @@ function mouseDown(e) {
 			helpOpen = false;
 		}
 
+		// Triple click
+		if ((currentTime - lastDoubleClickTime) < tripleClickMilli) {
+
+			// If it's draggable and has a parameter
+			if (gates[hover]["draggable"] && gates[hover]["letter"][0] == "R") {
+
+				// Open a prompt to change the text 
+				inPrompt = true;
+				var newVal = prompt("Enter new parameter:", gates[hover]["letter"].substring(3,gates[hover]["letter"].length-1));
+
+				// If the user didn't cancel
+				if (newVal !== null) {
+
+					// Update the gate's text and size
+					gates[hover]["letter"] = gates[hover]["letter"].substring(0,2) + "(" + newVal + ")";
+					circuitUpdates = 1;
+
+				}
+
+			}
+
 		// If it's the left button
-		if (gates[hover]["letter"] == "left") {
+		} else if (gates[hover]["letter"] == "left") {
 
 			// Shift the shown gates left
 			toolbarIndex -= numGatesToShow;
@@ -3993,27 +4009,6 @@ function mouseDown(e) {
 			// Wrap around
 			if (toolbarIndex >= toolbarGates.length) {
 				toolbarIndex = 0;
-			}
-
-		// Triple click
-		} else if ((currentTime - lastDoubleClickTime) < tripleClickMilli) {
-
-			// If it's draggable and has a parameter
-			if (gates[hover]["draggable"] && gates[hover]["letter"][0] == "R") {
-
-				// Open a prompt to change the text 
-				inPrompt = true;
-				var newVal = prompt("Enter new parameter:", gates[hover]["letter"].substring(3,gates[hover]["letter"].length-1));
-
-				// If the user didn't cancel
-				if (newVal !== null) {
-
-					// Update the gate's text and size
-					gates[hover]["letter"] = gates[hover]["letter"].substring(0,2) + "(" + newVal + ")";
-					circuitUpdates = 1;
-
-				}
-
 			}
 
 		// Double click 
